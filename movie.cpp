@@ -867,19 +867,6 @@ int S9xMovieCreate (const char *filename, uint8 controllers_mask, uint8 opts, co
 
 	write_movie_header(fd, &Movie);
 
-	// convert wchar_t metadata string/array to a uint16 array
-	// XXX: UTF-8 is much better...
-	if (metadata_length > 0)
-	{
-		uint8 meta_buf[sizeof(uint16) * MOVIE_MAX_METADATA];
-		for (int i = 0; i < metadata_length; i++)
-		{
-			uint16 c = (uint16) metadata[i];
-			meta_buf[i * 2]     = (uint8) (c & 0xff);
-			meta_buf[i * 2 + 1] = (uint8) ((c >> 8) & 0xff);
-		}
-	}
-
 	Movie.ROMCRC32 = Memory.ROMCRC32;
 	strncpy(Movie.ROMName, Memory.RawROMName, 23);
 
