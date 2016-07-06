@@ -1398,15 +1398,15 @@ extern struct SLineMatrixData	LineMatrixData[240];
    would incur two additional branches for the edges on every pixel.
 */
 
-//#define DRAW_PIXEL_H2x1(N, M) \
-//    if (Z1 > GFX.DB[Offset + 2 * N] && (M)) \
-//    { \
-//        GFX.S[Offset + 2 * N + 1] = MATH(GFX.ScreenColors[Pix], GFX.SubScreen[Offset + 2 * N], GFX.SubZBuffer[Offset + 2 * N]); \
-//        if ((Offset + 2 * N ) % GFX.RealPPL != (SNES_WIDTH - 1) << 1) \
-//            GFX.S[Offset + 2 * N + 2] = MATH((GFX.ClipColors ? 0 : GFX.SubScreen[Offset + 2 * N + 2]), GFX.RealScreenColors[Pix], GFX.SubZBuffer[Offset + 2 * N]); \
-//        if ((Offset + 2 * N) % GFX.RealPPL == 0) \
-//            GFX.S[Offset + 2 * N] = MATH((GFX.ClipColors ? 0 : GFX.SubScreen[Offset + 2 * N]), GFX.RealScreenColors[Pix], GFX.SubZBuffer[Offset + 2 * N]); \
-//        GFX.DB[Offset + 2 * N] = GFX.DB[Offset + 2 * N + 1] = Z2; \
+//#define DRAW_PIXEL_H2x1(N, M) /
+//    if (Z1 > GFX.DB[Offset + 2 * N] && (M)) /
+//    { /
+//        GFX.S[Offset + 2 * N + 1] = MATH(GFX.ScreenColors[Pix], GFX.SubScreen[Offset + 2 * N], GFX.SubZBuffer[Offset + 2 * N]); /
+//        if ((Offset + 2 * N ) % GFX.RealPPL != (SNES_WIDTH - 1) << 1) /
+//            GFX.S[Offset + 2 * N + 2] = MATH((GFX.ClipColors ? 0 : GFX.SubScreen[Offset + 2 * N + 2]), GFX.RealScreenColors[Pix], GFX.SubZBuffer[Offset + 2 * N]); /
+//        if ((Offset + 2 * N) % GFX.RealPPL == 0) /
+//            GFX.S[Offset + 2 * N] = MATH((GFX.ClipColors ? 0 : GFX.SubScreen[Offset + 2 * N]), GFX.RealScreenColors[Pix], GFX.SubZBuffer[Offset + 2 * N]); /
+//        GFX.DB[Offset + 2 * N] = GFX.DB[Offset + 2 * N + 1] = Z2; /
 //    }
 
 

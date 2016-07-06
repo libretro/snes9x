@@ -536,9 +536,6 @@ static void flush_movie (void)
 	fseek(Movie.File, 0, SEEK_SET);
 	write_movie_header(Movie.File, &Movie);
 	fseek(Movie.File, Movie.ControllerDataOffset, SEEK_SET);
-
-	size_t	ignore;
-	ignore = fwrite(Movie.InputBuffer, 1, Movie.BytesPerSample * (Movie.MaxSample + 1), Movie.File);
 }
 
 static void truncate_movie (void)
@@ -548,9 +545,6 @@ static void truncate_movie (void)
 
 	if (Movie.SaveStateOffset > Movie.ControllerDataOffset)
 		return;
-
-	int	ignore;
-	ignore = ftruncate(fileno(Movie.File), Movie.ControllerDataOffset + Movie.BytesPerSample * (Movie.MaxSample + 1));
 }
 
 static int read_movie_header (FILE *fd, SMovie *movie)
@@ -635,9 +629,6 @@ static void write_movie_header (FILE *fd, SMovie *movie)
 		for (int i = 0; i < 4; i++)
 			Write8(movie->PortIDs[p][i], ptr);
 	}
-
-	size_t	ignore;
-	ignore = fwrite(buf, 1, SMV_HEADER_SIZE, fd);
 }
 
 static void write_movie_extrarominfo (FILE *fd, SMovie *movie)
@@ -649,9 +640,6 @@ static void write_movie_extrarominfo (FILE *fd, SMovie *movie)
 	Write8(0, ptr);
 	Write32(movie->ROMCRC32, ptr);
 	strncpy((char *) ptr, movie->ROMName, 23);
-
-	size_t	ignore;
-	ignore = fwrite(buf, 1, SMV_EXTRAROMINFO_SIZE, fd);
 }
 
 static void change_state (MovieState new_state)
@@ -829,9 +817,6 @@ int S9xMovieOpen (const char *filename, bool8 read_only)
 	Movie.InputBufferPtr = Movie.InputBuffer;
 	reserve_buffer_space(Movie.BytesPerSample * (Movie.MaxSample + 1));
 
-	size_t	ignore;
-	ignore = fread(Movie.InputBufferPtr, 1, Movie.BytesPerSample * (Movie.MaxSample + 1), fd);
-
 	// read "baseline" controller data
 	if (Movie.MaxSample && Movie.MaxFrame)
 		read_frame_controller_data(true);
@@ -881,22 +866,6 @@ int S9xMovieCreate (const char *filename, uint8 controllers_mask, uint8 opts, co
 	Movie.SyncFlags            = MOVIE_SYNC_DATA_EXISTS | MOVIE_SYNC_HASROMINFO;
 
 	write_movie_header(fd, &Movie);
-
-	// convert wchar_t metadata string/array to a uint16 array
-	// XXX: UTF-8 is much better...
-	if (metadata_length > 0)
-	{
-		uint8 meta_buf[sizeof(uint16) * MOVIE_MAX_METADATA];
-		for (int i = 0; i < metadata_length; i++)
-		{
-			uint16 c = (uint16) metadata[i];
-			meta_buf[i * 2]     = (uint8) (c & 0xff);
-			meta_buf[i * 2 + 1] = (uint8) ((c >> 8) & 0xff);
-		}
-
-		size_t	ignore;
-		ignore = fwrite(meta_buf, sizeof(uint16), metadata_length, fd);
-	}
 
 	Movie.ROMCRC32 = Memory.ROMCRC32;
 	strncpy(Movie.ROMName, Memory.RawROMName, 23);
@@ -1059,9 +1028,6 @@ void S9xMovieUpdate (bool addFrame)
 			if (addFrame)
 				Movie.MaxFrame = ++Movie.CurrentFrame;
 
-			size_t	ignore;
-			ignore = fwrite((Movie.InputBufferPtr - Movie.BytesPerSample), 1, Movie.BytesPerSample, Movie.File);
-
 			break;
 		}
 
@@ -1084,9 +1050,6 @@ void S9xMovieUpdateOnReset (void)
 		Movie.InputBufferPtr += Movie.BytesPerSample;
 		Movie.MaxSample = ++Movie.CurrentSample;
 		Movie.MaxFrame = ++Movie.CurrentFrame;
-
-		size_t	ignore;
-		ignore = fwrite((Movie.InputBufferPtr - Movie.BytesPerSample), 1, Movie.BytesPerSample, Movie.File);
 	}
 }
 
