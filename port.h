@@ -253,7 +253,7 @@ typedef uint64_t			uint64;
 
 #if defined(__WIN32__)
 
-#ifndef _MSC_VER
+#ifdef _MSC_VER
 #define snprintf _snprintf
 #define strcasecmp	stricmp
 #define strncasecmp	strnicmp
