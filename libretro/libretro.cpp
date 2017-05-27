@@ -51,6 +51,8 @@ static retro_audio_sample_t audio_cb = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_input_poll_t poll_cb = NULL;
 static retro_input_state_t input_state_cb = NULL;
+static retro_game_read_t game_read_cb = NULL;
+static retro_game_seek_t game_seek_cb = NULL;
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
@@ -109,6 +111,16 @@ void retro_set_input_poll(retro_input_poll_t cb)
 void retro_set_input_state(retro_input_state_t cb)
 {
    input_state_cb = cb;
+}
+
+void retro_set_game_read(retro_game_read_t cb)
+{
+	game_read_cb = cb;
+}
+
+void retro_set_game_seek(retro_game_seek_t cb)
+{
+	game_seek_cb = cb;
 }
 
 static retro_environment_t environ_cb;
