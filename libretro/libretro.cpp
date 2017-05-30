@@ -39,7 +39,6 @@
 #define RETRO_GAME_TYPE_SUFAMI_TURBO    0x103
 #define RETRO_GAME_TYPE_SUPER_GAME_BOY  0x104
 
-#define SNES_8_7_PAR (SNES_WIDTH * (8.0f / 7.0f)) / (use_overscan ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT)
 #define SNES_4_3 4.0f / 3.0f
 
 char g_rom_dir[1024];
@@ -51,8 +50,6 @@ static retro_audio_sample_t audio_cb = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_input_poll_t poll_cb = NULL;
 static retro_input_state_t input_state_cb = NULL;
-static retro_game_read_t game_read_cb = NULL;
-static retro_game_seek_t game_seek_cb = NULL;
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
@@ -113,19 +110,9 @@ void retro_set_input_state(retro_input_state_t cb)
    input_state_cb = cb;
 }
 
-void retro_set_game_read(retro_game_read_t cb)
-{
-	game_read_cb = cb;
-}
-
-void retro_set_game_seek(retro_game_seek_t cb)
-{
-	game_seek_cb = cb;
-}
-
 static retro_environment_t environ_cb;
-static bool use_overscan = false;
-static bool use_par = true;
+static unsigned crop_overscan_mode = 0;
+static unsigned aspect_ratio_mode = 0;
 static bool rom_loaded = false;
 void retro_set_environment(retro_environment_t cb)
 {
@@ -151,8 +138,8 @@ void retro_set_environment(retro_environment_t cb)
       { "snes9x_sndchan_6", "Enable sound channel 6; enabled|disabled" },
       { "snes9x_sndchan_7", "Enable sound channel 7; enabled|disabled" },
       { "snes9x_sndchan_8", "Enable sound channel 8; enabled|disabled" },
-      { "snes9x_overscan", "Crop Overscan; enabled|disabled" },
-      { "snes9x_aspect", "Core-provided aspect ratio; 8:7 PAR|4:3" },
+      { "snes9x_overscan", "Crop overscan; auto|enabled|disabled" },
+      { "snes9x_aspect", "Preferred aspect ratio; auto|ntsc|pal|4:3" },
       { NULL, NULL },
    };
 
@@ -183,13 +170,19 @@ void retro_set_environment(retro_environment_t cb)
 
 extern void S9xResetSuperFX(void);
 
+void update_geometry()
+{
+  struct retro_system_av_info av_info;
+  retro_get_system_av_info(&av_info);
+  environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
+}
+
 static void update_variables(void)
 {
    bool reset_sfx = false;
    bool geometry_update = false;
    char key[256];
    struct retro_variable var;
-   struct retro_system_av_info av_info;
    var.key = "snes9x_overclock";
    var.value = NULL;
 
@@ -260,22 +253,34 @@ static void update_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      bool newval = (!strcmp(var.value, "disabled"));
-      if (newval != use_overscan)
-      {
-        use_overscan = newval;
-        geometry_update = true;
-      }
+     unsigned newval = 0;
+     if (strcmp(var.value, "enabled") == 0)
+       newval = 1;
+     else if (strcmp(var.value, "disabled") == 0)
+       newval = 2;
+     
+     if (newval != crop_overscan_mode)
+     {
+       crop_overscan_mode = newval;
+       geometry_update = true;
+     }
    }
 
    var.key = "snes9x_aspect";
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      bool newval = (!strcmp(var.value, "8:7 PAR"));
-      if (newval != use_par)
+      unsigned newval = 0;
+      if (strcmp(var.value, "ntsc") == 0)
+        newval = 1;
+      else if (strcmp(var.value, "pal") == 0)
+        newval = 2;
+      else if (strcmp(var.value, "4:3") == 0)
+        newval = 3;
+
+      if (newval != aspect_ratio_mode)
       {
-        use_par = newval;
+        aspect_ratio_mode = newval;
         geometry_update = true;
       }
    }
@@ -284,10 +289,7 @@ static void update_variables(void)
       S9xResetSuperFX();
 
    if (geometry_update)
-   {
-      retro_get_system_av_info(&av_info);
-      environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
-   }
+     update_geometry();
 }
 
 static void S9xAudioCallback(void*)
@@ -315,14 +317,49 @@ void retro_get_system_info(struct retro_system_info *info)
     info->block_extract = false;
 }
 
+float get_aspect_ratio(unsigned width, unsigned height)
+{
+  if (aspect_ratio_mode == 3) // 4:3
+  {
+    return SNES_4_3;
+  }
+
+  float sample_frequency_ntsc = 135000000.0 / 11.0;
+  float sample_frequency_pal = 14750000.0;
+
+  float sample_freq = retro_get_region() == RETRO_REGION_NTSC ? sample_frequency_ntsc : sample_frequency_pal;
+  float dot_rate = SNES::cpu.frequency / 4.0;
+
+  if (aspect_ratio_mode == 1) // ntsc
+  {
+    sample_freq = sample_frequency_ntsc;
+    dot_rate = NTSC_MASTER_CLOCK / 4.0;
+  }
+  else if (aspect_ratio_mode == 2) // pal
+  {
+    sample_freq = sample_frequency_pal;
+    dot_rate = PAL_MASTER_CLOCK / 4.0;
+  }
+
+  float par = sample_freq / 2.0 / dot_rate;
+  return (float)width * par / (float)height;
+}
+
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
     memset(info,0,sizeof(retro_system_av_info));
-    info->geometry.base_width = SNES_WIDTH;
-    info->geometry.base_height = use_overscan ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
+    unsigned width = SNES_WIDTH;
+    unsigned height = PPU.ScreenHeight;
+    if (crop_overscan_mode == 1) // enabled
+      height = SNES_HEIGHT;
+    else if (crop_overscan_mode == 2) // disabled
+      height = SNES_HEIGHT_EXTENDED;
+
+    info->geometry.base_width = width;
+    info->geometry.base_height = height;
     info->geometry.max_width = MAX_SNES_WIDTH;
     info->geometry.max_height = MAX_SNES_HEIGHT;
-    info->geometry.aspect_ratio = use_par ? SNES_8_7_PAR : SNES_4_3 ;
+    info->geometry.aspect_ratio = get_aspect_ratio(width, height);
     info->timing.sample_rate = 32040;
     info->timing.fps = retro_get_region() == RETRO_REGION_NTSC ? 21477272.0 / 357366.0 : 21281370.0 / 425568.0;
 }
@@ -601,8 +638,10 @@ void retro_unload_game(void)
 bool retro_load_game_special(unsigned game_type,
       const struct retro_game_info *info, size_t num_info) {
 
-   init_descriptors();
+  init_descriptors();
   memorydesc_c = 0;
+
+  update_variables();
 
   switch (game_type) {
      case RETRO_GAME_TYPE_BSX:
@@ -930,6 +969,7 @@ static void report_buttons()
 
 void retro_run()
 {
+   uint16 height = PPU.ScreenHeight;
    bool updated = false;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
       update_variables();
@@ -937,6 +977,8 @@ void retro_run()
    poll_cb();
    report_buttons();
    S9xMainLoop();
+   if (height != PPU.ScreenHeight)
+     update_geometry();
 }
 
 void retro_deinit()
@@ -1038,12 +1080,13 @@ bool retro_unserialize(const void* data, size_t size)
 {
    if (S9xUnfreezeGameMem((const uint8_t*)data,size) != SUCCESS)
       return false;
+   update_geometry();
    return true;
 }
 
 bool8 S9xDeinitUpdate(int width, int height)
 {
-   if (!use_overscan)
+   if (crop_overscan_mode == 1) // enabled
    {
       if (height >= SNES_HEIGHT << 1)
       {
@@ -1054,7 +1097,7 @@ bool8 S9xDeinitUpdate(int width, int height)
          height = SNES_HEIGHT;
       }
    }
-   else
+   else if (crop_overscan_mode == 2) // disabled
    {
       if (height > SNES_HEIGHT_EXTENDED)
       {
