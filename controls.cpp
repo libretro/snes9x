@@ -2829,7 +2829,7 @@ void S9xSetJoypadLatch (bool latch)
 			switch (i = curcontrollers[n])
 			{
 				case MP5:
-					for (int j = 0, k = mp5[n].pads[j]; j < 4; k = mp5[n].pads[++j])
+					for (int j = 0, k = mp5[n].pads[j]; j < 3; k = mp5[n].pads[++j])
 					{
 						if (k == NONE)
 							continue;
@@ -3117,7 +3117,7 @@ void S9xControlEOF (void)
 		switch (i = curcontrollers[n])
 		{
 			case MP5:
-				for (j = 0, i = mp5[n].pads[j]; j < 4; i = mp5[n].pads[++j])
+				for (j = 0, i = mp5[n].pads[j]; j < 3; i = mp5[n].pads[++j])
 				{
 					if (i == NONE)
 						continue;
