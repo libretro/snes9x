@@ -608,6 +608,12 @@ bool retro_load_game(const struct retro_game_info *game)
 
    if (!rom_loaded && log_cb)
       log_cb(RETRO_LOG_ERROR, "[libretro]: Rom loading failed...\n");
+	
+   char rominfotext[1024];
+   if (rom_loaded && log_cb) {
+      Memory.MakeRomInfoText(rominfotext);
+      log_cb(RETRO_LOG_INFO, "\n%s\n", rominfotext);
+   }
 
    struct retro_memory_map map={ memorydesc+MAX_MAPS-memorydesc_c, memorydesc_c };
    if (rom_loaded) environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
