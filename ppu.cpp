@@ -22,10 +22,12 @@
 
   (c) Copyright 2006 - 2007  nitsuja
 
-  (c) Copyright 2009 - 2011  BearOso,
+  (c) Copyright 2009 - 2017  BearOso,
                              OV2
 
-  (c) Copyright 2011 - 2016  Hans-Kristian Arntzen,
+  (c) Copyright 2017         qwertymodo
+
+  (c) Copyright 2011 - 2017  Hans-Kristian Arntzen,
                              Daniel De Matteis
                              (Under no circumstances will commercial rights be given)
 
@@ -122,6 +124,9 @@
   Sound emulator code used in 1.52+
   (c) Copyright 2004 - 2007  Shay Green (gblargg@gmail.com)
 
+  S-SMP emulator code used in 1.54+
+  (c) Copyright 2016         byuu
+
   SH assembler code partly based on x86 assembler code
   (c) Copyright 2002 - 2004  Marcus Comstedt (marcus@mc.pp.se)
 
@@ -135,7 +140,7 @@
   (c) Copyright 2006 - 2007  Shay Green
 
   GTK+ GUI code
-  (c) Copyright 2004 - 2011  BearOso
+  (c) Copyright 2004 - 2017  BearOso
 
   Win32 GUI code
   (c) Copyright 2003 - 2006  blip,
@@ -143,14 +148,14 @@
                              Matthew Kendora,
                              Nach,
                              nitsuja
-  (c) Copyright 2009 - 2011  OV2
+  (c) Copyright 2009 - 2017  OV2
 
   Mac OS GUI code
   (c) Copyright 1998 - 2001  John Stiles
   (c) Copyright 2001 - 2011  zones
 
   Libretro port
-  (c) Copyright 2011 - 2016  Hans-Kristian Arntzen,
+  (c) Copyright 2011 - 2017  Hans-Kristian Arntzen,
                              Daniel De Matteis
                              (Under no circumstances will commercial rights be given)
 
@@ -1089,6 +1094,7 @@ void S9xSetPPU (uint8 Byte, uint16 Address)
 	}
 
 	Memory.FillRAM[Address] = Byte;
+	OpenBus = Byte;
 }
 
 uint8 S9xGetPPU (uint16 Address)
@@ -1098,7 +1104,7 @@ uint8 S9xGetPPU (uint16 Address)
 		return (S9xMSU1ReadPort(Address & 7));
 	else
 	if (Address < 0x2100)
-		return (OpenBus);
+		return (PPU.OpenBus1);
 
 	if (CPU.InDMAorHDMA)
 	{
@@ -1171,7 +1177,7 @@ uint8 S9xGetPPU (uint16 Address)
 
 			case 0x2137: // SLHV
 				S9xLatchCounters(0);
-				return (OpenBus);
+				return (PPU.OpenBus1);
 
 			case 0x2138: // OAMDATAREAD
 				if (PPU.OAMAddr & 0x100)
@@ -1343,12 +1349,12 @@ uint8 S9xGetPPU (uint16 Address)
 			case 0x21c2:
 				if (Model->_5C77 == 2)
 					return (0x20);
-				return (OpenBus);
+				return (PPU.OpenBus2);
 
 			case 0x21c3:
 				if (Model->_5C77 == 2)
 					return (0);
-				return (OpenBus);
+				return (PPU.OpenBus2);
 
 			default:
 				return (OpenBus);

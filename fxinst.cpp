@@ -22,10 +22,12 @@
 
   (c) Copyright 2006 - 2007  nitsuja
 
-  (c) Copyright 2009 - 2011  BearOso,
+  (c) Copyright 2009 - 2017  BearOso,
                              OV2
 
-  (c) Copyright 2011 - 2016  Hans-Kristian Arntzen,
+  (c) Copyright 2017         qwertymodo
+
+  (c) Copyright 2011 - 2017  Hans-Kristian Arntzen,
                              Daniel De Matteis
                              (Under no circumstances will commercial rights be given)
 
@@ -122,6 +124,9 @@
   Sound emulator code used in 1.52+
   (c) Copyright 2004 - 2007  Shay Green (gblargg@gmail.com)
 
+  S-SMP emulator code used in 1.54+
+  (c) Copyright 2016         byuu
+
   SH assembler code partly based on x86 assembler code
   (c) Copyright 2002 - 2004  Marcus Comstedt (marcus@mc.pp.se)
 
@@ -135,7 +140,7 @@
   (c) Copyright 2006 - 2007  Shay Green
 
   GTK+ GUI code
-  (c) Copyright 2004 - 2011  BearOso
+  (c) Copyright 2004 - 2017  BearOso
 
   Win32 GUI code
   (c) Copyright 2003 - 2006  blip,
@@ -143,14 +148,14 @@
                              Matthew Kendora,
                              Nach,
                              nitsuja
-  (c) Copyright 2009 - 2011  OV2
+  (c) Copyright 2009 - 2017  OV2
 
   Mac OS GUI code
   (c) Copyright 1998 - 2001  John Stiles
   (c) Copyright 2001 - 2011  zones
 
   Libretro port
-  (c) Copyright 2011 - 2016  Hans-Kristian Arntzen,
+  (c) Copyright 2011 - 2017  Hans-Kristian Arntzen,
                              Daniel De Matteis
                              (Under no circumstances will commercial rights be given)
 
@@ -905,7 +910,7 @@ static void fx_plot_2bit (void)
 		return;
 
 	if (GSU.vPlotOptionReg & 0x02)
-		c = (x ^ y) & 1 ? (uint8) (GSU.vColorReg >> 4) : (uint8) GSU.vColorReg;
+		c = ((x ^ y) & 1) ? (uint8) (GSU.vColorReg >> 4) : (uint8) GSU.vColorReg;
 	else
 		c = (uint8) GSU.vColorReg;
 
@@ -969,7 +974,7 @@ static void fx_plot_4bit (void)
 		return;
 
 	if (GSU.vPlotOptionReg & 0x02)
-		c = (x ^ y) & 1 ? (uint8) (GSU.vColorReg >> 4) : (uint8) GSU.vColorReg;
+		c = ((x ^ y) & 1) ? (uint8) (GSU.vColorReg >> 4) : (uint8) GSU.vColorReg;
 	else
 		c = (uint8) GSU.vColorReg;
 
@@ -1181,7 +1186,7 @@ static void fx_cmode (void)
 {
 	GSU.vPlotOptionReg = SREG;
 
-	if (GSU.vPlotOptionReg & 0x10)		
+	if (GSU.vPlotOptionReg & 0x10)
 		GSU.vScreenHeight = 256; // OBJ Mode (for drawing into sprites)
 	else
 		GSU.vScreenHeight = GSU.vScreenRealHeight;
