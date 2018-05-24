@@ -22,10 +22,12 @@
 
   (c) Copyright 2006 - 2007  nitsuja
 
-  (c) Copyright 2009 - 2011  BearOso,
+  (c) Copyright 2009 - 2017  BearOso,
                              OV2
 
-  (c) Copyright 2011 - 2016  Hans-Kristian Arntzen,
+  (c) Copyright 2017         qwertymodo
+
+  (c) Copyright 2011 - 2017  Hans-Kristian Arntzen,
                              Daniel De Matteis
                              (Under no circumstances will commercial rights be given)
 
@@ -122,6 +124,9 @@
   Sound emulator code used in 1.52+
   (c) Copyright 2004 - 2007  Shay Green (gblargg@gmail.com)
 
+  S-SMP emulator code used in 1.54+
+  (c) Copyright 2016         byuu
+
   SH assembler code partly based on x86 assembler code
   (c) Copyright 2002 - 2004  Marcus Comstedt (marcus@mc.pp.se)
 
@@ -135,7 +140,7 @@
   (c) Copyright 2006 - 2007  Shay Green
 
   GTK+ GUI code
-  (c) Copyright 2004 - 2011  BearOso
+  (c) Copyright 2004 - 2017  BearOso
 
   Win32 GUI code
   (c) Copyright 2003 - 2006  blip,
@@ -143,14 +148,14 @@
                              Matthew Kendora,
                              Nach,
                              nitsuja
-  (c) Copyright 2009 - 2011  OV2
+  (c) Copyright 2009 - 2017  OV2
 
   Mac OS GUI code
   (c) Copyright 1998 - 2001  John Stiles
   (c) Copyright 2001 - 2011  zones
 
   Libretro port
-  (c) Copyright 2011 - 2016  Hans-Kristian Arntzen,
+  (c) Copyright 2011 - 2017  Hans-Kristian Arntzen,
                              Daniel De Matteis
                              (Under no circumstances will commercial rights be given)
 
@@ -201,9 +206,7 @@
 #define addCyclesInMemoryAccess \
 	if (!CPU.InDMAorHDMA) \
 	{ \
-		CPU.PrevCycles = CPU.Cycles; \
 		CPU.Cycles += speed; \
-		S9xCheckInterrupts(); \
 		while (CPU.Cycles >= CPU.NextEvent) \
 			S9xDoHEventProcessing(); \
 	}
@@ -211,9 +214,7 @@
 #define addCyclesInMemoryAccess_x2 \
 	if (!CPU.InDMAorHDMA) \
 	{ \
-		CPU.PrevCycles = CPU.Cycles; \
 		CPU.Cycles += speed << 1; \
-		S9xCheckInterrupts(); \
 		while (CPU.Cycles >= CPU.NextEvent) \
 			S9xDoHEventProcessing(); \
 	}
@@ -883,8 +884,7 @@ inline void S9xSetPCBase (uint32 Address)
 	Registers.PBPC = Address & 0xffffff;
 	ICPU.ShiftedPB = Address & 0xff0000;
 
-	int		block;
-	uint8	*GetAddress = Memory.Map[block = ((Address & 0xffffff) >> MEMMAP_SHIFT)];
+	uint8	*GetAddress = Memory.Map[(int)((Address & 0xffffff) >> MEMMAP_SHIFT)];
 
 	CPU.MemSpeed = memory_speed(Address);
 	CPU.MemSpeedx2 = CPU.MemSpeed << 1;
