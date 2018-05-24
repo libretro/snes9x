@@ -91,7 +91,7 @@ void SPC7110::reset() {
 }
 
 unsigned SPC7110::datarom_addr(unsigned addr) {
-  unsigned size = memory_cartrom_size() - programmrom_size;
+  unsigned size = memory_cartrom_size() > 0x500000 ? memory_cartrom_size() - 0x200000 : memory_cartrom_size() - 0x100000;
   while(addr >= size) addr -= size;
   return addr + 0x100000;
 }
@@ -642,5 +642,4 @@ void SPC7110::mmio_write(unsigned addr, uint8 data) {
 }
 
 SPC7110::SPC7110() {
-	programmrom_size = (memory_cartrom_size() > 0x500000) ? 0x200000 : 0x100000;
 }
