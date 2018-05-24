@@ -31,8 +31,6 @@ public:
   unsigned decomp_mode;
   unsigned decomp_offset;
 
-  unsigned programmrom_size;
-
   //read() will spool chunks half the size of decomp_buffer_size
   enum { decomp_buffer_size = SPC7110_DECOMP_BUFFER_SIZE }; //must be >= 64, and must be a power of two
   uint8 *decomp_buffer;
