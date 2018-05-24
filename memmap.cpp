@@ -3446,7 +3446,7 @@ void CMemory::Map_ExtendedHiROMMap (void)
 
 void CMemory::Map_SPC7110HiROMMap (void)
 {
-	printf("Map_SPC7110HiROMMap\n");
+	if (log_cb) log_cb(RETRO_LOG_INFO, "Map_SPC7110HiROMMap\n");
 	map_System();
 
 	map_index(0x00, 0x00, 0x6000, 0x7fff, MAP_HIROM_SRAM, MAP_TYPE_RAM);
