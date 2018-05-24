@@ -3305,7 +3305,7 @@ void CMemory::Map_SetaDSPLoROMMap (void)
 
 void CMemory::Map_SDD1LoROMMap (void)
 {
-	printf("Map_SDD1LoROMMap\n");
+	if (log_cb) log_cb(RETRO_LOG_INFO, "Map_SDD1LoROMMap\n");
 	map_System();
 
 	map_lorom(0x00, 0x3f, 0x8000, 0xffff, CalculatedSize);
