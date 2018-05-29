@@ -333,7 +333,8 @@ static void update_variables(void)
    if (reset_sfx)
       S9xResetSuperFX();
 
-   if (geometry_update)
+   //hack
+   //if (geometry_update)
      update_geometry();
 }
 
@@ -656,6 +657,8 @@ bool retro_load_game(const struct retro_game_info *game)
    init_descriptors();
    memorydesc_c = 0;
 
+   update_variables();
+
    if(game->data == NULL && game->size == 0 && game->path != NULL)
       rom_loaded = Memory.LoadROM(game->path);
    else
@@ -697,8 +700,6 @@ bool retro_load_game(const struct retro_game_info *game)
 
    struct retro_memory_map map={ memorydesc+MAX_MAPS-memorydesc_c, memorydesc_c };
    if (rom_loaded) environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
-
-   update_variables();
 
    return rom_loaded;
 }
@@ -1193,7 +1194,7 @@ bool retro_unserialize(const void* data, size_t size)
 
 bool8 S9xDeinitUpdate(int width, int height)
 {
-   // Apply Chrono Trigger Framehack
+	 // Apply Chrono Trigger Framehack
    if (ChronoTriggerFrameHack && (height > SNES_HEIGHT))
       height = SNES_HEIGHT;
 
