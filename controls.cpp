@@ -209,6 +209,8 @@
 #include "netplay.h"
 #endif
 
+extern int rifle_aim_x, rifle_aim_y;
+
 using namespace	std;
 
 #define NONE					(-2)
@@ -226,7 +228,8 @@ using namespace	std;
 #define SUPERSCOPE				10
 #define ONE_JUSTIFIER			11
 #define TWO_JUSTIFIERS			12
-#define NUMCTLS					13 // This must be LAST
+#define RIFLE					13
+#define NUMCTLS					14 // This must be LAST
 
 #define POLL_ALL				NUMCTLS
 
@@ -239,6 +242,8 @@ using namespace	std;
 #define JUSTIFIER_TRIGGER		0x80
 #define JUSTIFIER_START			0x20
 #define JUSTIFIER_SELECT		0x08
+
+#define RIFLE_TRIGGER			0x01
 
 #define MAP_UNKNOWN				(-1)
 #define MAP_NONE				0
@@ -319,6 +324,14 @@ static struct
 {
 	int8				pads[4];
 }	mp5[2];
+
+static struct
+{
+	int16				x, y;
+	uint8				buttons;
+	uint32				ID;
+	struct crosshair	crosshair;
+}	rifle;
 
 static set<struct exemulti *>		exemultis;
 static set<uint32>					pollmap[NUMCTLS + 1];
@@ -461,6 +474,7 @@ static const char	*command_names[LAST_COMMAND + 1] =
 
 static void DisplayStateChange (const char *, bool8);
 static void DoGunLatch (int, int);
+static void DoRifleLatch (int, int);
 static int maptype (int);
 static bool strless (const char *, const char *);
 static int findstr (const char *, const char **, int);
@@ -511,6 +525,12 @@ static void DoGunLatch (int x, int y)
 	PPU.GunHLatch = (uint16) x;
 }
 
+static void DoRifleLatch (int x, int y)
+{
+	PPU.GunVLatch = (uint16) (y + 42) + (uint16) rifle_aim_y;
+	PPU.GunHLatch = (uint16) (x + 76) + (uint16) rifle_aim_x;
+}
+
 static int maptype (int t)
 {
 	switch (t)
@@ -522,6 +542,7 @@ static int maptype (int t)
 		case S9xButtonMouse:
 		case S9xButtonSuperscope:
 		case S9xButtonJustifier:
+		case S9xButtonRifle:
 		case S9xButtonCommand:
 		case S9xButtonPseudopointer:
 		case S9xButtonPort:
@@ -549,6 +570,7 @@ void S9xControlsReset (void)
 	mouse[0].buttons  &= ~0x30;
 	mouse[1].buttons  &= ~0x30;
 	justifier.buttons &= ~JUSTIFIER_SELECT;
+	rifle.buttons = 0;
 }
 
 void S9xControlsSoftReset (void)
@@ -636,6 +658,17 @@ void S9xUnmapAllControls (void)
 	if (!(superscope.crosshair.set & 4))
 		superscope.crosshair.bg  = 1;
 
+	rifle.x = rifle.y = 0;
+	rifle.buttons = 0;
+	rifle.ID = InvalidControlID;
+
+	if (!(rifle.crosshair.set & 1))
+		rifle.crosshair.img = 2;
+	if (!(rifle.crosshair.set & 2))
+		rifle.crosshair.fg  = 5;
+	if (!(rifle.crosshair.set & 4))
+		rifle.crosshair.bg  = 1;
+
 	memset(pseudobuttons, 0, sizeof(pseudobuttons));
 
 	turbo_time = 1;
@@ -693,6 +726,11 @@ void S9xSetController (int port, enum controllers controller, int8 id1, int8 id2
 			}
 
 			newcontrollers[port] = ONE_JUSTIFIER + id1;
+			curcontrollers[port] = newcontrollers[port];
+			return;
+
+		case CTL_RIFLE:
+			newcontrollers[port] = RIFLE;
 			curcontrollers[port] = newcontrollers[port];
 			return;
 
@@ -802,6 +840,18 @@ bool S9xVerifyControllers (void)
 
 				break;
 
+			case RIFLE:
+				if (used[i]++ > 0)
+				{
+					snprintf(buf, sizeof(buf), "Rifle used more than once! Disabling extra instances");
+					S9xMessage(S9X_CONFIG_INFO, S9X_ERROR, buf);
+					newcontrollers[port] = NONE;
+					ret = true;
+					break;
+				}
+
+				break;
+
 			case MP5:
 				if (!Settings.MultiPlayer5Master)
 				{
@@ -903,6 +953,11 @@ void S9xGetController (int port, enum controllers *controller, int8 *id1, int8 *
 			*controller = CTL_JUSTIFIER;
 			*id1 = i - ONE_JUSTIFIER;
 			return;
+
+		case RIFLE:
+			*controller = CTL_RIFLE;
+			*id1 = 1;
+			return;
 	}
 }
 
@@ -970,6 +1025,13 @@ void S9xReportControllers (void)
 					c += sprintf(c, "Blue and Pink Justifiers (cannot fire). ");
 				else
 					c += sprintf(c, "Blue and Pink Justifiers. ");
+				break;
+
+			case RIFLE:
+				if (port == 0)
+					c += sprintf(c, "Rifle (cannot fire). ");
+				else
+					c += sprintf(c, "Rifle. ");
 				break;
 		}
 	}
@@ -1058,6 +1120,17 @@ char * S9xGetCommandName (s9xcommand_t command)
 
 			break;
 
+		case S9xButtonRifle:
+			if (!command.button.rifle.trigger)
+				return (strdup("None"));
+
+			s = "Rifle";
+
+			c = ' ';
+			if (command.button.rifle.trigger)	{ s += c; s += "Trigger"; c = '+'; }
+
+			break;
+
 		case S9xButtonCommand:
 			if (command.button.command >= LAST_COMMAND)
 				return (strdup("None"));
@@ -1065,7 +1138,7 @@ char * S9xGetCommandName (s9xcommand_t command)
 			return (strdup(command_names[command.button.command]));
 
 		case S9xPointer:
-			if (!command.pointer.aim_mouse0 && !command.pointer.aim_mouse1 && !command.pointer.aim_scope && !command.pointer.aim_justifier0 && !command.pointer.aim_justifier1)
+			if (!command.pointer.aim_mouse0 && !command.pointer.aim_mouse1 && !command.pointer.aim_scope && !command.pointer.aim_justifier0 && !command.pointer.aim_justifier1 && !command.pointer.aim_rifle)
 				return (strdup("None"));
 
 			s = "Pointer";
@@ -1076,6 +1149,7 @@ char * S9xGetCommandName (s9xcommand_t command)
 			if (command.pointer.aim_scope     )	{ s += c; s += "Superscope"; c = '+'; }
 			if (command.pointer.aim_justifier0)	{ s += c; s += "Justifier1"; c = '+'; }
 			if (command.pointer.aim_justifier1)	{ s += c; s += "Justifier2"; c = '+'; }
+			if (command.pointer.aim_rifle)		{ s += c; s += "Rifle";      c = '+'; }
 
 			break;
 
@@ -1409,6 +1483,19 @@ s9xcommand_t S9xGetCommandT (const char *name)
 		cmd.type = S9xButtonJustifier;
 	}
 	else
+	if (!strncmp(name, "Rifle ", 6))
+	{
+		s = name + 6;
+		i = 0;
+
+		if ((cmd.button.rifle.trigger = strncmp(s, "Trigger", 7) ? 0 : 1))	{ s += i =  7; }
+
+		if (i == 0 || *s != 0 || *(s - 1) == '+')
+			return (cmd);
+
+		cmd.type = S9xButtonRifle;
+	}
+	else
 	if (!strncmp(name, "Pointer ", 8))
 	{
 		s = name + 8;
@@ -1418,7 +1505,8 @@ s9xcommand_t S9xGetCommandT (const char *name)
 		if ((cmd.pointer.aim_mouse1     = strncmp(s, "Mouse2",      6) ? 0 : 1))	{ s += i =  6; if (*s == '+') s++; }
 		if ((cmd.pointer.aim_scope      = strncmp(s, "Superscope", 10) ? 0 : 1))	{ s += i = 10; if (*s == '+') s++; }
 		if ((cmd.pointer.aim_justifier0 = strncmp(s, "Justifier1", 10) ? 0 : 1))	{ s += i = 10; if (*s == '+') s++; }
-		if ((cmd.pointer.aim_justifier1 = strncmp(s, "Justifier2", 10) ? 0 : 1))	{ s += i = 10; }
+		if ((cmd.pointer.aim_justifier1 = strncmp(s, "Justifier2", 10) ? 0 : 1))	{ s += i = 10; if (*s == '+') s++; }
+		if ((cmd.pointer.aim_rifle      = strncmp(s, "Rifle", 5) ? 0 : 1))	{ s += i = 5; }
 
 		if (i == 0 || *s != 0 || *(s - 1) == '+')
 			return (cmd);
@@ -1719,6 +1807,7 @@ void S9xUnmapID (uint32 id)
 	if (superscope.ID   == id)	superscope.ID   = InvalidControlID;
 	if (justifier.ID[0] == id)	justifier.ID[0] = InvalidControlID;
 	if (justifier.ID[1] == id)	justifier.ID[1] = InvalidControlID;
+	if (rifle.ID        == id)	rifle.ID        = InvalidControlID;
 
 	if (id >= PseudoPointerBase)
 		pseudopointer[id - PseudoPointerBase].mapped = false;
@@ -1782,6 +1871,10 @@ bool S9xMapButton (uint32 id, s9xcommand_t mapping, bool poll)
 
 				case S9xButtonJustifier:
 					t = ONE_JUSTIFIER + mapping.button.justifier.idx;
+					break;
+
+				case S9xButtonRifle:
+					t = RIFLE;
 					break;
 
 				case S9xButtonCommand:
@@ -1890,6 +1983,12 @@ bool S9xMapPointer (uint32 id, s9xcommand_t mapping, bool poll)
 			fprintf(stderr, "ERROR: Rejecting attempt to control Justifier2 with two pointers\n");
 			return (false);
 		}
+
+		if (mapping.pointer.aim_rifle && rifle.ID != InvalidControlID && rifle.ID != id)
+		{
+			fprintf(stderr, "ERROR: Rejecting attempt to control M.A.C.S. Rifle with two pointers\n");
+			return (false);
+		}
 	}
 
 	S9xUnmapID(id);
@@ -1908,6 +2007,7 @@ bool S9xMapPointer (uint32 id, s9xcommand_t mapping, bool poll)
 					if (mapping.pointer.aim_scope     )	pollmap[SUPERSCOPE    ].insert(id);
 					if (mapping.pointer.aim_justifier0)	pollmap[ONE_JUSTIFIER ].insert(id);
 					if (mapping.pointer.aim_justifier1)	pollmap[TWO_JUSTIFIERS].insert(id);
+					if (mapping.pointer.aim_rifle     )	pollmap[RIFLE         ].insert(id);
 					break;
 
 				case S9xPointerPort:
@@ -1927,6 +2027,7 @@ bool S9xMapPointer (uint32 id, s9xcommand_t mapping, bool poll)
 	if (mapping.pointer.aim_scope     )	superscope.ID   = id;
 	if (mapping.pointer.aim_justifier0)	justifier.ID[0] = id;
 	if (mapping.pointer.aim_justifier1)	justifier.ID[1] = id;
+	if (mapping.pointer.aim_rifle     )	rifle.ID        = id;
 
 	return (true);
 }
@@ -2192,6 +2293,17 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 				justifier.buttons |=  i;
 			else
 				justifier.buttons &= ~i;
+
+			return;
+
+		case S9xButtonRifle:
+			i = 0;
+			if (cmd.button.rifle.trigger) i |= RIFLE_TRIGGER;
+
+			if(data1)
+				rifle.buttons |= i;
+			else
+				rifle.buttons &= ~i;
 
 			return;
 
@@ -2551,6 +2663,12 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 				justifier.y[1] = data2;
 			}
 
+			if (cmd.pointer.aim_rifle)
+			{
+				rifle.x = data1;
+				rifle.y = data2;
+			}
+
 			return;
 
 		case S9xButtonPseudopointer:
@@ -2902,6 +3020,10 @@ void S9xSetJoypadLatch (bool latch)
 					do_polling(ONE_JUSTIFIER);
 					break;
 
+				case RIFLE:
+					do_polling(i);
+					break;
+
 				default:
 					break;
 			}
@@ -2951,6 +3073,9 @@ uint8 S9xReadJOYSERn (int n)
 			case ONE_JUSTIFIER:
 			case TWO_JUSTIFIERS:
 				return (bits);
+
+			case RIFLE:
+				return (bits | ((rifle.buttons & 0x01) ? 1 : 0));
 
 			default:
 				return (bits);
@@ -3047,6 +3172,9 @@ uint8 S9xReadJOYSERn (int n)
 					return (bits | 1);
 				}
 
+			case RIFLE:
+				return (bits | ((rifle.buttons & 0x01) ? 1 : 0));
+
 			default:
 				read_idx[n][0]++;
 				return (bits);
@@ -3109,6 +3237,13 @@ void S9xDoAutoJoypad (void)
 			case TWO_JUSTIFIERS:
 				read_idx[n][0] = 16;
 				WRITE_WORD(Memory.FillRAM + 0x4218 + n * 2, 0x000e);
+				WRITE_WORD(Memory.FillRAM + 0x421c + n * 2, 0);
+				break;
+
+			case RIFLE:
+				read_idx[n][0] = 8;
+				Memory.FillRAM[0x4218 + n * 2] = 0xff;
+				Memory.FillRAM[0x4219 + n * 2] = rifle.buttons;
 				WRITE_WORD(Memory.FillRAM + 0x421c + n * 2, 0);
 				break;
 
@@ -3210,6 +3345,18 @@ void S9xControlEOF (void)
 						if (IPPU.RenderThisFrame)
 							S9xDrawCrosshair(S9xGetCrosshair(c->img), c->fg, c->bg, justifier.x[0], justifier.y[0]);
 					}
+				}
+
+				break;
+
+			case RIFLE:
+				if (n == 1)
+				{
+					DoRifleLatch(rifle.x, rifle.y);
+
+					c = &rifle.crosshair;
+					if (IPPU.RenderThisFrame)
+						S9xDrawCrosshair(S9xGetCrosshair(c->img), c->fg, c->bg, rifle.x, rifle.y);
 				}
 
 				break;
@@ -3317,6 +3464,7 @@ void S9xSetControllerCrosshair (enum crosscontrols ctl, int8 idx, const char *fg
 		case X_SUPERSCOPE:	c = &superscope.crosshair;		break;
 		case X_JUSTIFIER1:	c = &justifier.crosshair[0];	break;
 		case X_JUSTIFIER2:	c = &justifier.crosshair[1];	break;
+		//case X_RIFLE:	c = &rifle.crosshair;		break;
 		default:
 			fprintf(stderr, "S9xSetControllerCrosshair() called with an invalid controller ID %d\n", ctl);
 			return;
@@ -3406,6 +3554,7 @@ void S9xGetControllerCrosshair (enum crosscontrols ctl, int8 *idx, const char **
 		case X_SUPERSCOPE:	c = &superscope.crosshair;		break;
 		case X_JUSTIFIER1:	c = &justifier.crosshair[0];	break;
 		case X_JUSTIFIER2:	c = &justifier.crosshair[1];	break;
+		//case X_RIFLE:	c = &rifle.crosshair;		break;
 		default:
 			fprintf(stderr, "S9xGetControllerCrosshair() called with an invalid controller ID %d\n", ctl);
 			return;
@@ -3424,7 +3573,7 @@ void S9xGetControllerCrosshair (enum crosscontrols ctl, int8 *idx, const char **
 void S9xControlPreSaveState (struct SControlSnapshot *s)
 {
 	memset(s, 0, sizeof(*s));
-	s->ver = 3;
+	s->ver = 4;
 
 	for (int j = 0; j < 2; j++)
 	{
@@ -3472,6 +3621,10 @@ void S9xControlPreSaveState (struct SControlSnapshot *s)
 	for (int j = 0; j < 2; j++)
 		for (int k = 0; k < 2; k++)
 			COPY(mp5[j].pads[k]);
+
+	COPY(rifle.x);
+	COPY(rifle.y);
+	COPY(rifle.buttons);
 
 	assert(i == sizeof(s->internal));
 
@@ -3544,7 +3697,14 @@ void S9xControlPostLoadState (struct SControlSnapshot *s)
 			for (int k = 0; k < 2; k++)
 				COPY(mp5[j].pads[k]);
 
-		assert(i == sizeof(s->internal));
+		if (s->ver > 3)
+		{
+			COPY(rifle.x);
+			COPY(rifle.y);
+			COPY(rifle.buttons);
+
+			assert(i == sizeof(s->internal));
+		}
 
 	#undef COPY
 	}
