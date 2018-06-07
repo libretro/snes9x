@@ -214,7 +214,7 @@ void S9xInitSuperFX (void)
 void S9xResetSuperFX (void)
 {
 	// FIXME: Snes9x can't execute CPU and SuperFX at a time. Don't ask me what is 0.417 :P
-   SuperFX.speedPerLine = (uint32) (Settings.SuperFXSpeedPerLine * ((1.0f / Memory.ROMFramesPerSecond) / ((float) (Timings.V_Max))));
+	SuperFX.speedPerLine = (uint32) (0.417 * 10.5e6 * ((1.0 / (float) Memory.ROMFramesPerSecond) / ((float) (Timings.V_Max))));
 	SuperFX.oneLineDone = FALSE;
 	SuperFX.vFlags = 0;
 	CPU.IRQExternal = FALSE;
@@ -315,7 +315,7 @@ uint8 S9xGetSuperFX (uint16 address)
 	uint8	byte;
 
 	byte = Memory.FillRAM[address];
-
+	
 	if (address == 0x3031)
 	{
 		CPU.IRQExternal = FALSE;
@@ -329,7 +329,7 @@ void S9xSuperFXExec (void)
 {
 	if ((Memory.FillRAM[0x3000 + GSU_SFR] & FLG_G) && (Memory.FillRAM[0x3000 + GSU_SCMR] & 0x18) == 0x18)
 	{
-		FxEmulate((Memory.FillRAM[0x3000 + GSU_CLSR] & 1) ? SuperFX.speedPerLine * 2 : SuperFX.speedPerLine);
+		FxEmulate(((Memory.FillRAM[0x3000 + GSU_CLSR] & 1) ? SuperFX.speedPerLine * 2 : SuperFX.speedPerLine) * Settings.SuperFXClockMultiplier / 100);
 
 		uint16 GSUStatus = Memory.FillRAM[0x3000 + GSU_SFR] | (Memory.FillRAM[0x3000 + GSU_SFR + 1] << 8);
 		if ((GSUStatus & (FLG_G | FLG_IRQ)) == FLG_IRQ)
