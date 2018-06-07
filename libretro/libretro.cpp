@@ -47,8 +47,8 @@ char g_basename[1024];
 bool overclock_cycles = false;
 bool reduce_sprite_flicker = false;
 bool randomize_memory = false;
+int interlace_speed;
 int one_c, slow_one_c, two_c;
-int freq = 10;
 int macsrifle_adjust_x, macsrifle_adjust_y;
 
 retro_log_printf_t log_cb = NULL;
@@ -57,6 +57,8 @@ static retro_audio_sample_t audio_cb = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_input_poll_t poll_cb = NULL;
 static retro_input_state_t input_state_cb = NULL;
+
+static bool lufia2_credits_hack = false;
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
@@ -130,10 +132,11 @@ void retro_set_environment(retro_environment_t cb)
       // Changing "Show layer 1" is fine, but don't change "layer_1"/etc or the possible values ("Yes|No").
       // Adding more variables and rearranging them is safe.
       { "snes9x_up_down_allowed", "Allow Opposing Directions; disabled|enabled" },
-      { "snes9x_overclock", "SuperFX Frequency; 10MHz|20MHz|40MHz|60MHz|80MHz|100MHz" },
+      { "snes9x_overclock_superfx", "SuperFX Overclocking; 100%|150%|200%|250%|300%|350%|400%|450%|500%|50%" },
       { "snes9x_overclock_cycles", "Reduce Slowdown (Hack, Unsafe); disabled|compatible|max" },
       { "snes9x_reduce_sprite_flicker", "Reduce Flickering (Hack, Unsafe); disabled|enabled" },
       { "snes9x_randomize_memory", "Randomize Memory (Unsafe); disabled|enabled" },
+      { "snes9x_interlace_refresh", "Interlace Refresh; auto|fast|slow" },
       { "snes9x_layer_1", "Show layer 1; enabled|disabled" },
       { "snes9x_layer_2", "Show layer 2; enabled|disabled" },
       { "snes9x_layer_3", "Show layer 3; enabled|disabled" },
@@ -200,18 +203,15 @@ static void update_variables(void)
    bool geometry_update = false;
    char key[256];
    struct retro_variable var;
-   var.key = "snes9x_overclock";
+
+   var.key = "snes9x_overclock_superfx";
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
    {
-      int newval = atoi(var.value);
-      if (freq != newval)
-      {
-         freq = newval;
-         Settings.SuperFXSpeedPerLine = 0.417f * ((freq + 0.5f) * 1e6);
-         reset_sfx = true;
-      }
+		  int newval;
+      if(sscanf(var.value,"%d%",&newval))
+				Settings.SuperFXClockMultiplier = newval;
    }
 
    var.key = "snes9x_up_down_allowed";
@@ -267,6 +267,19 @@ static void update_variables(void)
           randomize_memory = true;
         else
           randomize_memory = false;
+      }
+
+   var.key = "snes9x_interlace_refresh";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      {
+        if (strcmp(var.value, "slow") == 0)
+          interlace_speed = 2;
+        else if (strcmp(var.value, "fast") == 0)
+          interlace_speed = 1;
+        else
+          interlace_speed = 0;
       }
 
    int disabled_channels=0;
@@ -351,9 +364,6 @@ static void update_variables(void)
 	 var.value=NULL;
 	 if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
 			macsrifle_adjust_y = atoi(var.value);
-
-   if (reset_sfx)
-      S9xResetSuperFX();
 
    if (geometry_update)
      update_geometry();
@@ -727,7 +737,17 @@ bool retro_load_game(const struct retro_game_info *game)
       )
          ChronoTriggerFrameHack = true;
 
-   struct retro_memory_map map={ memorydesc+MAX_MAPS-memorydesc_c, memorydesc_c };
+   lufia2_credits_hack = false;
+   if (Memory.match_id("E9ANIE") ||
+		   Memory.match_id("01ANIP") ||
+		   Memory.match_id("C0ANIJ") ||
+		   Memory.match_id("01ANIS") ||
+		   Memory.match_id("01ANIH") ||
+		   Memory.match_id("01ANID")
+      )
+         lufia2_credits_hack = true;
+
+	 struct retro_memory_map map={ memorydesc+MAX_MAPS-memorydesc_c, memorydesc_c };
    if (rom_loaded) environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
 
    update_geometry();
@@ -817,7 +837,7 @@ void retro_init(void)
    environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &achievements);
 
    memset(&Settings, 0, sizeof(Settings));
-   Settings.SuperFXSpeedPerLine = 0.417 * 10.5e6;
+   Settings.SuperFXClockMultiplier = 100;
    Settings.MouseMaster = TRUE;
    Settings.SuperScopeMaster = TRUE;
    Settings.JustifierMaster = TRUE;
@@ -1310,7 +1330,18 @@ bool8 S9xDeinitUpdate(int width, int height)
 
 bool8 S9xContinueUpdate(int width, int height)
 {
-   return S9xDeinitUpdate(width, height);
+   if(interlace_speed==1)
+     return S9xDeinitUpdate(width, height);
+
+   else if(interlace_speed==2)
+     return true;
+
+   else
+   {
+     // slow interlace
+		 if(lufia2_credits_hack && PPU.BGMode!=6)
+       return S9xDeinitUpdate(width, height);
+   }
 }
 
 // Dummy functions that should probably be implemented correctly later.
