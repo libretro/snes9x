@@ -141,7 +141,7 @@ void retro_set_environment(retro_environment_t cb)
       { "snes9x_layer_5", "Show sprite layer; enabled|disabled" },
       { "snes9x_gfx_clip", "Enable graphic clip windows; enabled|disabled" },
       { "snes9x_gfx_transp", "Enable transparency effects; enabled|disabled" },
-	  { "snes9x_gfx_hires", "Enable hires mode; enabled|disabled" },
+      { "snes9x_gfx_hires", "Enable hires mode; enabled|disabled" },
       { "snes9x_sndchan_1", "Enable sound channel 1; enabled|disabled" },
       { "snes9x_sndchan_2", "Enable sound channel 2; enabled|disabled" },
       { "snes9x_sndchan_3", "Enable sound channel 3; enabled|disabled" },
@@ -1012,20 +1012,33 @@ static void map_buttons()
 // libretro uses relative values for analogue devices.
 // S9x seems to use absolute values, but do convert these into relative values in the core. (Why?!)
 // Hack around it. :)
+
 static int16_t snes_mouse_state[2][2] = {{0}, {0}};
 static int16_t snes_scope_state[2] = {0};
 static int16_t snes_justifier_state[2][2] = {{0}, {0}};
 static int16_t snes_macsrifle_state[2] = {0};
+
 static void report_buttons()
 {
-   int _x, _y;
    int offset = snes_devices[0] == RETRO_DEVICE_JOYPAD_MULTITAP ? 4 : 1;
+
+   int runahead_poll = 0;
+   int result = -1;
+   if(environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result))
+   {
+         // runahead off: 3
+         // runahead secondary off: 0,0,0,0,0,3
+         runahead_poll = (result & 0x0b)==3;
+
+         // runahead secondary on: 2,8,8,8,8,9  (messy sync problems)
+   }
+
    for (int port = 0; port <= 1; port++)
    {
       switch (snes_devices[port])
       {
          case RETRO_DEVICE_NONE:
-			break;
+            break;
 			
          case RETRO_DEVICE_JOYPAD:
             for (int i = BTN_FIRST; i <= BTN_LAST; i++)
@@ -1039,18 +1052,22 @@ static void report_buttons()
             break;
 
          case RETRO_DEVICE_MOUSE:
-            _x = input_state_cb(port, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
-            _y = input_state_cb(port, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
-            snes_mouse_state[port][0] += _x;
-            snes_mouse_state[port][1] += _y;
+            if(runahead_poll)
+            {
+               snes_mouse_state[port][0] = input_state_cb(port, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
+               snes_mouse_state[port][1] = input_state_cb(port, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
+            }
             S9xReportPointer(BTN_POINTER + port, snes_mouse_state[port][0], snes_mouse_state[port][1]);
             for (int i = MOUSE_LEFT; i <= MOUSE_LAST; i++)
                S9xReportButton(MAKE_BUTTON(port + 1, i), input_state_cb(port, RETRO_DEVICE_MOUSE, 0, i));
             break;
 
          case RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE:
-            snes_scope_state[0] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE, 0, RETRO_DEVICE_ID_LIGHTGUN_X);
-            snes_scope_state[1] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE, 0, RETRO_DEVICE_ID_LIGHTGUN_Y);
+            if(runahead_poll)
+            {
+               snes_scope_state[0] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE, 0, RETRO_DEVICE_ID_LIGHTGUN_X);
+               snes_scope_state[1] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE, 0, RETRO_DEVICE_ID_LIGHTGUN_Y);
+            }
             if (snes_scope_state[0] < 0) snes_scope_state[0] = 0;
             else if (snes_scope_state[0] > (SNES_WIDTH-1)) snes_scope_state[0] = SNES_WIDTH-1;
             if (snes_scope_state[1] < 0) snes_scope_state[1] = 0;
@@ -1062,8 +1079,11 @@ static void report_buttons()
 
          case RETRO_DEVICE_LIGHTGUN_JUSTIFIER:
          case RETRO_DEVICE_LIGHTGUN_JUSTIFIERS:
-            snes_justifier_state[port][0] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_JUSTIFIER, 0, RETRO_DEVICE_ID_LIGHTGUN_X);
-            snes_justifier_state[port][1] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_JUSTIFIER, 0, RETRO_DEVICE_ID_LIGHTGUN_Y);
+            if(runahead_poll)
+            {
+              snes_justifier_state[port][0] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_JUSTIFIER, 0, RETRO_DEVICE_ID_LIGHTGUN_X);
+              snes_justifier_state[port][1] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_JUSTIFIER, 0, RETRO_DEVICE_ID_LIGHTGUN_Y);
+            }
             if (snes_justifier_state[port][0] < 0) snes_justifier_state[port][0] = 0;
             else if (snes_justifier_state[port][0] > (SNES_WIDTH-1)) snes_justifier_state[port][0] = SNES_WIDTH-1;
             if (snes_justifier_state[port][1] < 0) snes_justifier_state[port][1] = 0;
@@ -1074,8 +1094,11 @@ static void report_buttons()
             break;
 
          case RETRO_DEVICE_LIGHTGUN_MACSRIFLE:
-            snes_macsrifle_state[0] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_MACSRIFLE, 0, RETRO_DEVICE_ID_LIGHTGUN_X);
-            snes_macsrifle_state[1] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_MACSRIFLE, 0, RETRO_DEVICE_ID_LIGHTGUN_Y);
+            if(runahead_poll)
+            {
+              snes_macsrifle_state[0] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_MACSRIFLE, 0, RETRO_DEVICE_ID_LIGHTGUN_X);
+              snes_macsrifle_state[1] += input_state_cb(port, RETRO_DEVICE_LIGHTGUN_MACSRIFLE, 0, RETRO_DEVICE_ID_LIGHTGUN_Y);
+            }
             if (snes_macsrifle_state[0] < 0) snes_macsrifle_state[0] = 0;
             else if (snes_macsrifle_state[0] > (SNES_WIDTH-1)) snes_macsrifle_state[0] = SNES_WIDTH-1;
             if (snes_macsrifle_state[1] < 0) snes_macsrifle_state[1] = 0;
@@ -1088,7 +1111,6 @@ static void report_buttons()
          default:
             if (log_cb)
                log_cb(RETRO_LOG_ERROR, "[libretro]: Unknown device...\n");
-
       }
    }
 }
