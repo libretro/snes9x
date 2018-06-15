@@ -852,8 +852,10 @@ static bool LoadBIOS(uint8 *biosrom, const char *biosname, size_t biossize)
 void retro_load_init_reset()
 {
    struct retro_memory_map map={ memorydesc+MAX_MAPS-memorydesc_c, memorydesc_c };
-   if (rom_loaded) environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
+   environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
 
+   update_variables();
+	 
    int pixel_format = RGB555;
    if(environ_cb) {
       pixel_format = RGB565;
@@ -908,8 +910,6 @@ bool retro_load_game(const struct retro_game_info *game)
    init_descriptors();
    memorydesc_c = 0;
    rom_loaded = false;
-
-   update_variables();
 
    if(game->data == NULL && game->size == 0 && game->path != NULL)
       rom_loaded = Memory.LoadROM(game->path);
@@ -985,8 +985,6 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
    init_descriptors();
    memorydesc_c = 0;
    rom_loaded = false;
-
-   update_variables();
 
    switch (game_type) {
       case RETRO_GAME_TYPE_BSX:
@@ -1525,6 +1523,9 @@ bool retro_unserialize(const void* data, size_t size)
    if (S9xUnfreezeGameMem((const uint8_t*)data,size) != SUCCESS)
       return false;
 
+   // re-apply internal settings
+   update_variables();
+
    return true;
 }
 
@@ -1778,6 +1779,7 @@ void _makepath (char *path, const char *, const char *dir, const char *fname, co
 #endif // __WIN32__
 
 // interpolation by Mudlord
+
 static short const cubic [514] =
 {
    0,  -4,  -8, -12, -16, -20, -23, -27, -30, -34, -37, -41, -44, -47, -50, -53,
@@ -2082,12 +2084,6 @@ bool8 libretro_get_snes_interp()
    return false;
 }
 
-#define CLAMP16( io )\
-{\
-   if ( (int16_t) io != io )\
-      io = (io >> 31) ^ 0x7FFF;\
-}
-
 int libretro_snes_interp(void *ptr)
 {
    SNES::SPC_DSP::voice_t const* v = (SNES::SPC_DSP::voice_t const*) ptr;
@@ -2096,7 +2092,7 @@ int libretro_snes_interp(void *ptr)
    switch(audio_interp_mode) {
       // none
       case 0:
-         out = v->buf [(v->interp_pos >> 12) + v->buf_pos] & ~1;
+         out = v->buf [(v->interp_pos >> 12) + v->buf_pos];
          break;
 
       // linear
@@ -2110,7 +2106,7 @@ int libretro_snes_interp(void *ptr)
          break;
       }
 
-      // gaussian
+      // gaussian (snes) (brr glitch)
       case 2:
          break;
 
