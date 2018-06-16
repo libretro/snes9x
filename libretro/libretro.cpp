@@ -1526,7 +1526,7 @@ bool retro_unserialize(const void* data, size_t size)
       return false;
 
    // re-apply internal settings
-   update_variables();
+   if (Settings.FastSavestates == 0) update_variables();
 
    return true;
 }
