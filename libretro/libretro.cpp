@@ -170,7 +170,7 @@ void retro_set_environment(retro_environment_t cb)
       { "snes9x_overclock_cycles", "Reduce Slowdown (Hack, Unsafe); disabled|compatible|max" },
       { "snes9x_reduce_sprite_flicker", "Reduce Flickering (Hack, Unsafe); disabled|enabled" },
       { "snes9x_randomize_memory", "Randomize Memory (Unsafe); disabled|enabled" },
-      { "snes9x_audio_interpolation", "Audio Interpolation; gaussian (fixed)|cubic|sinc|none|linear|gaussian (snes)" },
+      { "snes9x_audio_interpolation", "Audio Interpolation; gaussian (hardware)|gaussian (fixed)|cubic|sinc|none|linear" },
       { "snes9x_layer_1", "Show layer 1; enabled|disabled" },
       { "snes9x_layer_2", "Show layer 2; enabled|disabled" },
       { "snes9x_layer_3", "Show layer 3; enabled|disabled" },
@@ -319,7 +319,7 @@ static void update_variables(void)
          audio_interp_mode = 0;
       else if (strcmp(var.value, "linear") == 0)
          audio_interp_mode = 1;
-      else if (strcmp(var.value, "gaussian (snes)") == 0)
+      else if (strcmp(var.value, "gaussian (hardware)") == 0)
          audio_interp_mode = 2;
       else if (strcmp(var.value, "gaussian (fixed)") == 0)
          audio_interp_mode = 3;
@@ -2146,7 +2146,7 @@ int libretro_snes_interp(void *ptr)
          break;
       }
 
-      // gaussian (snes) (brr overflow)
+      // gaussian (hardware) (brr overflow)
       case 2:
          break;
 
