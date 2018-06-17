@@ -50,6 +50,7 @@ char g_basename[1024];
 char retro_system_directory[4096];
 char retro_save_directory[4096];
 
+bool advanced_options = false;
 bool hires_blend = false;
 bool overclock_cycles = false;
 bool reduce_sprite_flicker = false;
@@ -69,6 +70,7 @@ static uint16 *gfx_blend;
 
 static int audio_interp_max = 32768;
 static int audio_interp_mode = 2;
+static uint8 audio_interp_custom[0x10000];
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
@@ -137,6 +139,9 @@ static bool rom_loaded = false;
 
 void retro_set_environment(retro_environment_t cb)
 {
+   char key[256];
+   struct retro_variable var;
+
    environ_cb = cb;
 
    static const struct retro_subsystem_memory_info multi_a_memory[] = {
@@ -164,13 +169,32 @@ void retro_set_environment(retro_environment_t cb)
       // These variable names and possible values constitute an ABI with ZMZ (ZSNES Libretro player).
       // Changing "Show layer 1" is fine, but don't change "layer_1"/etc or the possible values ("Yes|No").
       // Adding more variables and rearranging them is safe.
-      { "snes9x_up_down_allowed", "Allow Opposing Directions; disabled|enabled" },
-      { "snes9x_hires_blend", "Hires Blending; disabled|enabled" },
-      { "snes9x_overclock_superfx", "SuperFX Overclocking; 100%|150%|200%|250%|300%|350%|400%|450%|500%|50%" },
-      { "snes9x_overclock_cycles", "Reduce Slowdown (Hack, Unsafe); disabled|compatible|max" },
-      { "snes9x_reduce_sprite_flicker", "Reduce Flickering (Hack, Unsafe); disabled|enabled" },
-      { "snes9x_randomize_memory", "Randomize Memory (Unsafe); disabled|enabled" },
-      { "snes9x_audio_interpolation", "Audio Interpolation; gaussian|cubic|sinc|none|linear" },
+      { "snes9x_up_down_allowed", "Allow opposing directions; disabled|enabled" },
+      { "snes9x_hires_blend", "Hires blending; disabled|enabled" },
+      { "snes9x_overscan", "Crop overscan; auto|enabled|disabled" },
+      { "snes9x_aspect", "Preferred aspect ratio; auto|ntsc|pal|4:3" },
+      { "snes9x_macsrifle_adjust_x", "M.A.C.S. rifle - adjust aim x; 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|-25|-24|-23|-22|-21|-20|-19|-18|-17|-16|-15|-14|-13|-12|-11|-10|-9|-8|-7|-6|-5|-4|-3|-2|-1" },
+      { "snes9x_macsrifle_adjust_y", "M.A.C.S. rifle - adjust aim y; 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|-25|-24|-23|-22|-21|-20|-19|-18|-17|-16|-15|-14|-13|-12|-11|-10|-9|-8|-7|-6|-5|-4|-3|-2|-1" },
+      { "snes9x_advanced_menu", "Show advanced options - hardware override (reload core); disabled|enabled" },
+      {},
+   };
+
+   struct retro_variable variables_extra[] = {
+      // These variable names and possible values constitute an ABI with ZMZ (ZSNES Libretro player).
+      // Changing "Show layer 1" is fine, but don't change "layer_1"/etc or the possible values ("Yes|No").
+      // Adding more variables and rearranging them is safe.
+      { "snes9x_up_down_allowed", "Allow opposing directions; disabled|enabled" },
+      { "snes9x_hires_blend", "Hires blending; disabled|enabled" },
+      { "snes9x_overscan", "Crop overscan; auto|enabled|disabled" },
+      { "snes9x_aspect", "Preferred aspect ratio; auto|ntsc|pal|4:3" },
+      { "snes9x_macsrifle_adjust_x", "M.A.C.S. rifle - adjust aim x; 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|-25|-24|-23|-22|-21|-20|-19|-18|-17|-16|-15|-14|-13|-12|-11|-10|-9|-8|-7|-6|-5|-4|-3|-2|-1" },
+      { "snes9x_macsrifle_adjust_y", "M.A.C.S. rifle - adjust aim y; 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|-25|-24|-23|-22|-21|-20|-19|-18|-17|-16|-15|-14|-13|-12|-11|-10|-9|-8|-7|-6|-5|-4|-3|-2|-1" },
+      { "snes9x_advanced_menu", "Show advanced options - hardware override; disabled|enabled" },
+      { "snes9x_overclock_superfx", "SuperFX overclocking; 100%|150%|200%|250%|300%|350%|400%|450%|500%|50%" },
+      { "snes9x_overclock_cycles", "Reduce slowdown (Unsafe); disabled|compatible|max" },
+      { "snes9x_reduce_sprite_flicker", "Reduce flickering (Unsafe); disabled|enabled" },
+      { "snes9x_randomize_memory", "Randomize memory (Unsafe); disabled|enabled" },
+      { "snes9x_audio_interpolation", "Audio interpolation; gaussian (hardware)|gaussian|cubic|sinc|custom-4|custom-8|none|linear" },
       { "snes9x_layer_1", "Show layer 1; enabled|disabled" },
       { "snes9x_layer_2", "Show layer 2; enabled|disabled" },
       { "snes9x_layer_3", "Show layer 3; enabled|disabled" },
@@ -187,14 +211,23 @@ void retro_set_environment(retro_environment_t cb)
       { "snes9x_sndchan_6", "Enable sound channel 6; enabled|disabled" },
       { "snes9x_sndchan_7", "Enable sound channel 7; enabled|disabled" },
       { "snes9x_sndchan_8", "Enable sound channel 8; enabled|disabled" },
-      { "snes9x_overscan", "Crop overscan; auto|enabled|disabled" },
-      { "snes9x_aspect", "Preferred aspect ratio; auto|ntsc|pal|4:3" },
-      { "snes9x_macsrifle_adjust_x", "M.A.C.S. Rifle - adjust aim x; 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|-25|-24|-23|-22|-21|-20|-19|-18|-17|-16|-15|-14|-13|-12|-11|-10|-9|-8|-7|-6|-5|-4|-3|-2|-1" },
-      { "snes9x_macsrifle_adjust_y", "M.A.C.S. Rifle - adjust aim y; 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|-25|-24|-23|-22|-21|-20|-19|-18|-17|-16|-15|-14|-13|-12|-11|-10|-9|-8|-7|-6|-5|-4|-3|-2|-1" },
       {},
    };
 
    environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+
+   var.key="snes9x_advanced_menu";
+   var.value=NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      advanced_options=!strcmp("enabled", var.value);
+
+      if (advanced_options == true)
+      {
+         environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables_extra);
+         if (log_cb) log_cb(RETRO_LOG_INFO, "Advanced options enabled - at your own risk\n");
+      }
+   }
 
    static const struct retro_controller_description port_1[] = {
       { "None", RETRO_DEVICE_NONE },
@@ -238,136 +271,21 @@ static void update_variables(void)
    var.key = "snes9x_hires_blend";
    var.value = NULL;
 
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
       hires_blend = !strcmp(var.value, "disabled") ? false : true;
    else
       hires_blend = false;
 
-   var.key = "snes9x_overclock_superfx";
-   var.value = NULL;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
-   {
-      int newval;
-      if(sscanf(var.value,"%d%%",&newval))
-         Settings.SuperFXClockMultiplier = newval;
-   }
-
    var.key = "snes9x_up_down_allowed";
    var.value = NULL;
 
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
-   {
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
       Settings.UpAndDown = !strcmp(var.value, "disabled") ? false : true;
-   }
    else
       Settings.UpAndDown = false;
 
-   var.key = "snes9x_overclock_cycles";
-   var.value = NULL;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-   {
-      if (strcmp(var.value, "compatible") == 0)
-      {
-         overclock_cycles = true;
-         one_c = 4;
-         slow_one_c = 5;
-         two_c = 6;
-      }
-      else if (strcmp(var.value, "max") == 0)
-      {
-         overclock_cycles = true;
-         one_c = 3;
-         slow_one_c = 3;
-         two_c = 3;
-      }
-      else
-         overclock_cycles = false;
-   }
-
-   var.key = "snes9x_reduce_sprite_flicker";
-   var.value = NULL;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-   {
-      if (strcmp(var.value, "enabled") == 0)
-         reduce_sprite_flicker = true;
-      else
-         reduce_sprite_flicker = false;
-   }
-
-   var.key = "snes9x_randomize_memory";
-   var.value = NULL;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-   {
-      if (strcmp(var.value, "enabled") == 0)
-         randomize_memory = true;
-      else
-         randomize_memory = false;
-   }
-
-   var.key = "snes9x_audio_interpolation";
-   var.value = NULL;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-   {
-      int oldval = audio_interp_mode;
-
-      if (strcmp(var.value, "none") == 0)
-         audio_interp_mode = 0;
-      else if (strcmp(var.value, "linear") == 0)
-         audio_interp_mode = 1;
-      else if (strcmp(var.value, "gaussian") == 0)
-         audio_interp_mode = 2;
-      else if (strcmp(var.value, "cubic") == 0)
-         audio_interp_mode = 3;
-      else if (strcmp(var.value, "sinc") == 0)
-         audio_interp_mode = 4;
-
-      if (oldval != audio_interp_mode)
-         audio_interp_max = 32768;
-   }
-
-   int disabled_channels=0;
-   strcpy(key, "snes9x_sndchan_x");
-   var.key=key;
-   for (int i=0;i<8;i++)
-   {
-      key[strlen("snes9x_sndchan_")]='1'+i;
-      var.value=NULL;
-      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value))
-         disabled_channels|=1<<i;
-   }
-   S9xSetSoundControl(disabled_channels^0xFF);
-
-   int disabled_layers=0;
-   strcpy(key, "snes9x_layer_x");
-   for (int i=0;i<5;i++)
-   {
-      key[strlen("snes9x_layer_")]='1'+i;
-      var.value=NULL;
-      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value))
-         disabled_layers|=1<<i;
-   }
-   Settings.BG_Forced=disabled_layers;
-
-   //for some reason, Transparency seems to control both the fixed color and the windowing registers?
-   var.key="snes9x_gfx_clip";
-   var.value=NULL;
-   Settings.DisableGraphicWindows=(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));
-
-   var.key="snes9x_gfx_transp";
-   var.value=NULL;
-   Settings.Transparency=!(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));
-
-   var.key="snes9x_gfx_hires";
-   var.value=NULL;
-   Settings.SupportHiRes=!(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));
-
    var.key = "snes9x_overscan";
-
+   var.value=NULL;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       unsigned newval = 0;
@@ -384,7 +302,7 @@ static void update_variables(void)
    }
 
    var.key = "snes9x_aspect";
-
+   var.value=NULL;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       unsigned newval = 0;
@@ -411,6 +329,181 @@ static void update_variables(void)
    var.value=NULL;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
       macsrifle_adjust_y = atoi(var.value);
+
+   var.key="snes9x_advanced_menu";
+   var.value=NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      advanced_options=!strcmp("enabled", var.value);
+
+   if (advanced_options == false)
+   {
+      Settings.SuperFXClockMultiplier = 100;
+      overclock_cycles = false;
+      reduce_sprite_flicker = false;
+      randomize_memory = false;
+      audio_interp_mode = 2;
+      S9xSetSoundControl(0xFFFF);
+      Settings.BG_Forced=0;
+      Settings.DisableGraphicWindows=0;
+      Settings.Transparency=1;
+      Settings.SupportHiRes=1;
+   }
+
+   else
+   {
+      var.key = "snes9x_overclock_superfx";
+      var.value = NULL;
+
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      {
+         int newval;
+         if(sscanf(var.value,"%d%%",&newval))
+            Settings.SuperFXClockMultiplier = newval;
+      }
+
+      var.key = "snes9x_overclock_cycles";
+      var.value = NULL;
+
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      {
+         overclock_cycles = false;
+
+         if (strcmp(var.value, "compatible") == 0)
+         {
+            overclock_cycles = true;
+            one_c = 4;
+            slow_one_c = 5;
+            two_c = 6;
+         }
+         else if (strcmp(var.value, "max") == 0)
+         {
+            overclock_cycles = true;
+            one_c = 3;
+            slow_one_c = 3;
+            two_c = 3;
+         }
+      }
+
+      var.key = "snes9x_reduce_sprite_flicker";
+      var.value = NULL;
+
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      {
+         reduce_sprite_flicker = false;
+         if (strcmp(var.value, "enabled") == 0)
+            reduce_sprite_flicker = true;
+      }
+
+      var.key = "snes9x_randomize_memory";
+      var.value = NULL;
+
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      {
+         randomize_memory = false;
+         if (strcmp(var.value, "enabled") == 0)
+            randomize_memory = true;
+      }
+
+      var.key = "snes9x_audio_interpolation";
+      var.value = NULL;
+
+      if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+      {
+         int oldval = audio_interp_mode;
+
+         audio_interp_mode = 2;
+         if (advanced_options)
+         {
+            if (strcmp(var.value, "none") == 0)
+               audio_interp_mode = 0;
+            else if (strcmp(var.value, "linear") == 0)
+               audio_interp_mode = 1;
+            else if (strcmp(var.value, "gaussian (hardware)") == 0)
+               audio_interp_mode = 2;
+            else if (strcmp(var.value, "gaussian") == 0)
+               audio_interp_mode = 3;
+            else if (strcmp(var.value, "cubic") == 0)
+               audio_interp_mode = 4;
+            else if (strcmp(var.value, "sinc") == 0)
+               audio_interp_mode = 5;
+            else if (strcmp(var.value, "custom-4") == 0)
+            {
+               char name[PATH_MAX + 1];
+               sprintf(name,"%s/snes_audio_custom4.bin",retro_system_directory);
+               FILE *fp = fopen(name,"rb");
+               if(fp)
+               {
+                  if(fread(audio_interp_custom,1,0x8000,fp))
+                  {
+                     audio_interp_mode = 6;
+                     audio_interp_max = 32768;
+                  }
+               }
+               fclose(fp);
+            }
+            else if (strcmp(var.value, "custom-8") == 0)
+            {
+               char name[PATH_MAX + 1];
+               sprintf(name,"%s/snes_audio_custom8.bin",retro_system_directory);
+               FILE *fp = fopen(name,"rb");
+               if(fp)
+               {
+                  if(fread(audio_interp_custom,1,0x10000,fp))
+                  {
+                     audio_interp_mode = 7;
+                     audio_interp_max = 32768;
+                  }
+                  fclose(fp);
+               }
+            }
+        }
+
+        if (oldval != audio_interp_mode)
+           audio_interp_max = 32768;
+     }
+
+     int disabled_channels=0;
+     strcpy(key, "snes9x_sndchan_x");
+     var.key=key;
+     for (int i=0;i<8;i++)
+     {
+        key[strlen("snes9x_sndchan_")]='1'+i;
+        var.value=NULL;
+        if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+        {
+           if (!strcmp("disabled", var.value))
+              disabled_channels|=1<<i;
+        }
+     }
+     S9xSetSoundControl(disabled_channels^0xFF);
+
+     int disabled_layers=0;
+     strcpy(key, "snes9x_layer_x");
+     for (int i=0;i<5;i++)
+     {
+        key[strlen("snes9x_layer_")]='1'+i;
+        var.value=NULL;
+        if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+        {
+           if(!strcmp("disabled", var.value))
+              disabled_layers|=1<<i;
+        }
+     }
+     Settings.BG_Forced=disabled_layers;
+
+     //for some reason, Transparency seems to control both the fixed color and the windowing registers?
+     var.key="snes9x_gfx_clip";
+     var.value=NULL;
+     Settings.DisableGraphicWindows=(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));
+
+     var.key="snes9x_gfx_transp";
+     var.value=NULL;
+     Settings.Transparency=!(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));
+
+     var.key="snes9x_gfx_hires";
+     var.value=NULL;
+     Settings.SupportHiRes=!(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));
+   }
 
    if (geometry_update)
       update_geometry();
@@ -852,8 +945,10 @@ static bool LoadBIOS(uint8 *biosrom, const char *biosname, size_t biossize)
 void retro_load_init_reset()
 {
    struct retro_memory_map map={ memorydesc+MAX_MAPS-memorydesc_c, memorydesc_c };
-   if (rom_loaded) environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
+   environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &map);
 
+   update_variables();
+   
    int pixel_format = RGB555;
    if(environ_cb) {
       pixel_format = RGB565;
@@ -908,8 +1003,6 @@ bool retro_load_game(const struct retro_game_info *game)
    init_descriptors();
    memorydesc_c = 0;
    rom_loaded = false;
-
-   update_variables();
 
    if(game->data == NULL && game->size == 0 && game->path != NULL)
       rom_loaded = Memory.LoadROM(game->path);
@@ -985,8 +1078,6 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
    init_descriptors();
    memorydesc_c = 0;
    rom_loaded = false;
-
-   update_variables();
 
    switch (game_type) {
       case RETRO_GAME_TYPE_BSX:
@@ -1525,6 +1616,9 @@ bool retro_unserialize(const void* data, size_t size)
    if (S9xUnfreezeGameMem((const uint8_t*)data,size) != SUCCESS)
       return false;
 
+   // re-apply internal settings
+   if (Settings.FastSavestates == 0) update_variables();
+
    return true;
 }
 
@@ -1778,6 +1872,45 @@ void _makepath (char *path, const char *, const char *dir, const char *fname, co
 #endif // __WIN32__
 
 // interpolation by Mudlord
+
+// Gaussian interpolation
+
+static short const gauss [512] =
+{
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,
+   2,   2,   3,   3,   3,   3,   3,   4,   4,   4,   4,   4,   5,   5,   5,   5,
+   6,   6,   6,   6,   7,   7,   7,   8,   8,   8,   9,   9,   9,  10,  10,  10,
+  11,  11,  11,  12,  12,  13,  13,  14,  14,  15,  15,  15,  16,  16,  17,  17,
+  18,  19,  19,  20,  20,  21,  21,  22,  23,  23,  24,  24,  25,  26,  27,  27,
+  28,  29,  29,  30,  31,  32,  32,  33,  34,  35,  36,  36,  37,  38,  39,  40,
+  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,
+  58,  59,  60,  61,  62,  64,  65,  66,  67,  69,  70,  71,  73,  74,  76,  77,
+  78,  80,  81,  83,  84,  86,  87,  89,  90,  92,  94,  95,  97,  99, 100, 102,
+ 104, 106, 107, 109, 111, 113, 115, 117, 118, 120, 122, 124, 126, 128, 130, 132,
+ 134, 137, 139, 141, 143, 145, 147, 150, 152, 154, 156, 159, 161, 163, 166, 168,
+ 171, 173, 175, 178, 180, 183, 186, 188, 191, 193, 196, 199, 201, 204, 207, 210,
+ 212, 215, 218, 221, 224, 227, 230, 233, 236, 239, 242, 245, 248, 251, 254, 257,
+ 260, 263, 267, 270, 273, 276, 280, 283, 286, 290, 293, 297, 300, 304, 307, 311,
+ 314, 318, 321, 325, 328, 332, 336, 339, 343, 347, 351, 354, 358, 362, 366, 370,
+ 374, 378, 381, 385, 389, 393, 397, 401, 405, 410, 414, 418, 422, 426, 430, 434,
+ 439, 443, 447, 451, 456, 460, 464, 469, 473, 477, 482, 486, 491, 495, 499, 504,
+ 508, 513, 517, 522, 527, 531, 536, 540, 545, 550, 554, 559, 563, 568, 573, 577,
+ 582, 587, 592, 596, 601, 606, 611, 615, 620, 625, 630, 635, 640, 644, 649, 654,
+ 659, 664, 669, 674, 678, 683, 688, 693, 698, 703, 708, 713, 718, 723, 728, 732,
+ 737, 742, 747, 752, 757, 762, 767, 772, 777, 782, 787, 792, 797, 802, 806, 811,
+ 816, 821, 826, 831, 836, 841, 846, 851, 855, 860, 865, 870, 875, 880, 884, 889,
+ 894, 899, 904, 908, 913, 918, 923, 927, 932, 937, 941, 946, 951, 955, 960, 965,
+ 969, 974, 978, 983, 988, 992, 997,1001,1005,1010,1014,1019,1023,1027,1032,1036,
+1040,1045,1049,1053,1057,1061,1066,1070,1074,1078,1082,1086,1090,1094,1098,1102,
+1106,1109,1113,1117,1121,1125,1128,1132,1136,1139,1143,1146,1150,1153,1157,1160,
+1164,1167,1170,1174,1177,1180,1183,1186,1190,1193,1196,1199,1202,1205,1207,1210,
+1213,1216,1219,1221,1224,1227,1229,1232,1234,1237,1239,1241,1244,1246,1248,1251,
+1253,1255,1257,1259,1261,1263,1265,1267,1269,1270,1272,1274,1275,1277,1279,1280,
+1282,1283,1284,1286,1287,1288,1290,1291,1292,1293,1294,1295,1296,1297,1297,1298,
+1299,1300,1300,1301,1302,1302,1303,1303,1303,1304,1304,1304,1304,1304,1305,1305,
+};
+
 static short const cubic [514] =
 {
    0,  -4,  -8, -12, -16, -20, -23, -27, -30, -34, -37, -41, -44, -47, -50, -53,
@@ -2082,12 +2215,6 @@ bool8 libretro_get_snes_interp()
    return false;
 }
 
-#define CLAMP16( io )\
-{\
-   if ( (int16_t) io != io )\
-      io = (io >> 31) ^ 0x7FFF;\
-}
-
 int libretro_snes_interp(void *ptr)
 {
    SNES::SPC_DSP::voice_t const* v = (SNES::SPC_DSP::voice_t const*) ptr;
@@ -2096,7 +2223,7 @@ int libretro_snes_interp(void *ptr)
    switch(audio_interp_mode) {
       // none
       case 0:
-         out = v->buf [(v->interp_pos >> 12) + v->buf_pos] & ~1;
+         out = v->buf [(v->interp_pos >> 12) + v->buf_pos];
          break;
 
       // linear
@@ -2110,12 +2237,28 @@ int libretro_snes_interp(void *ptr)
          break;
       }
 
-      // gaussian
+      // gaussian (hardware) (brr overflow glitch)
       case 2:
          break;
 
-      // cubic
+      // gaussian
       case 3: {
+         // Make pointers into gaussian based on fractional position between samples
+         int offset = v->interp_pos >> 4 & 0xFF;
+         short const* fwd = gauss + 255 - offset;
+         short const* rev = gauss       + offset; // mirror left half of gaussian
+
+         int const* in = &v->buf [(v->interp_pos >> 12) + v->buf_pos];
+         out  = fwd [  0] * in [0];
+         out += fwd [256] * in [1];
+         out += rev [256] * in [2];
+         out += rev [  0] * in [3];
+         out >>= 11;
+         break;
+      }
+
+      // cubic
+      case 4: {
          // Make pointers into cubic based on fractional position between samples
          int offset = v->interp_pos >> 4 & 0xFF;
          short const* fwd = cubic       + offset;
@@ -2131,23 +2274,57 @@ int libretro_snes_interp(void *ptr)
       }
 
       // sinc
-      case 4: {
+      case 5: {
          // Make pointers into cubic based on fractional position between samples
          int offset = v->interp_pos & 0xFF0;
          short const* filt = (short const*) (((char const*)sinc) + offset);
         
          int const* in = &v->buf [(v->interp_pos >> 12) + v->buf_pos];
+         out  = filt [0] * in [0] >> 1;
+         out += filt [1] * in [1] >> 1;
+         out += filt [2] * in [2] >> 1;
+         out += filt [3] * in [3] >> 1;
+         out += filt [4] * in [4] >> 1;
+         out += filt [5] * in [5] >> 1;
+         out += filt [6] * in [6] >> 1;
+         out += filt [7] * in [7] >> 1;
+         out >>= 13;
+         break;
+      }
+
+      // custom-4
+      case 6: {
+         // Make pointers into gaussian based on fractional position between samples
+         int offset = v->interp_pos & 0xFFF;
+         short const* filt = (short const*) (((char const*)audio_interp_custom) + offset*4*2);
+
+         int const* in = &v->buf [(v->interp_pos >> 12) + v->buf_pos];
          out  = filt [0] * in [0];
          out += filt [1] * in [1];
          out += filt [2] * in [2];
          out += filt [3] * in [3];
-         out += filt [4] * in [4];
-         out += filt [5] * in [5];
-         out += filt [6] * in [6];
-         out += filt [7] * in [7];
-         out >>= 14;
+         out >>= 11;
          break;
-	    }
+      }
+
+      // custom-8
+      case 7: {
+         // Make pointers into gaussian based on fractional position between samples
+         int offset = v->interp_pos & 0xFFF;
+         short const* filt = (short const*) (((char const*)audio_interp_custom) + offset*8*2);
+
+         int const* in = &v->buf [(v->interp_pos >> 12) + v->buf_pos];
+         out  = filt [0] * in [0] >> 1;
+         out += filt [1] * in [1] >> 1;
+         out += filt [2] * in [2] >> 1;
+         out += filt [3] * in [3] >> 1;
+         out += filt [4] * in [4] >> 1;
+         out += filt [5] * in [5] >> 1;
+         out += filt [6] * in [6] >> 1;
+         out += filt [7] * in [7] >> 1;
+         out >>= 13;
+         break;
+      }
    }
 
    int out_max = out;
