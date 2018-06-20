@@ -735,8 +735,6 @@ static void init_descriptors(void)
    environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
 }
 
-static bool ChronoTriggerFrameHack;
-
 static bool valid_normal_bank (uint8 bankbyte)
 {
    switch (bankbyte)
@@ -864,20 +862,6 @@ void retro_load_init_reset()
    S9xGraphicsDeinit();
    S9xSetRenderPixelFormat(pixel_format);
    S9xGraphicsInit();
-
-   /* Check if Chrono Trigger is loaded, if so, we need to set a variable to
-    * true to get rid of an annoying mid-frame resolution switch to 256x239
-    * which can cause an undesirable flicker/breakup of the screen for a
-    * split second - this happens whenever the game switches from normal
-    * mode to battle mode and vice versa. */
-   ChronoTriggerFrameHack = false;
-   if (Memory.match_nc("CHRONO TRIGGER") || /* Chrono Trigger */
-       Memory.match_id("ACT") ||
-       Memory.match_id("AC9J")       /* Chrono Trigger (Sample) */
-      )
-   {
-      ChronoTriggerFrameHack = true;
-   }
 
    lufia2_credits_hack = false;
    if (Memory.match_id("E9ANIE") ||
@@ -1530,10 +1514,6 @@ bool retro_unserialize(const void* data, size_t size)
 
 bool8 S9xDeinitUpdate(int width, int height)
 {
-   // Apply Chrono Trigger Framehack
-   if (ChronoTriggerFrameHack && (height > SNES_HEIGHT))
-      height = SNES_HEIGHT;
-
    if (crop_overscan_mode == 1) // enabled
    {
       if (height >= SNES_HEIGHT << 1)
