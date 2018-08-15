@@ -192,6 +192,7 @@ void retro_set_environment(retro_environment_t cb)
         { "snes9x_sndchan_8", "Enable sound channel 8; enabled|disabled" },
         { "snes9x_overscan", "Crop overscan; enabled|disabled|auto" },
         { "snes9x_aspect", "Preferred aspect ratio; 4:3|8:7|auto|ntsc|pal" },
+        { "snes9x_block_invalid_vram", "Allow invalid VRAM access (Unsafe); disabled|enabled" },
         { NULL, NULL },
     };
 
@@ -411,6 +412,17 @@ static void update_variables(void)
         }
     }
 
+    var.key = "snes9x_block_invalid_vram";
+    var.value = NULL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        if (strcmp(var.value, "disabled") == 0)
+            Settings.BlockInvalidVRAMAccess = true;
+        else if (strcmp(var.value, "enabled") == 0)
+            Settings.BlockInvalidVRAMAccess = false;
+    }
+    
     if (geometry_update)
         update_geometry();
 }
