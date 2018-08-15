@@ -493,6 +493,8 @@ struct SSettings
 	int	OneSlowClockCycle;
 	int	TwoClockCycles;
 	int	MaxSpriteTilesPerLine;
+
+	bool	LoadStateDoNotClearScreen;
 };
 
 struct SSNESGameFixes
