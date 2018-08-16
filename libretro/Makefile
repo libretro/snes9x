@@ -496,6 +496,7 @@ ifeq ($(DEBUG), 1)
 else
    CFLAGS += -O2 -DNDEBUG
    CXXFLAGS += -O2 -DNDEBUG
+   LDFLAGS += -O2
 
    ifneq (,$(findstring msvc,$(platform)))
       ifeq ($(STATIC_LINKING),1)
