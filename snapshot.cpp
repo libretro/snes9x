@@ -1941,9 +1941,12 @@ int S9xUnfreezeFromStream (STREAM stream)
 		}
 		else
 		{
-			// couldn't load graphics, so black out the screen instead
-			for (uint32 y = 0; y < (uint32) (IMAGE_HEIGHT); y++)
-				memset(GFX.Screen + y * GFX.RealPPL, 0, GFX.RealPPL * 2);
+			if (!Settings.LoadStateDoNotClearScreen)
+			{
+				// couldn't load graphics, so black out the screen instead
+				for (uint32 y = 0; y < (uint32)(IMAGE_HEIGHT); y++)
+					memset(GFX.Screen + y * GFX.RealPPL, 0, GFX.RealPPL * 2);
+			}
 		}
 	}
 

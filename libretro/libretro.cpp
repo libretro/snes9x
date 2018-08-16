@@ -1000,6 +1000,7 @@ void retro_init(void)
     Settings.CartBName[0] = 0;
     Settings.AutoSaveDelay = 1;
     Settings.DontSaveOopsSnapshot = TRUE;
+    Settings.LoadStateDoNotClearScreen = TRUE;
 
     CPU.Flags = 0;
 
@@ -1250,6 +1251,9 @@ static void report_buttons()
 
 void retro_run()
 {
+   //sanity check to prevent infinite loop inside emulator
+   if (!rom_loaded) return;
+
     static uint16 height = PPU.ScreenHeight;
     bool updated = false;
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
