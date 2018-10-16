@@ -622,14 +622,15 @@ ${LIBRARY_NAME}_FILES = $(SOURCES_CXX) $(SOURCES_C)
 include $(THEOS_MAKE_PATH)/library.mk
 else
 all: $(TARGET)
-  @echo "** BUILDING $(TARGET) FOR PLATFORM $(platform) **"
+
 $(TARGET): $(OBJECTS)
+	@echo "** BUILDING $(TARGET) FOR PLATFORM $(platform) **"
 ifeq ($(STATIC_LINKING), 1)
 	$(AR) rcs $@ $(OBJECTS)
 else
 	+$(LD) $(fpic) $(SHARED) $(LINKOUT)$@ $(OBJECTS) $(LDFLAGS) $(LIBS)
 endif
-  @echo "** BUILD SUCCESSFUL! GG NO RE **"
+	@echo "** BUILD SUCCESSFUL! GG NO RE **"
 
 %.o: %.cpp 
 	$(CXX) $(INCFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $(OBJOUT)$@ $<
