@@ -601,7 +601,6 @@ static void update_variables(void)
     else
         Settings.BlockInvalidVRAMAccessMaster = true;
 
-
     if (geometry_update)
         update_geometry();
 }
