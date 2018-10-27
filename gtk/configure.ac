@@ -223,6 +223,19 @@ if test yes = "$with_opengl" ; then
     LIBS="$LIBS $EPOXY_LIBS"
 fi
 
+WAYLAND=0
+PKG_CHECK_MODULES([WAYLAND_EGL],[wayland-egl],[
+    if test yes = "$GTK3_WARNING" ; then
+        CFLAGS="$CFLAGS $WAYLAND_EGL_CFLAGS"
+        LIBS="$LIBS $WAYLAND_EGL_LIBS"
+        WAYLAND=yes
+    else
+        echo "Found Wayland, but need GTK3 for support."
+    fi
+],[
+    echo "Not using Wayland-EGL."
+])
+
 GTKJOY=0
 SDL_CFLAGS=""
 SDL_LIBS=""
@@ -492,6 +505,7 @@ AM_CONDITIONAL(PULSEAUDIO, [test yes = "$PULSEAUDIO"])
 AM_CONDITIONAL(HQ2X, [test yes = "$HQ2X"])
 AM_CONDITIONAL(XBRZ, [test yes = "$XBRZ"])
 AM_CONDITIONAL(SYSTEM_ZIP, [test yes = "$SYSTEM_ZIP"])
+AM_CONDITIONAL(WAYLAND, [test yes = "$WAYLAND"])
 
 AC_SUBST(NASM)
 AC_SUBST(NASM_FLAGS)

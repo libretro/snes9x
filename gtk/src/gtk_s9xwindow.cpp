@@ -1,5 +1,10 @@
 #include <gdk/gdk.h>
+#ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif
 #include <gdk/gdkkeysyms.h>
 #include <cairo.h>
 #include <X11/Xatom.h>
@@ -562,10 +567,10 @@ event_port (GtkWidget *widget, gpointer data)
         S9xSetController (1, CTL_SUPERSCOPE, 0, 0, 0, 0);
     }
 
-/*    else if (!strcasecmp (name, "multitap1"))
+    else if (!strcasecmp (name, "multitap1"))
     {
         S9xSetController (0, CTL_MP5, 0, 1, 2, 3);
-    } */
+    }
 
     else if (!strcasecmp (name, "multitap2"))
     {
@@ -760,14 +765,23 @@ Snes9xWindow::expose (void)
         config->window_height = get_height ();
     }
 
-    if (is_paused ()
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_WINDOW (gtk_widget_get_window (window)))
+    {
+        if (is_paused ()
 #ifdef NETPLAY_SUPPORT
             || NetPlay.Paused
 #endif
-    )
-    {
-        S9xDeinitUpdate (last_width, last_height);
+        )
+        {
+            S9xDeinitUpdate (last_width, last_height);
+        }
+
+        return;
     }
+#endif
+
+    S9xRealDeinitUpdate (last_width, last_height);
 
     return;
 }
@@ -1551,7 +1565,18 @@ Snes9xWindow::reset_screensaver (void)
     if (!focused)
         return;
 
-    XResetScreenSaver (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()));
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_WINDOW (gtk_widget_get_window (GTK_WIDGET (window))))
+    {
+        XResetScreenSaver (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()));
+    }
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+    if (GDK_IS_WAYLAND_WINDOW (gtk_widget_get_window (GTK_WIDGET (window))))
+    {
+    // TODO screensaver for wayland
+    }
+#endif
 
     config->screensaver_needs_reset = FALSE;
 
@@ -1614,9 +1639,26 @@ static double XRRGetExactRefreshRate (Display *dpy, Window window)
 double
 Snes9xWindow::get_refresh_rate (void)
 {
-    Window xid = GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (window));
-    Display *dpy = gdk_x11_display_get_xdisplay (gtk_widget_get_display (window));
-    double refresh_rate = XRRGetExactRefreshRate (dpy, xid);
+    double refresh_rate = 0.0;
+    GdkDisplay *display = gtk_widget_get_display (window);
+    GdkWindow *gdk_window =  gtk_widget_get_window (window);
+
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_DISPLAY (display))
+    {
+        Window xid = GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (window));
+        Display *dpy = gdk_x11_display_get_xdisplay (gtk_widget_get_display (window));
+        refresh_rate = XRRGetExactRefreshRate (dpy, xid);
+    }
+#endif
+
+#ifdef GDK_WINDOWING_WAYLAND
+    if (GDK_IS_WAYLAND_DISPLAY (display))
+    {
+        GdkMonitor *monitor = gdk_display_get_monitor_at_window(display, gdk_window);
+        refresh_rate = (double) gdk_monitor_get_refresh_rate(monitor) / 1000.0;
+    }
+#endif
 
     if (refresh_rate < 10.0)
     {
@@ -1651,12 +1693,14 @@ Snes9xWindow::get_auto_input_rate (void)
     return new_input_rate;
 }
 
+#ifdef GDK_WINDOWING_X11
 static void set_bypass_compositor (Display *dpy, Window window, unsigned char bypass)
 {
     uint32 value = bypass;
     Atom net_wm_bypass_compositor = XInternAtom (dpy, "_NET_WM_BYPASS_COMPOSITOR", False);
     XChangeProperty (dpy, window, net_wm_bypass_compositor, XA_CARDINAL, 32, PropModeReplace, (const unsigned char *) &value, 1);
 }
+#endif
 
 void
 Snes9xWindow::enter_fullscreen_mode (void)
@@ -1706,11 +1750,14 @@ Snes9xWindow::enter_fullscreen_mode (void)
 
     gdk_display_sync (gdk_display_get_default ());
     gtk_window_present (GTK_WINDOW (window));
-
-    set_bypass_compositor (gdk_x11_display_get_xdisplay (gtk_widget_get_display (GTK_WIDGET (window))),
-                           GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (GTK_WIDGET (window))),
-                           1);
-
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_WINDOW (gtk_widget_get_window (GTK_WIDGET (window))))
+    {
+        set_bypass_compositor (gdk_x11_display_get_xdisplay (gtk_widget_get_display (GTK_WIDGET (window))),
+                               GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (GTK_WIDGET (window))),
+                               1);
+    }
+#endif
     config->fullscreen = 1;
     config->rom_loaded = rom_loaded;
 
@@ -1762,9 +1809,14 @@ Snes9xWindow::leave_fullscreen_mode (void)
 
     gtk_window_unfullscreen (GTK_WINDOW (window));
 
-    set_bypass_compositor (gdk_x11_display_get_xdisplay (gtk_widget_get_display (GTK_WIDGET (window))),
-                           GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (GTK_WIDGET (window))),
-                           0);
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_WINDOW (gtk_widget_get_window (GTK_WIDGET (window))))
+    {
+        set_bypass_compositor (gdk_x11_display_get_xdisplay (gtk_widget_get_display (GTK_WIDGET (window))),
+                               GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (GTK_WIDGET (window))),
+                               0);
+    }
+#endif
 
     resize (nfs_width, nfs_height);
     gtk_window_move (GTK_WINDOW (window), nfs_x, nfs_y);

@@ -1,7 +1,9 @@
 #include <string>
 #include <stdlib.h>
 #include <gdk/gdkkeysyms.h>
+#ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
+#endif
 
 #include "gtk_preferences.h"
 #include "gtk_config.h"
@@ -844,9 +846,6 @@ Snes9xPreferences::get_settings_from_dialog (void)
     if (config->force_inverted_byte_order != get_check ("force_inverted_byte_order"))
         gfx_needs_restart = 1;
 
-#ifdef USE_OPENGL
-#endif
-
     config->full_screen_on_open       = get_check ("full_screen_on_open");
     Settings.DisplayFrameRate         = get_check ("show_frame_rate");
     config->scale_to_fit              = get_check ("scale_to_fit");
@@ -1094,6 +1093,7 @@ Snes9xPreferences::show (void)
     guint     source_id = -1;
 #endif
 
+#ifdef GDK_WINDOWING_X11
     if (config->allow_xrandr)
     {
         char      size_string[256];
@@ -1125,9 +1125,9 @@ Snes9xPreferences::show (void)
             config->xrr_index = 0;
     }
     else
+#endif
     {
         gtk_widget_hide (get_widget ("resolution_box"));
-        gtk_widget_hide (get_widget ("set_input_rate_button"));
     }
 
 #ifdef USE_HQ2X

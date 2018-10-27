@@ -1,5 +1,10 @@
 #include <gdk/gdk.h>
+#ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
+#endif
+#ifdef GDK_WINDOWING_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif
 #include <sched.h>
 
 #include "gtk_s9x.h"
@@ -7,9 +12,11 @@
 #include "gtk_display_driver.h"
 #include "gtk_display_driver_gtk.h"
 #include "snes_ntsc.h"
-#ifdef USE_XV
+
+#if defined(USE_XV) && defined(GDK_WINDOWING_X11)
 #include "gtk_display_driver_xv.h"
 #endif
+
 #ifdef USE_OPENGL
 #include "gtk_display_driver_opengl.h"
 #endif
@@ -1573,10 +1580,12 @@ S9xDisplayReconfigure (void)
 void
 S9xQueryDrivers (void)
 {
-#ifdef USE_XV
-    gui_config->allow_xv = S9xXVDisplayDriver::query_availability ();
-#else
+    GdkDisplay *display = gtk_widget_get_display (GTK_WIDGET (top_level->get_window()));
+
     gui_config->allow_xv = 0;
+#if defined(USE_XV) && defined(GDK_WINDOWING_X11)
+    if (GDK_IS_X11_DISPLAY (display))
+        gui_config->allow_xv = S9xXVDisplayDriver::query_availability ();
 #endif
 
 #ifdef USE_OPENGL
@@ -1586,33 +1595,19 @@ S9xQueryDrivers (void)
 #endif
 
     gui_config->allow_xrandr = 0;
-
-    int error_base_p, event_base_p;
-    int major_version, minor_version;
-    Display *dpy = gdk_x11_display_get_xdisplay (gtk_widget_get_display (GTK_WIDGET (top_level->get_window())));
-    Window xid   = GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (GTK_WIDGET (top_level->get_window())));
-
-    if (!XRRQueryExtension (dpy, &event_base_p, &error_base_p))
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_DISPLAY (display))
     {
-        gui_config->change_display_resolution = FALSE;
-        return;
-    }
-    if (!XRRQueryVersion (dpy, &major_version, &minor_version))
-    {
-        gui_config->change_display_resolution = FALSE;
-        return;
-    }
-    if (minor_version < 3)
-    {
-        gui_config->change_display_resolution = FALSE;
-        return;
-    }
+        Display *dpy = gdk_x11_display_get_xdisplay (gtk_widget_get_display (GTK_WIDGET (top_level->get_window())));
+        Window xid   = GDK_COMPAT_WINDOW_XID (gtk_widget_get_window (GTK_WIDGET (top_level->get_window())));
 
-    gui_config->allow_xrandr = 1;
-    gui_config->xrr_screen_resources = XRRGetScreenResourcesCurrent (dpy, xid);
-    gui_config->xrr_crtc_info        = XRRGetCrtcInfo (dpy,
-                                                       gui_config->xrr_screen_resources,
-                                                       gui_config->xrr_screen_resources->crtcs[0]);
+        gui_config->allow_xrandr = 1;
+        gui_config->xrr_screen_resources = XRRGetScreenResourcesCurrent (dpy, xid);
+        gui_config->xrr_crtc_info        = XRRGetCrtcInfo (dpy,
+                                                        gui_config->xrr_screen_resources,
+                                                        gui_config->xrr_screen_resources->crtcs[0]);
+    }
+#endif
 
     return;
 }
@@ -1620,7 +1615,30 @@ S9xQueryDrivers (void)
 bool8
 S9xDeinitUpdate (int width, int height)
 {
+    GdkWindow *gdk_window = gtk_widget_get_window (GTK_WIDGET (top_level->get_window ()));
+
+#ifdef GDK_WINDOWING_WAYLAND
+    if (GDK_IS_WAYLAND_WINDOW (gdk_window) && gui_config->hw_accel == 0)
+    {
+        gtk_widget_queue_draw (GTK_WIDGET (top_level->drawing_area));
+        return TRUE;
+    }
+#endif
+
+    return S9xRealDeinitUpdate (width, height);
+}
+
+bool8
+S9xRealDeinitUpdate (int width, int height)
+{
     int yoffset = 0;
+
+    if (top_level->last_height > height)
+    {
+        memset (GFX.Screen + (GFX.Pitch >> 1) * height,
+                0,
+                GFX.Pitch * (top_level->last_height - height));
+    }
 
     top_level->last_height = height;
     top_level->last_width = width;
@@ -1629,7 +1647,7 @@ S9xDeinitUpdate (int width, int height)
     {
         if (height == SNES_HEIGHT)
         {
-            yoffset = -7;
+            yoffset = -8;
             height = SNES_HEIGHT_EXTENDED;
         }
         if (height == SNES_HEIGHT * 2)
@@ -1699,7 +1717,7 @@ S9xInitDriver (void)
 
             break;
 #endif
-#ifdef USE_XV
+#if defined(USE_XV) && defined(GDK_WINDOWING_X11)
         case HWA_XV:
 
             driver = new S9xXVDisplayDriver (top_level, gui_config);
@@ -1715,7 +1733,6 @@ S9xInitDriver (void)
     {
         if (gui_config->hw_accel > 0)
         {
-            driver->deinit ();
             delete driver;
 
             gui_config->hw_accel = HWA_NONE;
