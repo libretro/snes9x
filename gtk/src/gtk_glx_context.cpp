@@ -1,8 +1,15 @@
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
 #include <stdio.h>
 #include <string.h>
 
 #include "gtk_s9x.h"
 #include "gtk_glx_context.h"
+#include "gtk_2_3_compat.h"
 
 GTKGLXContext::GTKGLXContext ()
 {
@@ -12,6 +19,9 @@ GTKGLXContext::GTKGLXContext ()
     display           = NULL;
     vi                = NULL;
     context           = NULL;
+
+    version_major     = -1;
+    version_minor     = -1;
 }
 
 GTKGLXContext::~GTKGLXContext ()
@@ -32,7 +42,6 @@ bool GTKGLXContext::attach (GtkWidget *widget)
     GdkWindow   *window;
     GLXFBConfig *fbconfigs;
     int         num_fbconfigs;
-    int         screen;
 
     int attribs[] = {
         GLX_DOUBLEBUFFER, True,
@@ -55,6 +64,10 @@ bool GTKGLXContext::attach (GtkWidget *widget)
     screen            = gdk_x11_screen_get_screen_number (gdk_screen);
     display           = GDK_DISPLAY_XDISPLAY (gdk_display);
 
+    glXQueryVersion (display, &version_major, &version_minor);
+    if (version_major < 2 && version_minor < 3)
+        return false;
+
     fbconfigs = glXChooseFBConfig (display, screen, attribs, &num_fbconfigs);
     if (!fbconfigs || num_fbconfigs < 1)
     {
@@ -66,8 +79,9 @@ bool GTKGLXContext::attach (GtkWidget *widget)
 
     vi = glXGetVisualFromFBConfig (display, fbconfig);
 
-    gdk_window_get_geometry (window, &x, &y, &width, &height);
+    gdk_window_get_geometry (parent_gdk_window, &x, &y, &width, &height);
     memset (&window_attr, 0, sizeof (GdkWindowAttr));
+    window_attr.event_mask  = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK;
     window_attr.width       = width;
     window_attr.height      = height;
     window_attr.wclass      = GDK_INPUT_OUTPUT;
@@ -77,7 +91,7 @@ bool GTKGLXContext::attach (GtkWidget *widget)
     gdk_window = gdk_window_new (window, &window_attr, GDK_WA_VISUAL);
     gdk_window_set_user_data (gdk_window, (gpointer) widget);
     gdk_window_show (gdk_window);
-    xid = GDK_COMPAT_WINDOW_XID (gdk_window);
+    xid = gdk_x11_window_get_xid (gdk_window);
 
     return true;
 }
@@ -85,11 +99,18 @@ bool GTKGLXContext::attach (GtkWidget *widget)
 bool GTKGLXContext::create_context ()
 {
     int context_attribs[] = {
-        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
         None
     };
 
-    context = glXCreateContextAttribsARB (display, fbconfig, NULL, True, context_attribs);
+    const char *extensions = glXQueryExtensionsString (display, screen);
+
+    if (strstr (extensions, "GLX_ARB_create_context"))
+        context = glXCreateContextAttribsARB (display, fbconfig, NULL, True, context_attribs);
+    if (!context)
+        context = glXCreateNewContext (display, fbconfig, GLX_RGBA_TYPE, NULL, True);
 
     if (!context)
     {
@@ -114,7 +135,7 @@ void GTKGLXContext::resize ()
     gdk_window = gdk_window_new (parent_gdk_window, &window_attr, GDK_WA_VISUAL);
     gdk_window_set_user_data (gdk_window, (gpointer) widget);
     gdk_window_show (gdk_window);
-    xid = GDK_COMPAT_WINDOW_XID (gdk_window);
+    xid = gdk_x11_window_get_xid (gdk_window);
 
     make_current ();
 }
@@ -131,13 +152,9 @@ void GTKGLXContext::make_current ()
 
 void GTKGLXContext::swap_interval (int frames)
 {
-    const char *extensions = (const char *) glGetString (GL_EXTENSIONS);
-    if (!extensions)
-        return;
-
-    if (strstr (extensions, "EXT_swap_control"))
+    if (epoxy_has_glx_extension (display, screen, "GLX_EXT_swap_control"))
         glXSwapIntervalEXT (display, xid, frames);
-    else if (strstr (extensions, "SGI_swap_control"))
+    else if (epoxy_has_glx_extension (display, screen, "GLX_SGI_swap_control"))
         glXSwapIntervalSGI (frames);
 }
 

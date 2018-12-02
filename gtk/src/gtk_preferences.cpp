@@ -1,10 +1,12 @@
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
 #include <string>
 #include <stdlib.h>
-#include <gdk/gdkkeysyms.h>
-#ifdef GDK_WINDOWING_X11
-#include <gdk/gdkx.h>
-#endif
-
+#include "gtk_2_3_compat.h"
 #include "gtk_preferences.h"
 #include "gtk_config.h"
 #include "gtk_s9xcore.h"
@@ -12,10 +14,6 @@
 #include "gtk_sound.h"
 #include "gtk_display.h"
 #include "gtk_binding.h"
-
-#if GTK_MAJOR_VERSION >= 3
-#include <gdk/gdkkeysyms-compat.h>
-#endif
 
 #define SAME_GAME _("Same location as current game")
 
@@ -53,8 +51,6 @@ static void
 event_sram_folder_browse (GtkButton *widget, gpointer data)
 {
     ((Snes9xPreferences *) data)->browse_folder_dialog ();
-
-    return;
 }
 
 #ifdef USE_JOYSTICK
@@ -62,8 +58,6 @@ static void
 event_calibrate (GtkButton *widget, gpointer data)
 {
     ((Snes9xPreferences *) data)->calibration_dialog ();
-
-    return;
 }
 #endif
 
@@ -99,8 +93,6 @@ event_control_toggle (GtkToggleButton *widget, gpointer data)
     gtk_toggle_button_set_active (widget, state);
 
     toggle_lock = 0;
-
-    return;
 }
 
 static gboolean
@@ -163,8 +155,6 @@ event_ntsc_composite_preset (GtkButton *widget, gpointer data)
     Snes9xPreferences *window = (Snes9xPreferences *) data;
     window->config->ntsc_setup = snes_ntsc_composite;
     window->load_ntsc_settings ();
-
-    return;
 }
 
 static void
@@ -173,8 +163,6 @@ event_ntsc_svideo_preset (GtkButton *widget, gpointer data)
     Snes9xPreferences *window = (Snes9xPreferences *) data;
     window->config->ntsc_setup = snes_ntsc_svideo;
     window->load_ntsc_settings ();
-
-    return;
 }
 
 static void
@@ -183,8 +171,6 @@ event_ntsc_rgb_preset (GtkButton *widget, gpointer data)
     Snes9xPreferences *window = (Snes9xPreferences *) data;
     window->config->ntsc_setup = snes_ntsc_rgb;
     window->load_ntsc_settings ();
-
-    return;
 }
 
 static void
@@ -193,8 +179,6 @@ event_ntsc_monochrome_preset (GtkButton *widget, gpointer data)
     Snes9xPreferences *window = (Snes9xPreferences *) data;
     window->config->ntsc_setup = snes_ntsc_monochrome;
     window->load_ntsc_settings ();
-
-    return;
 }
 
 
@@ -202,16 +186,12 @@ static void
 event_swap_with (GtkButton *widget, gpointer data)
 {
     ((Snes9xPreferences *) data)->swap_with ();
-
-    return;
 }
 
 static void
 event_reset_current_joypad (GtkButton *widget, gpointer data)
 {
     ((Snes9xPreferences *) data)->reset_current_joypad ();
-
-    return;
 }
 
 static void
@@ -263,8 +243,6 @@ event_shader_select (GtkButton *widget, gpointer data)
     }
 
     gtk_widget_destroy (dialog);
-
-    return;
 #endif
 }
 
@@ -275,8 +253,6 @@ event_game_data_clear (GtkEntry *entry,
                        gpointer  user_data)
 {
     gtk_entry_set_text (entry, SAME_GAME);
-
-    return;
 }
 
 static void
@@ -325,8 +301,6 @@ event_game_data_browse (GtkButton *widget, gpointer data)
     }
 
     gtk_widget_destroy (dialog);
-
-    return;
 }
 
 static void
@@ -357,9 +331,24 @@ event_hw_accel_changed (GtkComboBox *widget, gpointer data)
             gtk_widget_hide (window->get_widget ("opengl_frame"));
             break;
     }
-
-    return;
 }
+
+static void
+event_frameskip_combo_changed (GtkComboBox *widget, gpointer user_data)
+{
+    Snes9xPreferences *window = (Snes9xPreferences *) user_data;
+
+    if (window->get_combo ("frameskip_combo") == THROTTLE_SOUND_SYNC)
+    {
+        window->set_check ("dynamic_rate_control", 0);
+        window->enable_widget ("dynamic_rate_control", 0);
+    }
+    else
+    {
+        window->enable_widget ("dynamic_rate_control", 1);
+    }
+}
+
 
 static void
 event_scale_method_changed (GtkComboBox *widget, gpointer user_data)
@@ -385,9 +374,6 @@ event_scale_method_changed (GtkComboBox *widget, gpointer user_data)
     {
         gtk_widget_hide (window->get_widget ("scanline_filter_frame"));
     }
-
-
-    return;
 }
 
 static void
@@ -396,8 +382,6 @@ event_control_combo_changed (GtkComboBox *widget, gpointer user_data)
     Snes9xPreferences *window = (Snes9xPreferences *) user_data;
 
     window->bindings_to_dialog (gtk_combo_box_get_active (widget));
-
-    return;
 }
 
 #ifdef USE_JOYSTICK
@@ -437,7 +421,7 @@ poll_joystick (gpointer data)
 }
 
 void
-Snes9xPreferences::calibration_dialog (void)
+Snes9xPreferences::calibration_dialog ()
 {
     GtkWidget *dialog;
 
@@ -452,8 +436,6 @@ Snes9xPreferences::calibration_dialog (void)
     gtk_dialog_run (GTK_DIALOG (dialog));
 
     gtk_widget_destroy (dialog);
-
-    return;
 }
 
 #endif
@@ -468,8 +450,6 @@ event_input_rate_changed (GtkRange *range, gpointer data)
     snprintf (text, 256, "%.4f hz", value);
 
     gtk_label_set_text (label, text);
-
-    return;
 }
 
 void
@@ -558,8 +538,6 @@ event_about_clicked (GtkButton *widget, gpointer data)
     gtk_dialog_run (GTK_DIALOG (about_dialog->get_window ()));
 
     delete about_dialog;
-
-    return;
 }
 
 Snes9xPreferences::Snes9xPreferences (Snes9xConfig *config) :
@@ -584,6 +562,7 @@ Snes9xPreferences::Snes9xPreferences (Snes9xConfig *config) :
         { "game_data_clear", G_CALLBACK (event_game_data_clear) },
         { "about_clicked", G_CALLBACK (event_about_clicked) },
         { "auto_input_rate_toggled", G_CALLBACK (event_auto_input_rate_toggled) },
+        { "frameskip_combo_changed", G_CALLBACK (event_frameskip_combo_changed) },
 #ifdef USE_JOYSTICK
         { "calibrate", G_CALLBACK (event_calibrate) },
 #endif
@@ -605,19 +584,15 @@ Snes9xPreferences::Snes9xPreferences (Snes9xConfig *config) :
                            get_widget ("relative_video_rate"),
                            NULL,
                            (GConnectFlags) 0);
-
-    return;
 }
 
-Snes9xPreferences::~Snes9xPreferences (void)
+Snes9xPreferences::~Snes9xPreferences ()
 {
     delete[] mode_indices;
-
-    return;
 }
 
 void
-Snes9xPreferences::load_ntsc_settings (void)
+Snes9xPreferences::load_ntsc_settings ()
 {
     set_slider ("ntsc_artifacts", config->ntsc_setup.artifacts);
     set_slider ("ntsc_bleed", config->ntsc_setup.bleed);
@@ -630,12 +605,10 @@ Snes9xPreferences::load_ntsc_settings (void)
     set_slider ("ntsc_resolution", config->ntsc_setup.resolution);
     set_slider ("ntsc_saturation", config->ntsc_setup.saturation);
     set_slider ("ntsc_sharpness", config->ntsc_setup.sharpness);
-
-    return;
 }
 
 void
-Snes9xPreferences::store_ntsc_settings (void)
+Snes9xPreferences::store_ntsc_settings ()
 {
     config->ntsc_setup.artifacts    = get_slider ("ntsc_artifacts");
     config->ntsc_setup.bleed        = get_slider ("ntsc_bleed");
@@ -648,12 +621,10 @@ Snes9xPreferences::store_ntsc_settings (void)
     config->ntsc_setup.resolution   = get_slider ("ntsc_resolution");
     config->ntsc_setup.saturation   = get_slider ("ntsc_saturation");
     config->ntsc_setup.sharpness    = get_slider ("ntsc_sharpness");
-
-    return;
 }
 
 void
-Snes9xPreferences::move_settings_to_dialog (void)
+Snes9xPreferences::move_settings_to_dialog ()
 {
     set_check ("full_screen_on_open",       config->full_screen_on_open);
     set_check ("show_frame_rate",           Settings.DisplayFrameRate);
@@ -711,7 +682,8 @@ Snes9xPreferences::move_settings_to_dialog (void)
                               config->auto_input_rate ? FALSE : TRUE);
     set_spin  ("sound_buffer_size",         config->sound_buffer_size);
 
-    set_check ("sync_sound",                Settings.SoundSync);
+    if (Settings.SkipFrames == THROTTLE_SOUND_SYNC)
+        Settings.DynamicRateControl = 0;
     set_check ("dynamic_rate_control",      Settings.DynamicRateControl);
     set_spin  ("dynamic_rate_limit",        Settings.DynamicRateLimit / 1000.0);
     set_spin  ("rewind_buffer_size",        config->rewind_buffer_size);
@@ -762,16 +734,15 @@ Snes9xPreferences::move_settings_to_dialog (void)
     set_combo ("ntsc_scanline_intensity",   config->ntsc_scanline_intensity);
     set_combo ("scanline_filter_intensity", config->scanline_filter_intensity);
 
-    set_combo ("frameskip_combo",
-               Settings.SkipFrames == AUTO_FRAMERATE ?
-                   0 : Settings.SkipFrames + 1);
+    set_combo ("frameskip_combo",           Settings.SkipFrames);
+    enable_widget ("dynamic_rate_control",  Settings.SkipFrames != THROTTLE_SOUND_SYNC);
     set_check ("bilinear_filter",           Settings.BilinearFilter);
 
 #ifdef USE_OPENGL
     set_check ("sync_to_vblank",            config->sync_to_vblank);
     set_check ("sync_every_frame",          config->sync_every_frame);
     set_check ("use_pbos",                  config->use_pbos);
-    set_combo ("pixel_format",              config->pbo_format);
+    set_combo ("pixel_format",              config->pbo_format == 16 ? 0 : 1);
     set_check ("npot_textures",             config->npot_textures);
     set_check ("use_shaders",               config->use_shaders);
     set_entry_text ("fragment_shader",      config->fragment_shader);
@@ -797,15 +768,18 @@ Snes9xPreferences::move_settings_to_dialog (void)
     set_check ("cpu_overclock", Settings.OneClockCycle != 6);
     set_check ("remove_sprite_limit", Settings.MaxSpriteTilesPerLine != 34);
 #endif
-
-    return;
 }
 
 void
-Snes9xPreferences::get_settings_from_dialog (void)
+Snes9xPreferences::get_settings_from_dialog ()
 {
     int sound_needs_restart = 0;
     int gfx_needs_restart = 0;
+    int sound_sync = 0;
+
+    Settings.SkipFrames               = get_combo ("frameskip_combo");
+    if (Settings.SkipFrames == THROTTLE_SOUND_SYNC)
+        sound_sync = 1;
 
     if ((config->sound_driver        != get_combo ("sound_driver"))            ||
         (config->mute_sound          != get_check ("mute_sound_check"))        ||
@@ -814,7 +788,7 @@ Snes9xPreferences::get_settings_from_dialog (void)
         (config->sound_playback_rate != (7 - (get_combo ("playback_combo"))))  ||
         (config->sound_input_rate    != get_slider ("sound_input_rate"))       ||
         (config->auto_input_rate     != get_check ("auto_input_rate"))         ||
-        (Settings.SoundSync          != get_check ("sync_sound"))              ||
+        (Settings.SoundSync          != sound_sync)                            ||
         (Settings.DynamicRateControl != get_check ("dynamic_rate_control")))
     {
         sound_needs_restart = 1;
@@ -858,7 +832,6 @@ Snes9xPreferences::get_settings_from_dialog (void)
     Settings.AutoSaveDelay            = get_entry_value ("save_sram_after_sec");
     config->multithreading            = get_check ("multithreading");
     config->pause_emulation_on_switch = get_check ("pause_emulation_on_switch");
-    Settings.SkipFrames               = get_combo ("frameskip_combo");
     Settings.BlockInvalidVRAMAccessMaster   = get_check ("block_invalid_vram_access");
     Settings.UpAndDown                = get_check ("upanddown");
     Settings.SuperFXClockMultiplier   = get_spin ("superfx_multiplier");
@@ -868,7 +841,7 @@ Snes9xPreferences::get_settings_from_dialog (void)
     config->sound_buffer_size         = get_spin ("sound_buffer_size");
     config->sound_input_rate          = get_slider ("sound_input_rate");
     config->auto_input_rate           = get_check ("auto_input_rate");
-    Settings.SoundSync                = get_check ("sync_sound");
+    Settings.SoundSync                = sound_sync;
     config->mute_sound                = get_check ("mute_sound_check");
     config->mute_sound_turbo          = get_check ("mute_sound_turbo_check");
     Settings.DynamicRateControl       = get_check ("dynamic_rate_control");
@@ -914,10 +887,12 @@ Snes9xPreferences::get_settings_from_dialog (void)
 #endif
 
 #ifdef USE_OPENGL
+    int pbo_format = get_combo ("pixel_format") == 1 ? 32 : 16;
+
     if (config->sync_to_vblank != get_check ("sync_to_vblank") ||
         config->npot_textures != get_check ("npot_textures") ||
         config->use_pbos != get_check ("use_pbos") ||
-        config->pbo_format != get_combo ("pixel_format") ||
+        config->pbo_format !=  pbo_format ||
         config->use_shaders != get_check ("use_shaders") ||
         get_check ("use_shaders"))
     {
@@ -930,17 +905,17 @@ Snes9xPreferences::get_settings_from_dialog (void)
     config->use_shaders               = get_check ("use_shaders");
     config->sync_every_frame          = get_check ("sync_every_frame");
 
-    strncpy (config->fragment_shader, get_entry_text ("fragment_shader"), PATH_MAX);
+    sstrncpy (config->fragment_shader, get_entry_text ("fragment_shader"), PATH_MAX);
 
-    config->pbo_format = get_combo ("pixel_format");
+    config->pbo_format = pbo_format;
 #endif
     char safety_sram_directory [PATH_MAX];
 
-    strncpy (safety_sram_directory, get_entry_text ("sram_directory"), PATH_MAX);
-    strncpy (config->savestate_directory, get_entry_text ("savestate_directory"), PATH_MAX);
-    strncpy (config->patch_directory, get_entry_text ("patch_directory"), PATH_MAX);
-    strncpy (config->cheat_directory, get_entry_text ("cheat_directory"), PATH_MAX);
-    strncpy (config->export_directory, get_entry_text ("export_directory"), PATH_MAX);
+    sstrncpy (safety_sram_directory, get_entry_text ("sram_directory"), PATH_MAX);
+    sstrncpy (config->savestate_directory, get_entry_text ("savestate_directory"), PATH_MAX);
+    sstrncpy (config->patch_directory, get_entry_text ("patch_directory"), PATH_MAX);
+    sstrncpy (config->cheat_directory, get_entry_text ("cheat_directory"), PATH_MAX);
+    sstrncpy (config->export_directory, get_entry_text ("export_directory"), PATH_MAX);
 
     if (!strcmp (safety_sram_directory, SAME_GAME))
         safety_sram_directory[0] = '\0';
@@ -986,11 +961,6 @@ Snes9xPreferences::get_settings_from_dialog (void)
         strncpy (config->sram_directory, safety_sram_directory, PATH_MAX);
     }
 
-    if (Settings.SkipFrames == 0)
-        Settings.SkipFrames = AUTO_FRAMERATE;
-    else
-        Settings.SkipFrames--;
-
     memcpy (config->pad, pad, (sizeof (JoypadBinding)) * NUM_JOYPADS);
     memcpy (config->shortcut, shortcut, (sizeof (Binding)) * NUM_EMU_LINKS);
 
@@ -1013,8 +983,6 @@ Snes9xPreferences::get_settings_from_dialog (void)
 
     if (config->default_esc_behavior != ESC_TOGGLE_MENUBAR)
         top_level->leave_fullscreen_mode ();
-
-    return;
 }
 
 int
@@ -1045,7 +1013,7 @@ Snes9xPreferences::combo_value (int hw_accel)
 
 
 void
-Snes9xPreferences::browse_folder_dialog (void)
+Snes9xPreferences::browse_folder_dialog ()
 {
     GtkWidget *dialog;
     char      *filename;
@@ -1079,12 +1047,10 @@ Snes9xPreferences::browse_folder_dialog (void)
     }
 
     gtk_widget_destroy (dialog);
-
-    return;
 }
 
 void
-Snes9xPreferences::show (void)
+Snes9xPreferences::show ()
 {
     gint      result;
     GtkWidget *combo;
@@ -1229,12 +1195,10 @@ Snes9xPreferences::show (void)
 #endif
 
     gtk_widget_destroy (window);
-
-    return;
 }
 
 void
-Snes9xPreferences::focus_next (void)
+Snes9xPreferences::focus_next ()
 {
     int next = get_focused_binding () + 1;
 
@@ -1248,12 +1212,10 @@ Snes9xPreferences::focus_next (void)
         gtk_widget_grab_focus (get_widget (b_links [next].button_name));
     else
         gtk_widget_grab_focus (get_widget ("cancel_button"));
-
-    return;
 }
 
 void
-Snes9xPreferences::swap_with (void)
+Snes9xPreferences::swap_with ()
 {
     JoypadBinding mediator;
     int           source_joypad = get_combo ("control_combo");
@@ -1264,12 +1226,10 @@ Snes9xPreferences::swap_with (void)
     pad[dest_joypad] = mediator;
 
     bindings_to_dialog (source_joypad);
-
-    return;
 }
 
 void
-Snes9xPreferences::reset_current_joypad (void)
+Snes9xPreferences::reset_current_joypad ()
 {
     int joypad = get_combo ("control_combo");
 
@@ -1279,8 +1239,6 @@ Snes9xPreferences::reset_current_joypad (void)
     }
 
     bindings_to_dialog (joypad);
-
-    return;
 }
 
 void
@@ -1322,12 +1280,10 @@ Snes9xPreferences::store_binding (const char *string, Binding binding)
     focus_next ();
 
     bindings_to_dialog (get_combo ("control_combo"));
-
-    return;
 }
 
 int
-Snes9xPreferences::get_focused_binding (void)
+Snes9xPreferences::get_focused_binding ()
 {
     for (int i = 0; b_links[i].button_name; i++)
     {
@@ -1357,6 +1313,4 @@ Snes9xPreferences::bindings_to_dialog (int joypad)
         shortcut[i - NUM_JOYPAD_LINKS].to_string (name);
         set_entry_text (b_links[i].button_name, name);
     }
-
-    return;
 }

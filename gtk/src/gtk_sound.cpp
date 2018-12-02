@@ -1,3 +1,9 @@
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
 #include <errno.h>
 #include <unistd.h>
 
@@ -51,7 +57,7 @@ S9xSoundPowerof2 (int num)
 }
 
 void
-S9xPortSoundInit (void)
+S9xPortSoundInit ()
 {
     int pao_driver = 0;
     int sdl_driver = 0;
@@ -151,12 +157,10 @@ S9xPortSoundInit (void)
     {
         S9xSetSoundMute (gui_config->mute_sound);
     }
-
-    return;
 }
 
 void
-S9xPortSoundReinit (void)
+S9xPortSoundReinit ()
 {
     S9xPortSoundDeinit ();
 
@@ -167,35 +171,29 @@ S9xPortSoundReinit (void)
 }
 
 void
-S9xPortSoundDeinit (void)
+S9xPortSoundDeinit ()
 {
     S9xSoundStop ();
 
     driver->terminate ();
 
     delete driver;
-
-    return;
 }
 
 void
-S9xSoundStart (void)
+S9xSoundStart ()
 {
     driver->start ();
-
-    return;
 }
 
 void
-S9xSoundStop (void)
+S9xSoundStop ()
 {
     driver->stop ();
-
-    return;
 }
 
 bool8
-S9xOpenSoundDevice (void)
+S9xOpenSoundDevice ()
 {
     if (gui_config->mute_sound)
         return FALSE;
@@ -217,6 +215,4 @@ S9xToggleSoundChannel (int c)
         sound_switch ^= 1 << c;
 
     S9xSetSoundControl (sound_switch);
-
-    return;
 }

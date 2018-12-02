@@ -1,12 +1,20 @@
-#pragma once
-#include <gdk/gdkwayland.h>
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
+#ifndef __GTK_WAYLAND_EGL_CONTEXT_H
+#define __GTK_WAYLAND_EGL_CONTEXT_H
+
 #include <wayland-egl.h>
 #include <epoxy/egl.h>
 
 #include "gtk_opengl_context.h"
 
-struct WaylandEGLContext : OpenGLContext
+class WaylandEGLContext : public OpenGLContext
 {
+  public:
     WaylandEGLContext ();
     ~WaylandEGLContext ();
     bool attach (GtkWidget *widget);
@@ -35,3 +43,5 @@ struct WaylandEGLContext : OpenGLContext
 
     wl_egl_window *egl_window;
 };
+
+#endif

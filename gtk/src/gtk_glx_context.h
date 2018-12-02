@@ -1,12 +1,20 @@
-#pragma once
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
+#ifndef __GTK_GLX_CONTEXT_H
+#define __GTK_GLX_CONTEXT_H
+
+#include "gtk_2_3_compat.h"
 #include <epoxy/glx.h>
 
 #include "gtk_opengl_context.h"
 
-struct GTKGLXContext : OpenGLContext
+class GTKGLXContext : public OpenGLContext
 {
+  public:
     GTKGLXContext ();
     ~GTKGLXContext ();
     bool attach (GtkWidget *widget);
@@ -26,6 +34,12 @@ struct GTKGLXContext : OpenGLContext
     GLXContext context;
     GLXFBConfig fbconfig;
     Display *display;
+    int screen;
     XVisualInfo *vi;
     Window xid;
+
+    int version_major;
+    int version_minor;
 };
+
+#endif

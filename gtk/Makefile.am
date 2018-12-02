@@ -50,10 +50,11 @@ snes9x_gtk_SOURCES = \
     src/gtk_sound.cpp \
     src/gtk_sound.h \
     src/gtk_splash.cpp \
-    src/snes_ntsc_config.h \
-    src/snes_ntsc.h \
-    src/snes_ntsc_impl.h \
-    src/snes_ntsc.c
+    ../filter/snes_ntsc_config.h \
+    ../filter/snes_ntsc.h \
+    ../filter/snes_ntsc_impl.h \
+    ../filter/snes_ntsc.c \
+    src/gtk_2_3_compat.h
 
 if HQ2X
 snes9x_gtk_SOURCES += \
@@ -99,31 +100,14 @@ snes9x_gtk_SOURCES += \
     src/gtk_sound_driver_alsa.cpp
 endif
 
-if ZSNESFX
-snes9x_gtk_SOURCES += \
-    ../i386/fxemu2b.asm \
-    ../i386/fxemu2.asm \
-    ../i386/fxemu2c.asm \
-    ../i386/fxtable.asm \
-    ../i386/sfxproc.asm \
-    ../i386/zsnes.asm
-else
 snes9x_gtk_SOURCES += \
     ../fxinst.cpp \
     ../fxemu.cpp \
     ../fxdbg.cpp
-endif
 
-if ZSNESC4
-snes9x_gtk_SOURCES += \
-    ../i386/c4.asm \
-    ../i386/zsnesc4.asm \
-    ../c4.cpp
-else
 snes9x_gtk_SOURCES += \
     ../c4.cpp \
     ../c4emu.cpp
-endif
 
 if WAYLAND
 snes9x_gtk_SOURCES += \
@@ -197,9 +181,7 @@ snes9x_gtk_SOURCES += \
     ../cheats.cpp \
     ../cheats2.cpp
 
-if SDD1_DECOMP
 snes9x_gtk_SOURCES += ../sdd1emu.cpp
-endif
 
 if NETPLAY
 snes9x_gtk_SOURCES += \
@@ -260,17 +242,8 @@ snes9x_gtk_SOURCES += \
     src/gtk_netplay.h
 endif
 
-SUFFIXES = .asm .ASM
-
 src/sourcify: src/sourcify.c
 	$(CC) src/sourcify.c -o src/sourcify
 
 src/gtk_snes9x_ui.cpp: src/sourcify src/snes9x.ui
 	src/sourcify src/snes9x.ui src/gtk_snes9x_ui.cpp snes9x_ui
-
-.asm.o:
-	$(NASM) -f elf -DELF $(NASM_FLAGS) -i ./ -i ../ -i ../i386/ -i i386/ -o $@ $*.asm
-
-.ASM.o:
-	$(NASM) -f elf -DELF $(NASM_FLAGS) -i ./ -i ../ -i ../i386/ -i i386/ $*.ASM -o $@
-

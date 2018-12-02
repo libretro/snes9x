@@ -1,3 +1,9 @@
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
 #ifndef __GTK_DISPLAY_DRIVER_OPENGL_H
 #define __GTK_DISPLAY_DRIVER_OPENGL_H
 
@@ -7,6 +13,8 @@
 #include <epoxy/gl.h>
 
 #include "gtk_opengl_context.h"
+
+#include "gtk_2_3_compat.h"
 #ifdef GDK_WINDOWING_X11
 #include "gtk_glx_context.h"
 #endif
@@ -16,21 +24,7 @@
 
 #include "shaders/glsl.h"
 
-#define PBO_FMT_16 0
-#define PBO_FMT_24 1
-#define PBO_FMT_32 2
-
-#define BUFFER_OFFSET(i)             ((char *) NULL + (i))
-
-#ifdef __BIG_ENDIAN__
-/* We have to reverse the bytes on MSB systems. This can be slow */
-/* GL_UNSIGNED_INT_8_8_8_8_REV = 0x8367 */
-#define PBO_BGRA_NATIVE_ORDER        0x8367
-#else
-#define PBO_BGRA_NATIVE_ORDER        GL_UNSIGNED_BYTE
-#endif
-#define PBO_GET_FORMAT(x) (((x) == PBO_FMT_32) ? GL_BGRA : GL_RGB)
-#define PBO_GET_PACKING(x) (((x) == PBO_FMT_16) ? GL_UNSIGNED_SHORT_5_6_5 : (((x) == PBO_FMT_24) ? GL_UNSIGNED_BYTE : PBO_BGRA_NATIVE_ORDER))
+#define BUFFER_OFFSET(i) ((char *) (i))
 
 class S9xOpenGLDisplayDriver : public S9xDisplayDriver
 {
@@ -44,7 +38,6 @@ class S9xOpenGLDisplayDriver : public S9xDisplayDriver
         uint16 *get_next_buffer ();
         uint16 *get_current_buffer ();
         void push_buffer (uint16 *src);
-        void reconfigure (int width, int height);
         void *get_parameters ();
         void save (const char *filename);
         static int query_availability ();
@@ -52,42 +45,39 @@ class S9xOpenGLDisplayDriver : public S9xDisplayDriver
     private:
         int opengl_defaults ();
         void swap_buffers ();
-        int pbos_available ();
-        int shaders_available ();
         int load_shaders (const char *);
         void update_texture_size (int width, int height);
-        int init_gl ();
+        int create_context ();
         void resize ();
 
-        GLint                    texture_width;
-        GLint                    texture_height;
-        GLfloat                  vertices[8];
-        GLfloat                  texcoords[8];
-        GLuint                   texmap;
-        GLuint                   pbo;
-        GLuint                   program;
-        GLuint                   fragment_shader;
-        GLuint                   vertex_shader;
+        GLuint            stock_program;
+        GLuint            coord_buffer;
+        GLint             texture_width;
+        GLint             texture_height;
+        GLuint            texmap;
+        GLuint            pbo;
 
-        int                      dyn_resizing;
-        int                      using_pbos;
-        int                      using_shaders;
-        int                      initialized;
+        bool              legacy;
+        bool              core;
+        int               version;
+        bool              npot;
+        bool              using_pbos;
+        bool              initialized;
 
-        int                      using_glsl_shaders;
-        GLSLShader               *glsl_shader;
+        bool              using_glsl_shaders;
+        GLSLShader        *glsl_shader;
 
-        GdkWindow                *gdk_window;
-        int                      output_window_width;
-        int                      output_window_height;
+        GdkWindow         *gdk_window;
+        int               output_window_width;
+        int               output_window_height;
 
-        OpenGLContext            *context;
+        OpenGLContext     *context;
 
 #ifdef GDK_WINDOWING_X11
-        GTKGLXContext            glx;
+        GTKGLXContext     glx;
 #endif
 #ifdef GDK_WINDOWING_WAYLAND
-        WaylandEGLContext        wl;
+        WaylandEGLContext wl;
 #endif
 };
 
