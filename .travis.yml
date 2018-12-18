@@ -27,6 +27,12 @@ matrix:
       script:
         - docker pull dockcross/linux-armv7
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro
+    - os: linux
+      env:
+        - PROJECT=switch
+      script:
+        - docker pull starcarr/libnx
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp starcarr/libnx make -C libretro platform=libnx
     - os: osx
       script:
         - make -C libretro
