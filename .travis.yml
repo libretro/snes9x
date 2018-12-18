@@ -11,9 +11,19 @@ services:
 matrix:
   include:
     - os: linux
+      env:
+        - ARCH=x86_64
       script:
         - make -C libretro
     - os: linux
+      env:
+        - ARCH=x86
+      script:
+        - docker pull dockcross/linux-x86
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-x86 make -C libretro
+    - os: linux
+      env:
+        - ARCH=armv7
       script:
         - docker pull dockcross/linux-armv7
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro
