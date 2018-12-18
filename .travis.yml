@@ -15,8 +15,8 @@ matrix:
         - make -C libretro
     - os: linux
       script:
-        - docker pull armv7/armhf-ubuntu
-        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp armv7/armhf-ubuntu make -C libretro
+        - docker pull dockcross/linux-armv7
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 apt-get install make gcc make -C libretro
     - os: osx
       script:
         - make -C libretro
