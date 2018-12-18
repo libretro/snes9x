@@ -17,6 +17,11 @@ matrix:
         - make -C libretro
     - os: linux
       env:
+        - PLATFORM=emscripten
+      script:
+        - make -C libretro platform=emscripten
+    - os: linux
+      env:
         - ARCH=x86
       script:
         - docker pull dockcross/linux-x86
@@ -29,7 +34,7 @@ matrix:
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro
     - os: linux
       env:
-        - PROJECT=switch
+        - PLATFORM=switch
       script:
         - docker pull starcarr/libnx
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp starcarr/libnx make -C libretro platform=libnx
