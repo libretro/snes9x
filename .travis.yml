@@ -16,7 +16,7 @@ matrix:
     - os: linux
       script:
         - docker pull arm32v7/gcc
-        - docker run arm32v7/gcc make -C libretro
+        - docker run arm32v7/gcc /bin/bash -c "make -C libretro"
     - os: osx
       script:
         - make -C libretro
