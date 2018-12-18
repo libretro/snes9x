@@ -3,11 +3,13 @@ language: cpp
 matrix:
   include:
     - os: linux
+      script:
+        - make -C libretro
     - os: osx
+      script:
+        - make -C libretro
     - os: windows
-
-before_script:
-  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install make; fi
-
-script:
-  - make -C libretro
+      before_script:
+        - choco install make
+      script:
+        - make -C libretro platform=win
