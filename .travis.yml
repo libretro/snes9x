@@ -35,10 +35,14 @@ matrix:
       script:
         - docker pull devkitpro/devkita64
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkita64 make -C libretro platform=libnx -j4
-    - name: Vita
+#    - name: Vita
+#      script:
+#        - docker pull malev/vita-toolchain
+#        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp malev/vita-toolchain make -C libretro platform=vita -j4
+    - name: PSP
       script:
-        - docker pull malev/vita-toolchain
-        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp malev/vita-toolchain make -C libretro platform=vita -j4
+        - docker pull bkcsoft/psptoolchain
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp bkcsoft/psptoolchain make -C libretro platform=psp1 -j4
     - name: GameCube
       script:
         - docker pull devkitpro/devkitppc
