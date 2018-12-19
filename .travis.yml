@@ -27,7 +27,7 @@ matrix:
       script:
         - docker pull dockcross/linux-armv7
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro -j4
-     - name: Linux arm64
+    - name: Linux arm64
       script:
         - docker pull dockcross/linux-arm64
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-arm64 make -C libretro -j4
