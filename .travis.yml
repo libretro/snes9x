@@ -11,32 +11,24 @@ services:
 matrix:
   include:
     - name: Linux x86_64
-      os: linux
-      script:
-        - make -C libretro
+      script: make -C libretro
    - name: Linux x86
-      os: linux
       script:
         - docker pull dockcross/linux-x86
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-x86 make -C libretro
     - name: Linux armv7
-      os: linux
       script:
         - docker pull dockcross/linux-armv7
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro
     - name: Nintendo Switch
-      os: linux
       script:
         - docker pull devkitpro/devkita64
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkita64 make -C libretro platform=libnx
     - name: Emscripten
-      os: linux
-      script:
-        - make -C libretro platform=emscripten
+      script: make -C libretro platform=emscripten
     - name: OSX
       os: osx
-      script:
-        - make -C libretro
+      script: make -C libretro
     - name: Windows
       os: windows
       before_script:
@@ -44,12 +36,10 @@ matrix:
       script:
         - make -C libretro platform=win
     - name: Android arm
-      os: linux
       script:
         - docker pull dockcross/android-arm
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/android-arm make -C libretro platform=android
     - name: Android arm64
-      os: linux
       script:
         - docker pull dockcross/android-arm64
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/android-arm64 make -C libretro platform=android-arm64
