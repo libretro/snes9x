@@ -12,7 +12,7 @@ matrix:
   include:
     - name: Linux x86_64
       script: make -C libretro
-   - name: Linux x86
+    - name: Linux x86
       script:
         - docker pull dockcross/linux-x86
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-x86 make -C libretro
