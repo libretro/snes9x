@@ -10,6 +10,15 @@ services:
 
 matrix:
   include:
+    - name: OSX x86_64
+      os: osx
+      script: make -C libretro -j4
+    - name: Windows x86_64
+      os: windows
+      before_script:
+        - choco install make
+      script:
+        - make -C libretro platform=win -j4
     - name: Linux x86_64
       script: make -C libretro -j4
     - name: Linux x86
@@ -26,16 +35,7 @@ matrix:
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkita64 make -C libretro platform=libnx -j4
     - name: Emscripten
       script: make -C libretro platform=emscripten -j4
-    - name: OSX x86_64
-      os: osx
-      script: make -C libretro -j4
-    - name: Windows x86_64
-      os: windows
-      before_script:
-        - choco install make
-      script:
-        - make -C libretro platform=win -j4
-    - name: Android arm
+   - name: Android arm
       script:
         - docker pull dockcross/android-arm
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/android-arm make -C libretro platform=unix -j4
