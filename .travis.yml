@@ -35,10 +35,18 @@ matrix:
       script:
         - docker pull devkitpro/devkita64
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkita64 make -C libretro platform=libnx -j4
-     - name: Vita
+    - name: Vita
       script:
         - docker pull malev/vita-toolchain
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp malev/vita-toolchain make -C libretro platform=vita -j4
+    - name: GameCube
+      script:
+        - docker pull devkitpro/devkitppc
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkitppc make -C libretro platform=ngc -j4
+    - name: Wii
+      script:
+        - docker pull devkitpro/devkitppc
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkitppc make -C libretro platform=wii -j4
     - name: Emscripten
       script: make -C libretro platform=emscripten -j4
     - name: Android arm
