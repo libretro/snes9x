@@ -42,7 +42,7 @@ matrix:
     - name: PSP
       script:
         - docker pull bkcsoft/psptoolchain
-        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp bkcsoft/psptoolchain make -C libretro platform=psp1 -j4
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp bkcsoft/psptoolchain make -C libretro platform=unix -j4
     - name: GameCube
       script:
         - docker pull devkitpro/devkitppc
