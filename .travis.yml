@@ -36,8 +36,8 @@ matrix:
       env:
         - PLATFORM=switch
       script:
-        - docker pull starcarr/libnx
-        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp starcarr/libnx make -C libretro platform=libnx
+        - docker pull devkitpro/devkita64
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkita64 make -C libretro platform=libnx
     - os: osx
       script:
         - make -C libretro
