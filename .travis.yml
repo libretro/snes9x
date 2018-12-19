@@ -15,10 +15,8 @@ matrix:
       script: make -C libretro -j4
     - name: Windows x86_64
       os: windows
-      before_script:
-        - choco install make
-      script:
-        - make -C libretro platform=win -j4
+      before_script: choco install make
+      script: make -C libretro platform=win -j4
     - name: Linux x86_64
       script: make -C libretro -j4
     - name: Linux x86
@@ -29,6 +27,10 @@ matrix:
       script:
         - docker pull dockcross/linux-armv7
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro -j4
+     - name: Linux arm64
+      script:
+        - docker pull dockcross/linux-arm64
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-arm64 make -C libretro -j4
     - name: Nintendo Switch
       script:
         - docker pull devkitpro/devkita64
