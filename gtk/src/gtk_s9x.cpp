@@ -11,24 +11,20 @@
 #include "gtk_control.h"
 #include "gtk_sound.h"
 #include "gtk_display.h"
-
+#include "gtk_netplay.h"
 #include "statemanager.h"
 
-#ifdef NETPLAY_SUPPORT
-#include "gtk_netplay.h"
-#endif
 
 void S9xPostRomInit ();
 static void S9xThrottle ();
 static void S9xCheckPointerTimer ();
 static gboolean S9xIdleFunc (gpointer data);
+static gboolean S9xPauseFunc (gpointer data);
 static gboolean S9xScreenSaverCheckFunc (gpointer data);
 
 Snes9xWindow *top_level;
 Snes9xConfig *gui_config;
 StateManager state_manager;
-static int   needs_fullscreening = FALSE;
-guint        idle_func_id;
 gint64       frame_clock = -1;
 gint64       pointer_timestamp = -1;
 
@@ -43,6 +39,10 @@ int main (int argc, char *argv[])
 
     gtk_init (&argc, &argv);
 
+    g_set_prgname ("snes9x");
+    g_set_application_name ("Snes9x");
+
+    setlocale (LC_ALL, "");
     bindtextdomain (GETTEXT_PACKAGE, SNES9XLOCALEDIR);
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     textdomain (GETTEXT_PACKAGE);
@@ -65,8 +65,6 @@ int main (int argc, char *argv[])
 
     if (!Memory.Init () || !S9xInitAPU ())
         exit (3);
-
-    g_set_application_name ("Snes9x");
 
     top_level = new Snes9xWindow (gui_config);
 
@@ -100,23 +98,22 @@ int main (int argc, char *argv[])
         case CTL_SUPERSCOPE:
             device_type = "superscope";
             break;
-        default:
+        case CTL_JOYPAD:
             device_type = "joypad";
+            break;
+        default:
+            device_type = "nothingpluggedin";
         }
 
         device_type += std::to_string (port + 1);
         top_level->set_menu_item_selected (device_type.c_str ());
     }
 
-    gui_config->reconfigure ();
+    gui_config->rebind_keys ();
     top_level->update_accels ();
 
     Settings.Paused = TRUE;
-    idle_func_id = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-                                    S9xIdleFunc,
-                                    NULL,
-                                    NULL);
-
+    g_timeout_add (100, S9xPauseFunc, NULL);
     g_timeout_add (10000, S9xScreenSaverCheckFunc, NULL);
 
     S9xNoROMLoaded ();
@@ -136,13 +133,10 @@ int main (int argc, char *argv[])
 
     if (gui_config->fullscreen)
     {
-        gui_config->fullscreen = 0;
-        needs_fullscreening = 1;
+        top_level->enter_fullscreen_mode ();
     }
 
-#ifdef USE_JOYSTICK
     gui_config->flush_joysticks ();
-#endif
 
     gtk_window_present (top_level->get_window ());
 
@@ -163,9 +157,7 @@ int S9xOpenROM (const char *rom_filename)
         S9xAutoSaveSRAM ();
     }
 
-#ifdef NETPLAY_SUPPORT
     S9xNetplayDisconnect ();
-#endif
 
     flags = CPU.Flags;
 
@@ -262,42 +254,36 @@ void S9xNoROMLoaded ()
     top_level->update_statusbar ();
 }
 
-gboolean S9xPauseFunc (gpointer data)
+static gboolean S9xPauseFunc (gpointer data)
 {
     S9xProcessEvents (TRUE);
 
     if (!gui_config->rom_loaded)
         return TRUE;
 
-#ifdef NETPLAY_SUPPORT
     if (!S9xNetplayPush ())
     {
         S9xNetplayPop ();
     }
-#endif
 
     if (!Settings.Paused) /* Coming out of pause */
     {
-#ifdef USE_JOYSTICK
         /* Clear joystick queues */
         gui_config->flush_joysticks ();
-#endif
 
         S9xSetSoundMute (FALSE);
         S9xSoundStart ();
 
-#ifdef NETPLAY_SUPPORT
         if (Settings.NetPlay && NetPlay.Connected)
         {
             S9xNPSendPause (FALSE);
         }
-#endif
 
         /* Resume high-performance callback */
-        idle_func_id = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
-                                        S9xIdleFunc,
-                                        NULL,
-                                        NULL);
+        g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+                         S9xIdleFunc,
+                         NULL,
+                         NULL);
         top_level->update_statusbar ();
         return FALSE;
     }
@@ -307,27 +293,17 @@ gboolean S9xPauseFunc (gpointer data)
 
 gboolean S9xIdleFunc (gpointer data)
 {
-    if (needs_fullscreening)
-    {
-        top_level->enter_fullscreen_mode();
-        needs_fullscreening = FALSE;
-    }
-
     if (Settings.Paused)
     {
         S9xSetSoundMute (gui_config->mute_sound);
         S9xSoundStop ();
 
-#ifdef USE_JOYSTICK
         gui_config->flush_joysticks ();
-#endif
 
-#ifdef NETPLAY_SUPPORT
         if (Settings.NetPlay && NetPlay.Connected)
         {
             S9xNPSendPause (TRUE);
         }
-#endif
 
         /* Move to a timer-based function to use less CPU */
         g_timeout_add (100, S9xPauseFunc, NULL);
@@ -336,50 +312,49 @@ gboolean S9xIdleFunc (gpointer data)
     }
 
     S9xCheckPointerTimer ();
-    S9xThrottle ();
     S9xProcessEvents (TRUE);
 
-#ifdef NETPLAY_SUPPORT
+    if (!S9xDisplayDriverIsReady ())
+        return TRUE;
+
+    S9xThrottle ();
+
     if (!S9xNetplayPush ())
     {
-#endif
+        if(Settings.Rewinding)
+        {
+            uint16 joypads[8];
+            for (int i = 0; i < 8; i++)
+                joypads[i] = MovieGetJoypad(i);
 
-    if(Settings.Rewinding)
-    {
-        uint16 joypads[8];
-        for (int i = 0; i < 8; i++)
-            joypads[i] = MovieGetJoypad(i);
+            Settings.Rewinding = state_manager.pop();
 
-        Settings.Rewinding = state_manager.pop();
+            for (int i = 0; i < 8; i++)
+                MovieSetJoypad (i, joypads[i]);
+        }
+        else if(IPPU.TotalEmulatedFrames % gui_config->rewind_granularity == 0)
+            state_manager.push();
 
-        for (int i = 0; i < 8; i++)
-            MovieSetJoypad (i, joypads[i]);
-    }
-    else if(IPPU.TotalEmulatedFrames % gui_config->rewind_granularity == 0)
-        state_manager.push();
+        static int muted_from_turbo = FALSE;
+        static int mute_saved_state = FALSE;
 
-    static int muted_from_turbo = FALSE;
-    static int mute_saved_state = FALSE;
+        if (Settings.TurboMode && !muted_from_turbo && gui_config->mute_sound_turbo)
+        {
+            muted_from_turbo = TRUE;
+            mute_saved_state = Settings.Mute;
+            S9xSetSoundMute (TRUE);
+        }
 
-    if (Settings.TurboMode && !muted_from_turbo && gui_config->mute_sound_turbo)
-    {
-        muted_from_turbo = TRUE;
-        mute_saved_state = Settings.Mute;
-        S9xSetSoundMute (TRUE);
-    }
+        if (!Settings.TurboMode && muted_from_turbo)
+        {
+            muted_from_turbo = FALSE;
+            Settings.Mute = mute_saved_state;
+        }
 
-    if (!Settings.TurboMode && muted_from_turbo)
-    {
-        muted_from_turbo = FALSE;
-        Settings.Mute = mute_saved_state;
-    }
+        S9xMainLoop ();
 
-    S9xMainLoop ();
-
-#ifdef NETPLAY_SUPPORT
         S9xNetplayPop ();
     }
-#endif
 
     return TRUE;
 }
@@ -398,6 +373,14 @@ gboolean S9xScreenSaverCheckFunc (gpointer data)
 /* Snes9x core hooks */
 void S9xMessage (int type, int number, const char *message)
 {
+    switch (number)
+    {
+      case S9X_MOVIE_INFO:
+        S9xSetInfoString (message);
+        break;
+      default:
+        break;
+    }
 }
 
 /* Varies from ParseArgs because this one is for the OS port to handle */
@@ -475,10 +458,8 @@ static void S9xThrottle ()
 {
     gint64 now;
 
-#ifdef NETPLAY_SUPPORT
     if (S9xNetplaySyncSpeed ())
         return;
-#endif
 
     now = g_get_monotonic_time ();
 

@@ -30,18 +30,14 @@ snes9x_preferences_open (GtkWidget *widget,
     gtk_window_set_transient_for (preferences.get_window (),
                                   window->get_window ());
 
-#ifdef USE_JOYSTICK
     config->set_joystick_mode (JOY_MODE_GLOBAL);
-#endif
 
     preferences.show ();
     window->unpause_from_focus_change ();
 
-#ifdef USE_JOYSTICK
     config->set_joystick_mode (JOY_MODE_INDIVIDUAL);
-#endif
 
-    config->reconfigure ();
+    config->rebind_keys ();
     window->update_accels ();
 
     return TRUE;
@@ -53,13 +49,11 @@ event_sram_folder_browse (GtkButton *widget, gpointer data)
     ((Snes9xPreferences *) data)->browse_folder_dialog ();
 }
 
-#ifdef USE_JOYSTICK
 static void
 event_calibrate (GtkButton *widget, gpointer data)
 {
     ((Snes9xPreferences *) data)->calibration_dialog ();
 }
-#endif
 
 static void
 event_control_toggle (GtkToggleButton *widget, gpointer data)
@@ -384,8 +378,6 @@ event_control_combo_changed (GtkComboBox *widget, gpointer user_data)
     window->bindings_to_dialog (gtk_combo_box_get_active (widget));
 }
 
-#ifdef USE_JOYSTICK
-
 static gboolean
 poll_joystick (gpointer data)
 {
@@ -438,8 +430,6 @@ Snes9xPreferences::calibration_dialog ()
     gtk_widget_destroy (dialog);
 }
 
-#endif
-
 static void
 event_input_rate_changed (GtkRange *range, gpointer data)
 {
@@ -479,26 +469,6 @@ event_about_clicked (GtkButton *widget, gpointer data)
     ((version_string += _("GTK+ port version: ")) += SNES9X_GTK_VERSION) += "\n";
     (version_string += SNES9X_GTK_AUTHORS) += "\n";
     (version_string += _("English localization by Brandon Wright")) += "\n";
-
-#if defined(USE_OPENGL) || defined(USE_XV) || defined(USE_XRANDR) \
-    || defined(USE_JOYSTICK) || defined(NETPLAY_SUPPORT)
-    version_string += _("\nFeatures enabled:<i>");
-#else
-    version_string += _(" Only barebones features enabled<i>");
-#endif
-#ifdef USE_OPENGL
-    version_string += _(" OpenGL");
-#endif
-#ifdef USE_XV
-    version_string += _(" XVideo");
-#endif
-#ifdef USE_JOYSTICK
-    version_string += _(" Joystick");
-#endif
-#ifdef NETPLAY_SUPPORT
-    version_string += _(" NetPlay");
-#endif
-    version_string += "</i>";
 
     GtkLabel *version_string_label = GTK_LABEL (about_dialog->get_widget ("version_string_label"));
     gtk_label_set_label (version_string_label, version_string.c_str ());
@@ -563,9 +533,7 @@ Snes9xPreferences::Snes9xPreferences (Snes9xConfig *config) :
         { "about_clicked", G_CALLBACK (event_about_clicked) },
         { "auto_input_rate_toggled", G_CALLBACK (event_auto_input_rate_toggled) },
         { "frameskip_combo_changed", G_CALLBACK (event_frameskip_combo_changed) },
-#ifdef USE_JOYSTICK
         { "calibrate", G_CALLBACK (event_calibrate) },
-#endif
         { NULL, NULL }
     };
 
@@ -628,6 +596,7 @@ Snes9xPreferences::move_settings_to_dialog ()
 {
     set_check ("full_screen_on_open",       config->full_screen_on_open);
     set_check ("show_frame_rate",           Settings.DisplayFrameRate);
+    set_check ("show_pressed_keys",         Settings.DisplayPressedKeys);
     set_check ("change_display_resolution", config->change_display_resolution);
     set_check ("scale_to_fit",              config->scale_to_fit);
     set_check ("overscan",                  config->overscan);
@@ -697,9 +666,7 @@ Snes9xPreferences::move_settings_to_dialog ()
 #ifdef USE_OSS
     num_sound_drivers++;
 #endif
-#ifdef USE_JOYSTICK
-    num_sound_drivers++;
-#endif
+    num_sound_drivers++; // SDL is automatically there.
 #ifdef USE_ALSA
     num_sound_drivers++;
 #endif
@@ -745,14 +712,9 @@ Snes9xPreferences::move_settings_to_dialog ()
     set_combo ("pixel_format",              config->pbo_format == 16 ? 0 : 1);
     set_check ("npot_textures",             config->npot_textures);
     set_check ("use_shaders",               config->use_shaders);
-    set_entry_text ("fragment_shader",      config->fragment_shader);
+    set_entry_text ("fragment_shader",      config->shader_filename);
 #endif
-
-#ifdef USE_JOYSTICK
     set_spin ("joystick_threshold",         config->joystick_threshold);
-#else
-    gtk_widget_set_sensitive (get_widget ("joystick_box"), FALSE);
-#endif
 
     /* Control bindings */
     memcpy (pad, config->pad, (sizeof (JoypadBinding)) * NUM_JOYPADS);
@@ -822,6 +784,7 @@ Snes9xPreferences::get_settings_from_dialog ()
 
     config->full_screen_on_open       = get_check ("full_screen_on_open");
     Settings.DisplayFrameRate         = get_check ("show_frame_rate");
+    Settings.DisplayPressedKeys       = get_check ("show_pressed_keys");
     config->scale_to_fit              = get_check ("scale_to_fit");
     config->overscan                  = get_check ("overscan");
     config->maintain_aspect_ratio     = get_check ("maintain_aspect_ratio");
@@ -882,9 +845,7 @@ Snes9xPreferences::get_settings_from_dialog ()
     }
 #endif
 
-#ifdef USE_JOYSTICK
     config->joystick_threshold        = get_spin ("joystick_threshold");
-#endif
 
 #ifdef USE_OPENGL
     int pbo_format = get_combo ("pixel_format") == 1 ? 32 : 16;
@@ -905,7 +866,7 @@ Snes9xPreferences::get_settings_from_dialog ()
     config->use_shaders               = get_check ("use_shaders");
     config->sync_every_frame          = get_check ("sync_every_frame");
 
-    sstrncpy (config->fragment_shader, get_entry_text ("fragment_shader"), PATH_MAX);
+    sstrncpy (config->shader_filename, get_entry_text ("fragment_shader"), PATH_MAX);
 
     config->pbo_format = pbo_format;
 #endif
@@ -1055,9 +1016,7 @@ Snes9xPreferences::show ()
     gint      result;
     GtkWidget *combo;
     int       close_dialog;
-#ifdef USE_JOYSTICK
     guint     source_id = -1;
-#endif
 
 #ifdef GDK_WINDOWING_X11
     if (config->allow_xrandr)
@@ -1132,10 +1091,8 @@ Snes9xPreferences::show ()
     combo_box_append (GTK_COMBO_BOX (combo),
                       _("Open Sound System"));
 #endif
-#ifdef USE_JOYSTICK
     combo_box_append (GTK_COMBO_BOX (combo),
                       _("SDL"));
-#endif
 #ifdef USE_ALSA
     combo_box_append (GTK_COMBO_BOX (combo),
                       _("ALSA"));
@@ -1147,10 +1104,8 @@ Snes9xPreferences::show ()
 
     move_settings_to_dialog ();
 
-#ifdef USE_JOYSTICK
     S9xGrabJoysticks ();
     source_id = g_timeout_add (100, poll_joystick, (gpointer) this);
-#endif
 
     if (config->preferences_width > 0 && config->preferences_height > 0)
         resize (config->preferences_width, config->preferences_height);
@@ -1189,10 +1144,8 @@ Snes9xPreferences::show ()
         }
     }
 
-#ifdef USE_JOYSTICK
     g_source_remove (source_id);
     S9xReleaseJoysticks ();
-#endif
 
     gtk_widget_destroy (window);
 }

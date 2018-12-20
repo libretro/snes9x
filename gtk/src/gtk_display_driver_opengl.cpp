@@ -61,7 +61,7 @@ static const GLchar *stock_fragment_shader_140 =
 
 "void main()\n"
 "{\n"
-"    fragcolor = texture2D(texmap, texcoord);\n"
+"    fragcolor = texture(texmap, texcoord);\n"
 "}\n";
 
 
@@ -88,6 +88,7 @@ S9xOpenGLDisplayDriver::S9xOpenGLDisplayDriver (Snes9xWindow *window,
     this->window = window;
     this->config = config;
     this->drawing_area = GTK_WIDGET (window->drawing_area);
+    fence = NULL;
 }
 
 void S9xOpenGLDisplayDriver::update (int width, int height, int yoffset)
@@ -306,7 +307,7 @@ void S9xOpenGLDisplayDriver::update_texture_size (int width, int height)
             {
                 glTexImage2D (GL_TEXTURE_2D,
                               0,
-                              4,
+                              GL_RGBA,
                               width,
                               height,
                               0,
@@ -361,6 +362,8 @@ int S9xOpenGLDisplayDriver::load_shaders (const char *shader_file)
 {
     int length = strlen (shader_file);
 
+    setlocale (LC_ALL, "C");
+
     if ((length > 6 && !strcasecmp(shader_file + length - 6, ".glslp")) ||
         (length > 5 && !strcasecmp(shader_file + length - 5, ".glsl")))
     {
@@ -373,12 +376,14 @@ int S9xOpenGLDisplayDriver::load_shaders (const char *shader_file)
             if (glsl_shader->param.size () > 0)
                 window->enable_widget ("shader_parameters_item", TRUE);
 
+            setlocale (LC_ALL, "");
             return 1;
         }
 
         delete glsl_shader;
     }
 
+    setlocale (LC_ALL, "");
     return 0;
 }
 
@@ -400,7 +405,7 @@ int S9xOpenGLDisplayDriver::opengl_defaults ()
 
     if (config->use_shaders)
     {
-        if (legacy || !load_shaders (config->fragment_shader))
+        if (legacy || !load_shaders (config->shader_filename))
         {
             config->use_shaders = false;
         }
@@ -489,7 +494,7 @@ int S9xOpenGLDisplayDriver::opengl_defaults ()
         glBindTexture (GL_TEXTURE_2D, texmap);
         glTexImage2D (GL_TEXTURE_2D,
                       0,
-                      config->pbo_format == 16 ? GL_RGB565 : 4,
+                      config->pbo_format == 16 ? GL_RGB565 : GL_RGBA,
                       texture_width,
                       texture_height,
                       0,
@@ -584,6 +589,9 @@ int S9xOpenGLDisplayDriver::create_context ()
     else
         core = false;
 
+    if (version >= 31 || epoxy_has_gl_extension ("GL_ARB_sync"))
+        fences = true;
+
     return 1;
 }
 
@@ -640,8 +648,17 @@ void S9xOpenGLDisplayDriver::swap_buffers ()
 
     if (config->sync_every_frame)
     {
-        usleep (0);
-        glFinish ();
+        if (fences)
+        {
+            if (fence)
+                glDeleteSync (fence);
+            fence = glFenceSync (GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        }
+        else
+        {
+            usleep (0);
+            glFinish ();
+        }
     }
 }
 
@@ -702,4 +719,17 @@ int S9xOpenGLDisplayDriver::query_availability ()
         gui_config->hw_accel = HWA_NONE;
 
     return 0;
+}
+
+bool S9xOpenGLDisplayDriver::is_ready ()
+{
+    if (!fence)
+        return true;
+
+    if (glClientWaitSync (fence, GL_SYNC_FLUSH_COMMANDS_BIT, 0) == GL_TIMEOUT_EXPIRED)
+        return false;
+
+    glDeleteSync (fence);
+    fence = NULL;
+    return true;
 }

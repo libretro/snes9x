@@ -2282,11 +2282,11 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], def[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
 
 						_splitpath(Memory.ROMFilename, drive, dir, def, ext);
-						ssnprintf(filename, PATH_MAX + 1, "%s%s%s.%.*s", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, _MAX_EXT - 1, "oops");
+						snprintf(filename, PATH_MAX + 1, "%s%s%s.%.*s", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, _MAX_EXT - 1, "oops");
 
 						if (S9xUnfreezeGame(filename))
 						{
-							ssnprintf(buf, 256, "%s.%.*s loaded", def, _MAX_EXT - 1, "oops");
+							snprintf(buf, 256, "%s.%.*s loaded", def, _MAX_EXT - 1, "oops");
 							S9xSetInfoString (buf);
 						}
 						else
@@ -2319,11 +2319,11 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], def[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
 
 						_splitpath(Memory.ROMFilename, drive, dir, def, ext);
-						ssnprintf(filename, PATH_MAX + 1, "%s%s%s.%03d", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, i - QuickLoad000);
+						snprintf(filename, PATH_MAX + 1, "%s%s%s.%03d", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, i - QuickLoad000);
 
 						if (S9xUnfreezeGame(filename))
 						{
-							ssnprintf(buf, 256, "%s.%03d loaded", def, i - QuickLoad000);
+							snprintf(buf, 256, "%s.%03d loaded", def, i - QuickLoad000);
 							S9xSetInfoString(buf);
 						}
 						else
@@ -2348,9 +2348,9 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], def[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
 
 						_splitpath(Memory.ROMFilename, drive, dir, def, ext);
-						ssnprintf(filename, PATH_MAX + 1, "%s%s%s.%03d", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, i - QuickSave000);
+						snprintf(filename, PATH_MAX + 1, "%s%s%s.%03d", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, i - QuickSave000);
 
-						ssnprintf(buf, 256, "%s.%03d saved", def, i - QuickSave000);
+						snprintf(buf, 256, "%s.%03d saved", def, i - QuickSave000);
 						S9xSetInfoString(buf);
 
 						S9xFreezeGame(filename);
@@ -2723,7 +2723,7 @@ static void do_polling (int mp)
 		{
 			case MAP_BUTTON:
 			{
-				bool	pressed;
+				bool	pressed = false;
 				if (S9xPollButton(*itr, &pressed))
 					S9xReportButton(*itr, pressed);
 				break;
@@ -2731,7 +2731,7 @@ static void do_polling (int mp)
 
 			case MAP_AXIS:
 			{
-				int16	value;
+				int16	value = 0;
 				if (S9xPollAxis(*itr, &value))
 					S9xReportAxis(*itr, value);
 				break;
@@ -2739,7 +2739,7 @@ static void do_polling (int mp)
 
 			case MAP_POINTER:
 			{
-				int16	x, y;
+				int16	x = 0, y = 0;
 				if (S9xPollPointer(*itr, &x, &y))
 					S9xReportPointer(*itr, x, y);
 				break;
@@ -3320,8 +3320,6 @@ void S9xControlEOF (void)
 	}
 
 	do_polling(POLL_ALL);
-
-	S9xMovieUpdate();
 
 	pad_read_last = pad_read;
 	pad_read      = false;
