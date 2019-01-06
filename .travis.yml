@@ -1,6 +1,7 @@
 branches:
   only:
     - master
+    - kivutar/gh-releases
     - /^v.*$/
 
 language: cpp
