@@ -64,7 +64,7 @@ matrix:
         - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/android-arm64 make -C libretro platform=unix-arm64 -j4
 
 addons:
-  ssh_known_hosts: static.kivutar.me
+  ssh_known_hosts: buildbot.kivutar.me
 
 deploy:
 - provider: script
