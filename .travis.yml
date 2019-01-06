@@ -73,7 +73,7 @@ deploy:
   - snes9x_libretro.so
   - snes9x_libretro.dylib
   - snes9x_libretro.dll
-  script: scp snes9x_libretro.* kivutar@static.kivutar.me:www/static/buildbotexp/
+  script: scp snes9x_libretro.* kivutar@buildbot.kivutar.me:www/static/buildbotexp/
   on:
     repo: libretro/snes9x
     branch: kivutar/gh-releases
