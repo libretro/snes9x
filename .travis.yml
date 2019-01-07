@@ -71,13 +71,14 @@ before_deploy:
   - eval "$(ssh-agent -s)"
   - chmod 600 deploy_rsa
   - ssh-add deploy_rsa
+  - zip snes9x_libretro*
 
 deploy:
   - provider: script
     skip_cleanup: true
     file_glob: true
-    file: libretro/snes9x_libretro*
-    script: ssh -i deploy_rsa kivutar@buildbot.kivutar.me "mkdir -p www/static/buildbotexp/$TRAVIS_JOB_NAME/latest" && scp -i deploy_rsa libretro/snes9x_libretro* kivutar@buildbot.kivutar.me:www/static/buildbotexp/$TRAVIS_JOB_NAME/latest
+    file: libretro/snes9x_libretro*.zip
+    script: ssh -i deploy_rsa kivutar@buildbot.kivutar.me "mkdir -p www/static/buildbotexp/$TRAVIS_JOB_NAME/latest" && scp -i deploy_rsa libretro/snes9x_libretro*.zip kivutar@buildbot.kivutar.me:www/static/buildbotexp/$TRAVIS_JOB_NAME/latest
     on:
       repo: libretro/snes9x
       branch: kivutar/gh-releases
