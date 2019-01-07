@@ -66,6 +66,9 @@ matrix:
 addons:
   ssh_known_hosts: buildbot.kivutar.me
 
+before_install:
+  - openssl aes-256-cbc -K $encrypted_e9188be949d7_key -iv $encrypted_e9188be949d7_iv -in deploy_rsa.enc -out deploy_rsa -d
+
 deploy:
 - provider: script
   skip_cleanup: true
@@ -73,10 +76,8 @@ deploy:
   - snes9x_libretro.so
   - snes9x_libretro.dylib
   - snes9x_libretro.dll
-  script: scp snes9x_libretro.* kivutar@buildbot.kivutar.me:www/static/buildbotexp/
+  script: scp -i deploy_rsa snes9x_libretro.* kivutar@buildbot.kivutar.me:www/static/buildbotexp/
   on:
     repo: libretro/snes9x
     branch: kivutar/gh-releases
 
-before_install:
-  - openssl aes-256-cbc -K $encrypted_e9188be949d7_key -iv $encrypted_e9188be949d7_iv -in deploy_rsa.enc -out deploy_rsa -d
