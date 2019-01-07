@@ -76,8 +76,8 @@ deploy:
   - provider: script
     skip_cleanup: true
     file_glob: true
-    file: snes9x_libretro.*
-    script: scp -i deploy_rsa snes9x_libretro.so kivutar@buildbot.kivutar.me:www/static/buildbotexp/
+    file: libretro/snes9x_libretro.*
+    script: scp -i deploy_rsa libretro/snes9x_libretro.so kivutar@buildbot.kivutar.me:www/static/buildbotexp/
     on:
       repo: libretro/snes9x
       branch: kivutar/gh-releases
