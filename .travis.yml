@@ -73,14 +73,12 @@ before_install:
   - ssh-add deploy_rsa
 
 deploy:
-- provider: script
-  skip_cleanup: true
-  file:
-  - snes9x_libretro.so
-  - snes9x_libretro.dylib
-  - snes9x_libretro.dll
-  script: scp -i deploy_rsa snes9x_libretro.* kivutar@buildbot.kivutar.me:www/static/buildbotexp/
-  on:
-    repo: libretro/snes9x
-    branch: kivutar/gh-releases
+  - provider: script
+    skip_cleanup: true
+    file_glob: true
+    file: snes9x_libretro.*
+    script: scp -i deploy_rsa snes9x_libretro.* kivutar@buildbot.kivutar.me:www/static/buildbotexp/
+    on:
+      repo: libretro/snes9x
+      branch: kivutar/gh-releases
 
