@@ -29,10 +29,10 @@ matrix:
 #      script:
 #        - docker pull dockcross/linux-armv7
 #        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro -j4
-    - name: linux/armv7-neon-hf
-      script:
-        - docker pull dockcross/linux-armv7
-        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro platform=unix-armv7-neon-hardfloat -j4
+#    - name: linux/armv7-neon-hf
+#      script:
+#        - docker pull dockcross/linux-armv7
+#        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/linux-armv7 make -C libretro platform=unix-armv7-neon-hardfloat -j4
 #    - name: linux/arm64
 #      script:
 #        - docker pull dockcross/linux-arm64
@@ -41,10 +41,10 @@ matrix:
 #      script:
 #        - docker pull devkitpro/devkita64
 #        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp devkitpro/devkita64 make -C libretro platform=libnx -j4
-#    - name: playstation/vita
-#      script:
-#        - docker pull malev/vita-toolchain
-#        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp malev/vita-toolchain make -C libretro platform=vita -j4
+    - name: playstation/vita
+      script:
+        - docker pull malev/vita-toolchain
+        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp malev/vita-toolchain make -C libretro platform=vita -j4
 #    - name: playstation/psp
 #      script:
 #        - docker pull bkcsoft/psptoolchain
