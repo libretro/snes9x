@@ -16,8 +16,11 @@ matrix:
 #      script: make -C libretro -j4
     - name: windows/x86_64
       os: windows
-      before_script: choco install make
-      script: make -C libretro platform=win -j4
+#      before_script: choco install make
+      script:
+       - choco install openssh
+       - choco install make
+       - make -C libretro platform=win -j4
 #    - name: linux/x86_64
 #      script: make -C libretro -j4
 #    - name: linux/x86
