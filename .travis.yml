@@ -16,7 +16,7 @@ matrix:
 #      script: make -C libretro -j4
     - name: windows/x86_64
       os: windows
-#      before_script: choco install make
+      before_script: choco install make
       script: make -C libretro platform=win -j4
 #    - name: linux/x86_64
 #      script: make -C libretro -j4
@@ -63,23 +63,23 @@ matrix:
 #        - docker pull dockcross/android-arm64
 #        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp dockcross/android-arm64 make -C libretro platform=unix-arm64 -j4
 
-addons:
-  ssh_known_hosts: buildbot.kivutar.me
-
-before_deploy:
-  - openssl aes-256-cbc -K $encrypted_e9188be949d7_key -iv $encrypted_e9188be949d7_iv -in deploy_rsa.enc -out deploy_rsa -d
-  - eval "$(ssh-agent -s)"
-  - chmod 600 deploy_rsa
-  - ssh-add deploy_rsa
-  - for file in libretro/snes9x_libretro*; do zip -j "${file}.zip" $file; done
-
-deploy:
-  - provider: script
-    skip_cleanup: true
-    file_glob: true
-    file: libretro/snes9x_libretro*.zip
-    script: ssh -i deploy_rsa kivutar@buildbot.kivutar.me "mkdir -p www/static/buildbotexp/$TRAVIS_JOB_NAME/latest" && scp -i deploy_rsa libretro/snes9x_libretro*.zip kivutar@buildbot.kivutar.me:www/static/buildbotexp/$TRAVIS_JOB_NAME/latest
-    on:
-      repo: libretro/snes9x
-      branch: kivutar/gh-releases
-
+#addons:
+#  ssh_known_hosts: buildbot.kivutar.me
+#
+#before_deploy:
+#  - openssl aes-256-cbc -K $encrypted_e9188be949d7_key -iv $encrypted_e9188be949d7_iv -in deploy_rsa.enc -out deploy_rsa -d
+#  - eval "$(ssh-agent -s)"
+#  - chmod 600 deploy_rsa
+#  - ssh-add deploy_rsa
+#  - for file in libretro/snes9x_libretro*; do zip -j "${file}.zip" $file; done
+#
+#deploy:
+#  - provider: script
+#    skip_cleanup: true
+#    file_glob: true
+#    file: libretro/snes9x_libretro*.zip
+#    script: ssh -i deploy_rsa kivutar@buildbot.kivutar.me "mkdir -p www/static/buildbotexp/$TRAVIS_JOB_NAME/latest" && scp -i deploy_rsa libretro/snes9x_libretro*.zip kivutar@buildbot.kivutar.me:www/static/buildbotexp/$TRAVIS_JOB_NAME/latest
+#    on:
+#      repo: libretro/snes9x
+#      branch: kivutar/gh-releases
+#
