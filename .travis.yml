@@ -41,10 +41,10 @@ matrix:
 #      script:
 #        - docker pull malev/vita-toolchain
 #        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp malev/vita-toolchain make -C libretro platform=vita -j4
-    - name: playstation/psp
-      script:
-        - docker pull bkcsoft/psptoolchain
-        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp bkcsoft/psptoolchain make -C libretro platform=unix -j4
+#    - name: playstation/psp
+#      script:
+#        - docker pull bkcsoft/psptoolchain
+#        - docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp bkcsoft/psptoolchain make -C libretro platform=unix -j4
     - name: nintendo/ngc
       script:
         - docker pull devkitpro/devkitppc
