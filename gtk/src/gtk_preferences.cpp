@@ -727,6 +727,7 @@ Snes9xPreferences::move_settings_to_dialog ()
 #ifdef ALLOW_CPU_OVERCLOCK
     gtk_widget_show (get_widget ("cpu_overclock"));
     gtk_widget_show (get_widget ("remove_sprite_limit"));
+    gtk_widget_show (get_widget ("block_invalid_vram_access"));
 
     set_check ("cpu_overclock", Settings.OneClockCycle != 6);
     set_check ("remove_sprite_limit", Settings.MaxSpriteTilesPerLine != 34);
@@ -856,7 +857,7 @@ Snes9xPreferences::get_settings_from_dialog ()
         config->use_pbos != get_check ("use_pbos") ||
         config->pbo_format !=  pbo_format ||
         config->use_shaders != get_check ("use_shaders") ||
-        get_check ("use_shaders"))
+        (config->shader_filename.compare(get_entry_text("fragment_shader"))))
     {
         gfx_needs_restart = true;
     }

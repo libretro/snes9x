@@ -175,7 +175,14 @@ void S9xOpenGLDisplayDriver::update (int width, int height, int yoffset)
                           width * height * 2,
                           NULL,
                           GL_STREAM_DRAW);
-            pbo_map = glMapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+
+            if (version >= 30)
+                pbo_map = glMapBufferRange (
+                    GL_PIXEL_UNPACK_BUFFER, 0, width * height * 2,
+                    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT |
+                        GL_MAP_UNSYNCHRONIZED_BIT);
+            else
+                pbo_map = glMapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 
             for (int y = 0; y < height; y++)
             {
@@ -206,7 +213,14 @@ void S9xOpenGLDisplayDriver::update (int width, int height, int yoffset)
                           width * height * 4,
                           NULL,
                           GL_STREAM_DRAW);
-            pbo_map = glMapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+
+            if (version >= 30)
+                pbo_map = glMapBufferRange (
+                    GL_PIXEL_UNPACK_BUFFER, 0, width * height * 4,
+                    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT |
+                        GL_MAP_UNSYNCHRONIZED_BIT);
+            else
+                pbo_map = glMapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 
             /* Pixel swizzling in software */
             S9xSetEndianess (ENDIAN_NORMAL);
@@ -358,32 +372,38 @@ void S9xOpenGLDisplayDriver::update_texture_size (int width, int height)
     }
 }
 
-bool S9xOpenGLDisplayDriver::load_shaders (const char *shader_file)
+bool S9xOpenGLDisplayDriver::load_shaders(const char *shader_file)
 {
-    int length = strlen (shader_file);
+    setlocale(LC_ALL, "C");
+    std::string filename(shader_file);
 
-    setlocale (LC_ALL, "C");
+    auto endswith = [&](std::string ext) -> bool {
+        return filename.rfind(ext) == filename.length() - ext.length();
+    };
 
-    if ((length > 6 && !strcasecmp(shader_file + length - 6, ".glslp")) ||
-        (length > 5 && !strcasecmp(shader_file + length - 5, ".glsl")))
+    if (endswith(".glslp") || endswith(".glsl")
+#ifdef USE_SLANG
+        || endswith(".slangp") || endswith(".slang")
+#endif
+    )
     {
         glsl_shader = new GLSLShader;
-        if (glsl_shader->load_shader ((char *) shader_file))
+        if (glsl_shader->load_shader((char *)shader_file))
         {
             using_glsl_shaders = true;
             npot = true;
 
-            if (glsl_shader->param.size () > 0)
-                window->enable_widget ("shader_parameters_item", true);
+            if (glsl_shader->param.size() > 0)
+                window->enable_widget("shader_parameters_item", true);
 
-            setlocale (LC_ALL, "");
+            setlocale(LC_ALL, "");
             return true;
         }
 
         delete glsl_shader;
     }
 
-    setlocale (LC_ALL, "");
+    setlocale(LC_ALL, "");
     return false;
 }
 
