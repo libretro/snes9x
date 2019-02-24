@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include "glsl.h"
 #include "../../conffile.h"
 #include "shader_helpers.h"
@@ -19,7 +20,7 @@ static const GLfloat mvp_ortho[16] = { 2.0f,  0.0f,  0.0f,  0.0f,
                                        0.0f,  0.0f, -1.0f,  0.0f,
                                       -1.0f, -1.0f,  0.0f,  1.0f };
 
-static int scale_string_to_enum(const char *string, bool last)
+static int scale_string_to_enum(const char *string)
 {
     if (!strcasecmp(string, "source"))
     {
@@ -33,10 +34,8 @@ static int scale_string_to_enum(const char *string, bool last)
     {
         return GLSL_ABSOLUTE;
     }
-    else if (last)
-        return GLSL_VIEWPORT;
     else
-        return GLSL_SOURCE;
+        return GLSL_NONE;
 }
 
 static const char *scale_enum_to_string(int val)
@@ -50,7 +49,7 @@ static const char *scale_enum_to_string(int val)
     case GLSL_ABSOLUTE:
         return "absolute";
     default:
-        return "source";
+        return "undefined";
     }
 }
 
@@ -98,6 +97,7 @@ bool GLSLShader::load_shader_preset_file(char *filename)
                        !strcasecmp(&filename[length - 6], ".slang")))
         singlepass = true;
 
+    this->using_slang = false;
     if (length > 7 && (!strcasecmp(&filename[length - 6], ".slang") ||
                        !strcasecmp(&filename[length - 7], ".slangp")))
     {
@@ -152,15 +152,15 @@ bool GLSLShader::load_shader_preset_file(char *filename)
         {
             sprintf(key, "::scale_type_x%u", i);
             const char* scaleTypeX = conf.GetString(key, "");
-            pass.scale_type_x = scale_string_to_enum(scaleTypeX, i == shader_count - 1);
+            pass.scale_type_x = scale_string_to_enum(scaleTypeX);
 
             sprintf(key, "::scale_type_y%u", i);
             const char* scaleTypeY = conf.GetString(key, "");
-            pass.scale_type_y = scale_string_to_enum(scaleTypeY, i == shader_count - 1);
+            pass.scale_type_y = scale_string_to_enum(scaleTypeY);
         }
         else
         {
-            int scale_type =  scale_string_to_enum(scaleType, i == shader_count - 1);
+            int scale_type =  scale_string_to_enum(scaleType);
             pass.scale_type_x = scale_type;
             pass.scale_type_y = scale_type;
         }
@@ -186,6 +186,9 @@ bool GLSLShader::load_shader_preset_file(char *filename)
 
         sprintf(key, "::wrap_mode%u", i);
         pass.wrap_mode = wrap_mode_string_to_enum (conf.GetString (key ,""));
+
+        sprintf(key, "::mipmap_input%u", i);
+        pass.mipmap_input = conf.GetBool (key);
 
         sprintf(key, "::frame_count_mod%u", i);
         pass.frame_count_mod = conf.GetInt(key, 0);
@@ -248,18 +251,96 @@ bool GLSLShader::load_shader_preset_file(char *filename)
     return true;
 }
 
-void GLSLShader::strip_parameter_pragmas(std::vector<std::string> &lines)
+static std::string folder_from_path(std::string filename)
 {
-   // #pragma parameter lines tend to have " characters in them,
-   // which is not legal GLSL.
-   auto it = lines.begin();
-   while (it != lines.end())
-   {
-        if (it->find("#pragma parameter") != std::string::npos)
+    for (int i = filename.length() - 1; i >= 0; i--)
+        if (filename[i] == '\\' || filename[i] == '/')
+            return filename.substr(0, i);
+
+    return std::string(".");
+}
+
+static std::string canonicalize(const std::string &noncanonical)
+{
+    char *temp = realpath(noncanonical.c_str(), NULL);
+    std::string filename_string(temp);
+    free(temp);
+    return filename_string;
+}
+
+static GLuint string_to_format(char *format)
+{
+#define MATCH(s, f)                                                            \
+    if (!strcmp(format, s))                                                    \
+        return f;
+    MATCH("R8_UNORM", GL_R8);
+    MATCH("R8_UINT", GL_R8UI);
+    MATCH("R8_SINT", GL_R8I);
+    MATCH("R8G8_UNORM", GL_RG8);
+    MATCH("R8G8_UINT", GL_RG8UI);
+    MATCH("R8G8_SINT", GL_RG8I);
+    MATCH("R8G8B8A8_UNORM", GL_RGBA8);
+    MATCH("R8G8B8A8_UINT", GL_RGBA8UI);
+    MATCH("R8G8B8A8_SINT", GL_RGBA8I);
+    MATCH("R8G8B8A8_SRGB", GL_SRGB8_ALPHA8);
+
+    MATCH("R16_UINT", GL_R16UI);
+    MATCH("R16_SINT", GL_R16I);
+    MATCH("R16_SFLOAT", GL_R16F);
+    MATCH("R16G16_UINT", GL_RG16UI);
+    MATCH("R16G16_SINT", GL_RG16I);
+    MATCH("R16G16_SFLOAT", GL_RG16F);
+    MATCH("R16G16B16A16_UINT", GL_RGBA16UI);
+    MATCH("R16G16B16A16_SINT", GL_RGBA16I);
+    MATCH("R16G16B16A16_SFLOAT", GL_RGBA16F);
+
+    MATCH("R32_UINT", GL_R32UI);
+    MATCH("R32_SINT", GL_R32I);
+    MATCH("R32_SFLOAT", GL_R32F);
+    MATCH("R32G32_UINT", GL_RG32UI);
+    MATCH("R32G32_SINT", GL_RG32I);
+    MATCH("R32G32_SFLOAT", GL_RG32F);
+    MATCH("R32G32B32A32_UINT", GL_RGBA32UI);
+    MATCH("R32G32B32A32_SINT", GL_RGBA32I);
+    MATCH("R32G32B32A32_SFLOAT", GL_RGBA32F);
+
+    return GL_RGBA;
+}
+
+// filename must be canonical
+void GLSLShader::read_shader_file_with_includes(std::string filename,
+                                                std::vector<std::string> &lines,
+                                                int p)
+{
+    std::ifstream ss(filename.c_str());
+
+    if (ss.fail())
+    {
+        printf ("Couldn't open file \"%s\"\n", filename.c_str());
+        return;
+    }
+
+    std::string line;
+
+    while (std::getline(ss, line, '\n'))
+    {
+        if (line.empty())
+            continue;
+
+        if (line.compare(0, 8, "#include") == 0)
+        {
+            char tmp[PATH_MAX];
+            sscanf(line.c_str(), "#include \"%[^\"]\"", tmp);
+
+            std::string fullpath = canonicalize(folder_from_path(filename) + "/" + tmp);
+            read_shader_file_with_includes(fullpath.c_str(), lines, p);
+            continue;
+        }
+        else if (line.compare(0, 17, "#pragma parameter") == 0)
         {
             GLSLParam par;
 
-            sscanf(it->c_str(), "#pragma parameter %s \"%[^\"]\" %f %f %f %f",
+            sscanf(line.c_str(), "#pragma parameter %s \"%[^\"]\" %f %f %f %f",
                    par.id, par.name, &par.val, &par.min, &par.max, &par.step);
 
             if (par.step == 0.0f)
@@ -273,12 +354,30 @@ void GLSLShader::strip_parameter_pragmas(std::vector<std::string> &lines)
             }
             if (i >= param.size())
                 param.push_back(par);
-
-            it = lines.erase(it);
+            continue;
         }
-        else
-            ++it;
-   }
+#ifdef USE_SLANG
+        else if (line.compare(0, 12, "#pragma name") == 0)
+        {
+            sscanf(line.c_str(), "#pragma name %255s", pass[p].alias);
+            continue;
+        }
+        else if (line.compare(0, 14, "#pragma format") == 0)
+        {
+            char format[256];
+            sscanf(line.c_str(), "#pragma format %255s", format);
+            pass[p].format = string_to_format(format);
+            if (pass[p].format == GL_RGBA16F || pass[p].format == GL_RGBA32F)
+                pass[p].fp = TRUE;
+            else if (pass[p].format == GL_SRGB8_ALPHA8)
+                pass[p].srgb = TRUE;
+            continue;
+        }
+#endif
+        lines.push_back(line);
+    }
+
+    return;
 }
 
 GLuint GLSLShader::compile_shader(std::vector<std::string> &lines,
@@ -362,26 +461,22 @@ bool GLSLShader::load_shader(char *filename)
         strcpy(p->filename, temp);
 
         std::vector<std::string> lines;
-        read_shader_file_with_includes(p->filename, lines);
+        read_shader_file_with_includes(p->filename, lines, i);
 
         if (lines.empty())
         {
-            printf("Couldn't read shader file %s\n", temp);
+            printf("Couldn't read shader file \"%s\"\n", temp);
             return false;
         }
-
-        strip_parameter_pragmas(lines);
 
 #ifdef USE_SLANG
         if (using_slang)
         {
-            slang_parse_pragmas(lines, i);
-
             GLint retval;
             retval = slang_compile(lines, "vertex");
             if (retval < 0)
             {
-                printf("Vertex shader in %s failed to compile.\n", p->filename);
+                printf("Vertex shader in \"%s\" failed to compile.\n", p->filename);
                 return false;
             }
             vertex_shader = retval;
@@ -389,7 +484,7 @@ bool GLSLShader::load_shader(char *filename)
             retval = slang_compile(lines, "fragment");
             if (retval < 0)
             {
-                printf ("Fragment shader in %s failed to compile.\n", p->filename);
+                printf ("Fragment shader in \"%s\" failed to compile.\n", p->filename);
                 return false;
             }
             fragment_shader = retval;
@@ -403,7 +498,7 @@ bool GLSLShader::load_shader(char *filename)
                                 GL_VERTEX_SHADER,
                                 &vertex_shader) || !vertex_shader)
             {
-                printf("Couldn't compile vertex shader in %s.\n", p->filename);
+                printf("Couldn't compile vertex shader in \"%s\".\n", p->filename);
                 return false;
             }
 
@@ -413,7 +508,7 @@ bool GLSLShader::load_shader(char *filename)
                                 GL_FRAGMENT_SHADER,
                                 &fragment_shader) || !fragment_shader)
             {
-                printf("Couldn't compile fragment shader in %s.\n", p->filename);
+                printf("Couldn't compile fragment shader in \"%s\".\n", p->filename);
                 return false;
             }
         }
@@ -474,20 +569,33 @@ bool GLSLShader::load_shader(char *filename)
             {
                 int width, height;
                 bool hasAlpha;
+                bool grayscale;
                 GLubyte* texData;
 
-                if (loadPngImage(temp, width, height, hasAlpha, &texData))
+                if (loadPngImage(temp, width, height, grayscale, hasAlpha,
+                                 &texData))
                 {
                     glPixelStorei(GL_UNPACK_ROW_LENGTH, width);
-                    glTexImage2D(GL_TEXTURE_2D,
-                                 0,
-                                 GL_RGBA,
-                                 width,
-                                 height,
-                                 0,
-                                 hasAlpha ? GL_RGBA : GL_RGB,
-                                 GL_UNSIGNED_BYTE,
-                                 texData);
+                    if (grayscale)
+                        glTexImage2D(GL_TEXTURE_2D,
+                                     0,
+                                     GL_RGBA,
+                                     width,
+                                     height,
+                                     0,
+                                     GL_LUMINANCE,
+                                     GL_UNSIGNED_BYTE,
+                                     texData);
+                    else
+                        glTexImage2D(GL_TEXTURE_2D,
+                                     0,
+                                     GL_RGBA,
+                                     width,
+                                     height,
+                                     0,
+                                     hasAlpha ? GL_RGBA : GL_RGB,
+                                     GL_UNSIGNED_BYTE,
+                                     texData);
                     l->width = width;
                     l->height = height;
                     free(texData);
@@ -544,9 +652,6 @@ bool GLSLShader::load_shader(char *filename)
         }
     }
 
-    glActiveTexture(GL_TEXTURE1);
-    glEnable(GL_TEXTURE_COORD_ARRAY);
-    glTexCoordPointer(2, GL_FLOAT, 0, tex_coords);
     glActiveTexture(GL_TEXTURE0);
 
 #ifdef USE_SLANG
@@ -588,6 +693,18 @@ void GLSLShader::render(GLuint &orig,
     pass[0].width = width;
     pass[0].height = height;
 
+#ifdef USE_SLANG
+    if (using_slang && using_feedback)
+        for (int i = 1; i < (int)pass.size(); i++)
+        {
+            if (!pass[i].uses_feedback)
+                continue;
+            GLuint tmp = pass[i].texture;
+            pass[i].texture = pass[i].feedback_texture;
+            pass[i].feedback_texture = tmp;
+        }
+#endif
+
     // loop through all real passes
     for (unsigned int i = 1; i < pass.size(); i++)
     {
@@ -605,7 +722,10 @@ void GLSLShader::render(GLuint &orig,
             pass[i].width = viewport_width * pass[i].scale_x;
             break;
         default:
-            pass[i].width = viewport_width;
+            if (lastpass)
+                pass[i].width = viewport_width;
+            else
+                pass[i].width = pass[i - 1].width * pass[i].scale_x;
         }
 
         switch (pass[i].scale_type_y)
@@ -620,10 +740,21 @@ void GLSLShader::render(GLuint &orig,
             pass[i].height = viewport_height * pass[i].scale_y;
             break;
         default:
-            pass[i].height = viewport_height;
+            if (lastpass)
+                pass[i].height = viewport_height;
+            else
+                pass[i].height = pass[i - 1].height * pass[i].scale_y;
         }
 
-        if (!lastpass)
+        bool direct_lastpass = true;
+#ifdef USE_SLANG
+        if (lastpass && using_feedback && pass[i].scale_type_x != GLSL_NONE &&
+            pass[i].scale_type_y != GLSL_NONE && pass[i].uses_feedback)
+        {
+            direct_lastpass = false;
+        }
+#endif
+        if (!lastpass || !direct_lastpass)
         {
             // Output to a framebuffer texture
             glBindTexture(GL_TEXTURE_2D, pass[i].texture);
@@ -695,33 +826,53 @@ void GLSLShader::render(GLuint &orig,
 
         glBindTexture(GL_TEXTURE_2D, pass[i - 1].texture);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint) pass[i - 1].width);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MAG_FILTER,
-                        filter);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_MIN_FILTER,
-                        filter);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_WRAP_S,
-                        pass[i].wrap_mode);
-        glTexParameteri(GL_TEXTURE_2D,
-                        GL_TEXTURE_WRAP_T,
-                        pass[i].wrap_mode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, pass[i].wrap_mode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, pass[i].wrap_mode);
+
+        if (pass[i].mipmap_input)
+            glGenerateMipmap(GL_TEXTURE_2D);
 
         glUseProgram(pass[i].program);
 #ifdef USE_SLANG
         if (using_slang)
-            slang_set_shader_vars(i);
+            slang_set_shader_vars(i, lastpass && direct_lastpass);
         else
 #endif
-            set_shader_vars(i);
+            set_shader_vars(i, lastpass && direct_lastpass);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
         glClear(GL_COLOR_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        // reset vertex attribs set in set_shader_vars
 #ifdef USE_SLANG
+        if (lastpass && !direct_lastpass)
+        {
+            glBindTexture(GL_TEXTURE_2D, pass[i].texture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, pass[i].wrap_mode);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, pass[i].wrap_mode);
+
+            int out_x = 0, out_y = 0, out_width = 0, out_height = 0;
+            vpcallback (pass[i].width, pass[i].height,
+                        viewport_x, viewport_y,
+                        viewport_width, viewport_height,
+                        &out_x, &out_y,
+                        &out_width, &out_height);
+
+            glViewport(out_x, out_y, out_width, out_height);
+            glBindFramebuffer(GL_FRAMEBUFFER, saved_framebuffer);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, pass[i].fbo);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, saved_framebuffer);
+            glBlitFramebuffer(0, 0, pass[i].width, pass[i].height, out_x,
+                              out_height + out_y, out_x + out_width, out_y,
+                              GL_COLOR_BUFFER_BIT,
+                              Settings.BilinearFilter ? GL_LINEAR : GL_NEAREST);
+        }
+        // reset vertex attribs set in set_shader_vars
         if (using_slang)
             slang_clear_shader_vars();
         else
@@ -867,12 +1018,12 @@ void GLSLShader::register_uniforms()
     glUseProgram(0);
 }
 
-void GLSLShader::set_shader_vars(unsigned int p)
+void GLSLShader::set_shader_vars(unsigned int p, bool inverted)
 {
     unsigned int texunit = 0;
     unsigned int offset = 0;
 
-    if (p == pass.size() - 1)
+    if (inverted)
         offset = 8;
     GLSLUniforms *u = &pass[p].unif;
 
@@ -1006,9 +1157,9 @@ void GLSLShader::clear_shader_vars()
     vaos.clear();
 }
 
-#define outs(s, v) fprintf (file, "%s%d = \"%s\"\n", s, i, v)
-#define outf(s, v) fprintf (file, "%s%d = \"%f\"\n", s, i, v)
-#define outd(s, v) fprintf (file, "%s%d = \"%d\"\n", s, i, v)
+#define outs(s, v) fprintf(file, "%s%d = \"%s\"\n", s, i, v)
+#define outf(s, v) fprintf(file, "%s%d = \"%f\"\n", s, i, v)
+#define outd(s, v) fprintf(file, "%s%d = \"%d\"\n", s, i, v)
 void GLSLShader::save(const char *filename)
 {
     FILE *file = fopen(filename, "wb");
@@ -1100,6 +1251,15 @@ void GLSLShader::destroy()
         glDeleteProgram(pass[i].program);
         glDeleteTextures(1, &pass[i].texture);
         glDeleteFramebuffers(1, &pass[i].fbo);
+#ifdef USE_SLANG
+        if (using_slang)
+        {
+            if (pass[i].uses_feedback)
+                glDeleteTextures(1, &pass[i].feedback_texture);
+            if (pass[i].ubo_buffer.size() > 0)
+                glDeleteBuffers(1, &pass[i].ubo);
+        }
+#endif
     }
 
     for (unsigned int i = 0; i < lut.size(); i++)
@@ -1111,6 +1271,8 @@ void GLSLShader::destroy()
     {
         glDeleteTextures(1, &prev_frame[i].texture);
     }
+
+    glDeleteBuffers(1, &vbo);
 
     param.clear();
     pass.clear();

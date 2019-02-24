@@ -113,6 +113,8 @@ int Snes9xConfig::load_defaults ()
     window_height = -1;
     preferences_width = -1;
     preferences_height = -1;
+    shader_parameters_width = -1;
+    shader_parameters_height = -1;
     sram_directory.clear ();
     export_directory.clear ();
     savestate_directory.clear ();
@@ -283,9 +285,6 @@ int Snes9xConfig::save_config_file ()
     outbool (cf, z"DynamicRateControl", Settings.DynamicRateControl);
     cf.SetInt   (z"DynamicRateControlLimit", Settings.DynamicRateLimit);
     outbool (cf, z"AutomaticInputRate", auto_input_rate, "Guess input rate by asking the monitor what its refresh rate is");
-    outbool (cf, z"16bit", Settings.SixteenBitSound);
-    outbool (cf, z"Stereo", Settings.Stereo);
-    outbool (cf, z"ReverseStereo", Settings.ReverseStereo);
     cf.SetInt   (z"PlaybackRate", gui_config->sound_playback_rate, "1: 8000Hz, 2: 11025Hz, 3: 16000Hz, 4: 22050Hz, 5: 32000Hz, 6: 44100Hz, 7: 48000Hz");
 
 #undef z
@@ -305,6 +304,8 @@ int Snes9xConfig::save_config_file ()
     cf.SetInt (z"MainHeight", window_height);
     cf.SetInt (z"PreferencesWidth", preferences_width);
     cf.SetInt (z"PreferencesHeight", preferences_height);
+    cf.SetInt (z"ShaderParametersWidth", shader_parameters_width);
+    cf.SetInt (z"ShaderParametersHeight", shader_parameters_height);
     outbool (cf, z"UIVisible", ui_visible);
     outbool (cf, z"StatusBarVisible", statusbar_visible);
     if (default_esc_behavior != ESC_TOGGLE_MENUBAR)
@@ -513,9 +514,6 @@ int Snes9xConfig::load_config_file ()
     inbool (z"DynamicRateControl", Settings.DynamicRateControl);
     inint  (z"DynamicRateControlLimit", Settings.DynamicRateLimit);
     inbool (z"AutomaticInputRate", auto_input_rate);
-    inbool (z"16bit", Settings.SixteenBitSound);
-    inbool (z"Stereo", Settings.Stereo);
-    inbool (z"ReverseStereo", Settings.ReverseStereo);
     inint  (z"PlaybackRate", gui_config->sound_playback_rate);
 
 #undef z
@@ -535,6 +533,8 @@ int Snes9xConfig::load_config_file ()
     inint (z"MainHeight", window_height);
     inint (z"PreferencesWidth", preferences_width);
     inint (z"PreferencesHeight", preferences_height);
+    inint (z"ShaderParametersWidth", shader_parameters_width);
+    inint (z"ShaderParametersHeight", shader_parameters_height);
     inbool (z"UIVisible", ui_visible);
     inbool (z"StatusBarVisible", statusbar_visible);
     inbool (z"Fullscreen", fullscreen);

@@ -81,7 +81,7 @@ void gl_log_errors(void)
 }
 
 bool loadPngImage(const char *name, int &outWidth, int &outHeight,
-                  bool &outHasAlpha, GLubyte **outData)
+                  bool &grayscale, bool &outHasAlpha, GLubyte **outData)
 {
 #ifdef HAVE_LIBPNG
     png_structp png_ptr;
@@ -131,9 +131,14 @@ bool loadPngImage(const char *name, int &outWidth, int &outHeight,
     {
     case PNG_COLOR_TYPE_RGBA:
         outHasAlpha = true;
+        grayscale = false;
         break;
     case PNG_COLOR_TYPE_RGB:
         outHasAlpha = false;
+        grayscale = false;
+        break;
+    case PNG_COLOR_TYPE_GRAY:
+        grayscale = true;
         break;
     default:
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
@@ -237,82 +242,4 @@ void reduce_to_path(char *filename)
     }
 }
 
-static std::string folder_from_path(std::string filename)
-{
-    for (int i = filename.length() - 1; i >= 0; i--)
-        if (filename[i] == '\\' || filename[i] == '/')
-            return filename.substr(0, i);
 
-    return std::string(".");
-}
-
-static char *read_file(const char *filename)
-{
-    FILE *file = NULL;
-    int size;
-    char *contents;
-
-    file = fopen(filename, "rb");
-    if (!file)
-        return NULL;
-
-    fseek(file, 0, SEEK_END);
-    size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    contents = new char[size + 1];
-    fread(contents, size, 1, file);
-    contents[size] = '\0';
-    fclose(file);
-
-    return contents;
-}
-
-static std::string canonicalize(const std::string &noncanonical)
-{
-    char *temp = realpath(noncanonical.c_str(), NULL);
-    std::string filename_string(temp);
-    free(temp);
-    return filename_string;
-}
-
-// filename must be canonical
-void read_shader_file_with_includes(std::string filename,
-                                    std::vector<std::string> &lines)
-{
-    char *file_contents = read_file(filename.c_str());
-    if (!file_contents)
-        return;
-
-    std::string string_contents(file_contents);
-    delete[] file_contents;
-
-    for (char &c : string_contents)
-    {
-        if (c == '\r')
-            c = '\n';
-    }
-
-    std::istringstream ss(string_contents);
-    std::string line;
-
-    while (std::getline(ss, line, '\n'))
-    {
-        if (line.empty())
-            continue;
-
-        if (line.find("#include") == 0)
-        {
-            char tmp[PATH_MAX];
-            sscanf(line.c_str(), "#include \"%[^\"]\"", tmp);
-
-            std::string fullpath = canonicalize(folder_from_path(filename) + "/" + tmp);
-            read_shader_file_with_includes(fullpath.c_str(), lines);
-            continue;
-        }
-
-        lines.push_back(line);
-    }
-
-    return;
-}

@@ -1,3 +1,9 @@
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
 #include "glsl.h"
 #include "shader_helpers.h"
 #include <vector>
@@ -19,17 +25,13 @@ std::string GLSLShader::slang_get_stage(std::vector<std::string> &lines,
 
     for (auto &line : lines)
     {
-        if (line.find("#pragma stage") != std::string::npos)
+        if (line.compare(0, 13, "#pragma stage") == 0)
         {
             if (line.find(std::string("#pragma stage ") + name) !=
                 std::string::npos)
                 in_stage = true;
             else
                 in_stage = false;
-        }
-        else if (line.find("#pragma name") != std::string::npos ||
-                 line.find("#pragma format") != std::string::npos)
-        {
         }
         else if (in_stage)
         {
@@ -40,67 +42,41 @@ std::string GLSLShader::slang_get_stage(std::vector<std::string> &lines,
     return output.str();
 }
 
-static GLuint string_to_format(char *format)
+static void printuniforms(std::vector<SlangUniform> &unif)
 {
-#define MATCH(s, f)                                                            \
-    if (!strcmp(format, s))                                                    \
-        return f;
-    MATCH("R8_UNORM", GL_R8);
-    MATCH("R8_UINT", GL_R8UI);
-    MATCH("R8_SINT", GL_R8I);
-    MATCH("R8G8_UNORM", GL_RG8);
-    MATCH("R8G8_UINT", GL_RG8UI);
-    MATCH("R8G8_SINT", GL_RG8I);
-    MATCH("R8G8B8A8_UNORM", GL_RGBA8);
-    MATCH("R8G8B8A8_UINT", GL_RGBA8UI);
-    MATCH("R8G8B8A8_SINT", GL_RGBA8I);
-    MATCH("R8G8B8A8_SRGB", GL_SRGB8_ALPHA8);
-
-    MATCH("A2B10G10R10_UNORM_PACK32", GL_RGB10_A2);
-    MATCH("A2B10G10R10_UINT_PACK32", GL_RGB10_A2UI);
-
-    MATCH("R16_UINT", GL_R16UI);
-    MATCH("R16_SINT", GL_R16I);
-    MATCH("R16_SFLOAT", GL_R16F);
-    MATCH("R16G16_UINT", GL_RG16UI);
-    MATCH("R16G16_SINT", GL_RG16I);
-    MATCH("R16G16_SFLOAT", GL_RG16F);
-    MATCH("R16G16B16A16_UINT", GL_RGBA16UI);
-    MATCH("R16G16B16A16_SINT", GL_RGBA16I);
-    MATCH("R16G16B16A16_SFLOAT", GL_RGBA16F);
-
-    MATCH("R32_UINT", GL_R32UI);
-    MATCH("R32_SINT", GL_R32I);
-    MATCH("R32_SFLOAT", GL_R32F);
-    MATCH("R32G32_UINT", GL_RG32UI);
-    MATCH("R32G32_SINT", GL_RG32I);
-    MATCH("R32G32_SFLOAT", GL_RG32F);
-    MATCH("R32G32B32A32_UINT", GL_RGBA32UI);
-    MATCH("R32G32B32A32_SINT", GL_RGBA32I);
-    MATCH("R32G32B32A32_SFLOAT", GL_RGBA32F);
-
-    return GL_RGBA;
-}
-
-void GLSLShader::slang_parse_pragmas(std::vector<std::string> &lines, int p)
-{
-    pass[p].format = GL_RGBA;
-
-    for (auto &line : lines)
+    for (int i = 0; i < (int)unif.size(); i++)
     {
-        if (line.find("#pragma name") != std::string::npos)
+        SlangUniform &u = unif[i];
+        printf("Uniform %d: ", i);
+        switch (u.type)
         {
-            sscanf(line.c_str(), "#pragma name %255s", pass[p].alias);
-        }
-        else if (line.find("#pragma format") != std::string::npos)
-        {
-            char format[256];
-            sscanf(line.c_str(), "#pragma format %255s", format);
-            pass[p].format = string_to_format(format);
-            if (pass[p].format == GL_RGBA16F || pass[p].format == GL_RGBA32F)
-                pass[p].fp = TRUE;
-            else if (pass[p].format == GL_SRGB8_ALPHA8)
-                pass[p].srgb = TRUE;
+        case SL_PREVIOUSFRAMETEXTURE:
+            printf("OriginalHistory%d\n", u.num);
+            break;
+        case SL_PASSTEXTURE:
+            printf("Pass%d\n", u.num);
+            break;
+        case SL_LUTTEXTURE:
+            printf("User%d\n", u.num);
+            break;
+        case SL_PREVIOUSFRAMESIZE:
+            printf("OriginalHistorySize%d\n", u.num);
+            break;
+        case SL_PASSSIZE:
+            printf("PassSize%d\n", u.num);
+            break;
+        case SL_LUTSIZE:
+            printf("UserSize%d\n", u.num);
+            break;
+        case SL_MVP:
+            printf("MVP\n");
+            break;
+        case SL_FRAMECOUNT:
+            printf("FrameCount\n");
+            break;
+        case SL_PARAM:
+            printf("Parameter %d\n", u.num);
+            break;
         }
     }
 }
@@ -334,10 +310,12 @@ static inline bool isalldigits(std::string str)
 void GLSLShader::slang_introspect()
 {
     max_prev_frame = 0;
+    using_feedback = false;
 
     for (int i = 1; i < (int)pass.size(); i++)
     {
         GLSLPass &p = pass[i];
+        p.feedback_texture = 0;
 
         int num_uniforms;
         glGetProgramiv(p.program, GL_ACTIVE_UNIFORMS, &num_uniforms);
@@ -385,10 +363,10 @@ void GLSLShader::slang_introspect()
                 if (name.find(needle) == 0)
                 {
                     std::string tmp = name.substr(needle.length());
-                    if (tmp.rfind("Size") == tmp.length() - 4)
+                    if (tmp.find("Size") == 0)
                     {
                         u.type = type + 1;
-                        tmp = tmp.substr(0, tmp.length() - 4);
+                        tmp = tmp.substr(4);
                     }
                     else
                         u.type = type;
@@ -450,8 +428,18 @@ void GLSLShader::slang_introspect()
             }
             else if (indexedtexorsize("PassOutput", SL_PASSTEXTURE))
             {
-                // Their pass 0 is our pass 1
-                u.num--;
+                u.num++;
+            }
+            else if (indexedtexorsize("PassFeedback", SL_FEEDBACK))
+            {
+                u.num++;
+                if (u.type == SL_FEEDBACK + 1)
+                    u.type = SL_PASSSIZE;
+                else
+                {
+                    pass[u.num].uses_feedback = true;
+                    using_feedback = true;
+                }
             }
             else if (indexedtexorsize("User", SL_LUTTEXTURE))
             {
@@ -541,6 +529,11 @@ void GLSLShader::slang_introspect()
             p.ubo_buffer.resize(uniform_block_size);
         }
     }
+
+    if (using_feedback)
+        for (int i = 1; i < (int)pass.size(); i++)
+            if (pass[i].uses_feedback)
+                glGenTextures(1, &pass[i].feedback_texture);
 }
 
 static const GLfloat coords[] =  { 0.0f, 0.0f, 0.0f, 1.0f, // Vertex Positions
@@ -568,7 +561,7 @@ void GLSLShader::slang_clear_shader_vars()
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void GLSLShader::slang_set_shader_vars(int p)
+void GLSLShader::slang_set_shader_vars(int p, bool inverted)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 32, coords, GL_STATIC_DRAW);
@@ -585,7 +578,7 @@ void GLSLShader::slang_set_shader_vars(int p)
     {
         GLfloat *offset = 0;
         offset += 16;
-        if (p == (int)pass.size() - 1)
+        if (inverted)
             offset += 8;
 
         glEnableVertexAttribArray(attr);
@@ -604,6 +597,7 @@ void GLSLShader::slang_set_shader_vars(int p)
         case SL_PREVIOUSFRAMETEXTURE:
         case SL_PASSTEXTURE:
         case SL_LUTTEXTURE:
+        case SL_FEEDBACK:
             glActiveTexture(GL_TEXTURE0 + texunit);
 
             if (u.type == SL_PASSTEXTURE)
@@ -612,6 +606,8 @@ void GLSLShader::slang_set_shader_vars(int p)
                 glBindTexture(GL_TEXTURE_2D, prev_frame[u.num - 1].texture);
             else if (u.type == SL_LUTTEXTURE)
                 glBindTexture(GL_TEXTURE_2D, lut[u.num].texture);
+            else if (u.type == SL_FEEDBACK)
+                glBindTexture(GL_TEXTURE_2D, pass[u.num].feedback_texture);
 
             if (u.location == -1)
                 *((GLint *)(ubo + u.offset)) = texunit;
@@ -634,6 +630,8 @@ void GLSLShader::slang_set_shader_vars(int p)
             }
             else if (u.type == SL_PREVIOUSFRAMESIZE)
             {
+                if (u.num < 1)
+                    u.num = 0;
                 size[0] = (GLfloat)prev_frame[u.num - 1].width;
                 size[1] = (GLfloat)prev_frame[u.num - 1].height;
                 size[2] = (GLfloat)1.0f / prev_frame[u.num - 1].width;

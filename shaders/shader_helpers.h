@@ -41,13 +41,12 @@ typedef struct _STGA
 } STGA;
 
 bool loadPngImage(const char *name, int &outWidth, int &outHeight,
-                  bool &outHasAlpha, GLubyte **outData);
+                  bool &grayscale, bool &outHasAlpha, GLubyte **outData);
 bool loadTGA(const char *filename, STGA &tgaFile);
 void gl_log_errors();
 bool gl_srgb_available();
 int gl_version();
 bool gl_float_texture_available();
 void reduce_to_path(char* filename);
-void read_shader_file_with_includes(std::string filename, std::vector<std::string> &lines);
 
 #endif // __SHADER_HELPERS_H

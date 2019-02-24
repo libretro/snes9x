@@ -81,7 +81,8 @@ enum
     SL_LUTSIZE = 6,
     SL_MVP = 7,
     SL_FRAMECOUNT = 8,
-    SL_PARAM = 9
+    SL_PARAM = 9,
+    SL_FEEDBACK = 10
 };
 
 typedef struct
@@ -117,6 +118,7 @@ typedef struct
     GLuint width;
     GLuint height;
     GLuint filter;
+    bool mipmap_input;
 
     GLSLUniforms unif;
 #ifdef USE_SLANG
@@ -124,6 +126,8 @@ typedef struct
     std::vector<SlangUniform> uniforms;
     std::vector<uint8_t> ubo_buffer;
     GLuint ubo;
+    bool uses_feedback = false;
+    GLuint feedback_texture;
 #endif
 } GLSLPass;
 
@@ -157,9 +161,11 @@ typedef struct
     void render(GLuint &orig, int width, int height, int viewport_x,
                 int viewport_y, int viewport_width, int viewport_height,
                 GLSLViewportCallback vpcallback);
-    void set_shader_vars(unsigned int pass);
+    void set_shader_vars(unsigned int pass, bool inverted);
     void clear_shader_vars();
-    void strip_parameter_pragmas(std::vector<std::string> &lines);
+    void read_shader_file_with_includes(std::string filename,
+                                        std::vector<std::string> &lines,
+                                        int p);
     GLuint compile_shader(std::vector<std::string> &lines, const char *aliases,
                           const char *defines, GLuint type, GLuint *out);
     void save(const char *filename);
@@ -177,18 +183,17 @@ typedef struct
 
     unsigned int frame_count;
     GLuint vbo;
-    GLuint prev_fbo;
-    GLfloat *fa;
 
-    bool using_slang = false;
+    bool using_slang;
 #ifdef USE_SLANG
     std::string slang_get_stage(std::vector<std::string> &lines,
                                 std::string name);
-    void slang_parse_pragmas(std::vector<std::string> &lines, int p);
     GLint slang_compile(std::vector<std::string> &lines, std::string stage);
     void slang_introspect();
-    void slang_set_shader_vars(int p);
+    void slang_set_shader_vars(int p, bool inverted);
     void slang_clear_shader_vars();
+
+    bool using_feedback;
 #endif
 } GLSLShader;
 
