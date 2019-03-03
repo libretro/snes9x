@@ -1,8 +1,8 @@
 DEBUG = 0
 HAVE_EXCEPTIONS = 0
-LAGFIX=1
 HAVE_STRINGS_H = 1
 
+LTO ?= -flto
 SPACE :=
 SPACE := $(SPACE) $(SPACE)
 BACKSLASH :=
@@ -46,16 +46,11 @@ ifneq ($(GIT_VERSION)," unknown")
    CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
 endif
 
-ifeq ($(LAGFIX),1)
-   CFLAGS   += -DLAGFIX
-   CXXFLAGS += -DLAGFIX
-endif
-
 # Unix
 ifneq (,$(findstring unix,$(platform)))
-   CFLAGS += -flto
-   CXXFLAGS += -flto
-   LDFLAGS += -flto
+   CFLAGS += $(LTO)
+   CXXFLAGS += $(LTO)
+   LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    ifneq ($(findstring SunOS,$(shell uname -a)),)
@@ -78,9 +73,9 @@ ifneq (,$(findstring unix,$(platform)))
 
 # OS X
 else ifeq ($(platform), osx)
-   CFLAGS += -flto
-   CXXFLAGS += -flto
-   LDFLAGS += -flto
+   CFLAGS += $(LTO)
+   CXXFLAGS += $(LTO)
+   LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
@@ -91,9 +86,12 @@ else ifeq ($(platform), osx)
    ifeq ($(arch),ppc)
       CXXFLAGS += -DBLARGG_BIG_ENDIAN=1 -D__ppc__
    endif
-   OSXVER = `sw_vers -productVersion | cut -d. -f 2`
-   OSX_LT_MAVERICKS = `(( $(OSXVER) <= 9)) && echo "YES"`
-   fpic += -mmacosx-version-min=10.1
+   OSXVER = $(shell sw_vers -productVersion | cut -d. -f 2)
+   OSX_GT_MOJAVE = $(shell (( $(OSXVER) >= 14)) && echo "YES")
+   ifneq ($(OSX_GT_MOJAVE),YES)
+	#this breaks compiling on Mac OS Mojave
+      fpic += -mmacosx-version-min=10.1
+   endif
 
 # Nintendo Switch (libnx)
 else ifeq ($(platform), libnx)
@@ -137,8 +135,8 @@ else ifeq ($(platform), classic_armv7_a7)
 	    LDFLAGS += -static-libgcc -static-libstdc++
 	  endif
 	endif
- 
- # (armv8 a35, hard point, neon based) ### 
+
+# (armv8 a35, hard point, neon based) ### 
 # Playstation Classic 
 else ifeq ($(platform), classic_armv8_a35)
 	TARGET := $(TARGET_NAME)_libretro.so
@@ -170,9 +168,9 @@ else ifeq ($(platform), classic_armv8_a35)
    
 # iOS
 else ifneq (,$(findstring ios,$(platform)))
-   CFLAGS += -flto
-   CXXFLAGS += -flto
-   LDFLAGS += -flto
+   CFLAGS += $(LTO)
+   CXXFLAGS += $(LTO)
+   LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro_ios.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
@@ -202,9 +200,9 @@ else ifneq (,$(findstring ios,$(platform)))
 
 # Theos
 else ifeq ($(platform), theos_ios)
-   CFLAGS += -flto
-   CXXFLAGS += -flto
-   LDFLAGS += -flto
+   CFLAGS += $(LTO)
+   CXXFLAGS += $(LTO)
+   LDFLAGS += $(LTO)
    DEPLOYMENT_IOSVERSION = 5.0
    TARGET = iphone:latest:$(DEPLOYMENT_IOSVERSION)
    ARCHS = armv7 armv7s
@@ -227,9 +225,9 @@ else ifeq ($(platform), qnx)
 
 # Vita
 else ifeq ($(platform), vita)
-   CFLAGS += -flto
-   CXXFLAGS += -flto
-   LDFLAGS += -flto
+   CFLAGS += $(LTO)
+   CXXFLAGS += $(LTO)
+   LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro_$(platform).so
    fpic := -fPIC
    CC = arm-vita-eabi-gcc$(EXE_EXT)
@@ -267,9 +265,9 @@ else ifneq (,$(filter $(platform), ps3 sncps3 psl1ght))
 
 # Xbox 360
 else ifeq ($(platform), xenon)
-   CFLAGS += -flto
-   CXXFLAGS += -flto
-   LDFLAGS += -flto
+   CFLAGS += $(LTO)
+   CXXFLAGS += $(LTO)
+   LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro_xenon360.a
    CC = xenon-gcc$(EXE_EXT)
    CXX = xenon-g++$(EXE_EXT)
@@ -304,6 +302,22 @@ else ifneq (,$(filter $(platform), ngc wii wiiu))
 else ifeq ($(platform), emscripten)
    TARGET := $(TARGET_NAME)_libretro_$(platform).bc
    STATIC_LINKING = 1
+
+# Genode
+else ifeq ($(platform), genode)
+   TARGET  := $(TARGET_NAME)_libretro.lib.so
+   PKG_CONFIG := genode-lib genode-stdcxx
+   CXXFLAGS += -D__GENODE__
+   CXXFLAGS += $(shell pkg-config --cflags $(PKG_CONFIG))
+
+   LDFLAGS += -shared --version-script=link.T
+   LDFLAGS += $(shell pkg-config --libs $(PKG_CONFIG))
+
+   CC  = $(shell pkg-config genode-base --variable=cc)
+   CXX = $(shell pkg-config genode-base --variable=cxx)
+   LD  = $(shell pkg-config genode-base --variable=ld)
+   AR  = $(shell pkg-config genode-base --variable=ar) -rcs
+   LIBS =
 
 # Windows MSVC 2003 Xbox 1
 else ifeq ($(platform), xbox1_msvc2003)
@@ -533,9 +547,9 @@ CFLAGS += -D_CRT_SECURE_NO_DEPRECATE
 CXXFLAGS += -D_CRT_SECURE_NO_DEPRECATE
 # Windows
 else
-   CFLAGS += -flto
-   CXXFLAGS += -flto
-   LDFLAGS += -flto
+   CFLAGS += $(LTO)
+   CXXFLAGS += $(LTO)
+   LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro.dll
    CC = gcc
    CXX = g++
@@ -562,8 +576,13 @@ ifeq ($(DEBUG), 1)
       CXXFLAGS += -O0 -g -DDEBUG
    endif
 else
+ifneq (,$(findstring msvc,$(platform)))
    CFLAGS += -O2 -DNDEBUG
    CXXFLAGS += -O2 -DNDEBUG
+else
+   CFLAGS += -O3 -DNDEBUG
+   CXXFLAGS += -O3 -DNDEBUG
+endif
 
    ifneq (,$(findstring msvc,$(platform)))
       ifeq ($(STATIC_LINKING),1)
@@ -618,7 +637,7 @@ ifeq ($(STATIC_LINKING),1)
 else
 	LD = link.exe
 endif
-else
+else ifneq ($(platform),genode)
 	LD = $(CXX)
 endif
 
@@ -638,7 +657,7 @@ $(TARGET): $(OBJECTS)
 ifeq ($(STATIC_LINKING), 1)
 	$(AR) rcs $@ $(OBJECTS)
 else
-	$(LD) $(fpic) $(SHARED) $(LINKOUT)$@ $(OBJECTS) $(LDFLAGS) $(LIBS)
+	+$(LD) $(fpic) $(SHARED) $(LINKOUT)$@ $(OBJECTS) $(LDFLAGS) $(LIBS)
 endif
 	@echo "** BUILD SUCCESSFUL! GG NO RE **"
 

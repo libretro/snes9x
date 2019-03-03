@@ -1,3 +1,9 @@
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
 #include <glib.h>
 
 #include "gtk_s9x.h"
@@ -14,7 +20,7 @@ static GThread *npthread;
 extern SNPServer NPServer;
 
 static void
-S9xNetplayPreconnect (void)
+S9xNetplayPreconnect ()
 {
     S9xNetplayDisconnect ();
 
@@ -24,13 +30,11 @@ S9xNetplayPreconnect (void)
     }
 
     NetPlay.MaxBehindFrameCount = gui_config->netplay_max_frame_loss;
-    NetPlay.Waiting4EmulationThread = FALSE;
-
-    return;
+    NetPlay.Waiting4EmulationThread = false;
 }
 
 static void
-S9xNetplayConnect (void)
+S9xNetplayConnect ()
 {
     GtkWidget *msg;
 
@@ -38,13 +42,13 @@ S9xNetplayConnect (void)
 
     uint32 flags = CPU.Flags;
 
-    if (*(gui_config->netplay_last_rom) &&
-        top_level->try_open_rom (gui_config->netplay_last_rom))
+    if (!gui_config->netplay_last_rom.empty () &&
+        !top_level->try_open_rom (gui_config->netplay_last_rom.c_str ()))
     {
         return;
     }
 
-    if (!S9xNPConnectToServer (gui_config->netplay_last_host,
+    if (!S9xNPConnectToServer (gui_config->netplay_last_host.c_str (),
                                gui_config->netplay_last_port,
                                Memory.ROMName))
     {
@@ -53,7 +57,7 @@ S9xNetplayConnect (void)
                                       GTK_MESSAGE_ERROR,
                                       GTK_BUTTONS_CLOSE,
                                       "Couldn't connect to server: %s:%d",
-                                      gui_config->netplay_last_host,
+                                      gui_config->netplay_last_host.c_str (),
                                       gui_config->netplay_last_port);
         gtk_window_set_title (GTK_WINDOW (msg), _("Connection Error"));
 
@@ -61,12 +65,12 @@ S9xNetplayConnect (void)
         gtk_widget_destroy (msg);
     }
 
-    gui_config->netplay_activated = TRUE;
+    gui_config->netplay_activated = true;
 
     /* If no rom is specified, assume we'll get it from the server */
-    if (*(gui_config->netplay_last_rom) == 0)
+    if (gui_config->netplay_last_rom.empty ())
     {
-        Settings.StopEmulation = FALSE;
+        Settings.StopEmulation = false;
         S9xROMLoaded ();
     }
 
@@ -75,33 +79,27 @@ S9xNetplayConnect (void)
     CPU.Flags = flags;
 
     top_level->configure_widgets ();
-
-    return;
 }
 
 void
-S9xNetplaySyncClients (void)
+S9xNetplaySyncClients ()
 {
     if (Settings.NetPlay && Settings.NetPlayServer)
         S9xNPServerQueueSyncAll ();
-
-    return;
 }
 
 void
-S9xNetplayStopServer (void)
+S9xNetplayStopServer ()
 {
     S9xNPStopServer ();
 
     g_thread_join (npthread);
-    Settings.NetPlayServer = FALSE;
-    gui_config->netplay_server_up = FALSE;
-
-    return;
+    Settings.NetPlayServer = false;
+    gui_config->netplay_server_up = false;
 }
 
 void
-S9xNetplayDisconnect (void)
+S9xNetplayDisconnect ()
 {
     if (Settings.NetPlay)
     {
@@ -114,12 +112,10 @@ S9xNetplayDisconnect (void)
         S9xNetplayStopServer ();
     }
 
-    gui_config->netplay_activated = FALSE;
-    NetPlay.Paused = FALSE;
+    gui_config->netplay_activated = false;
+    NetPlay.Paused = false;
 
     top_level->configure_widgets ();
-
-    return;
 }
 
 static gpointer
@@ -131,7 +127,7 @@ S9xNetplayServerThread (gpointer)
 }
 
 void
-S9xNetplayStartServer (void)
+S9xNetplayStartServer ()
 {
     uint32 flags;
 
@@ -139,13 +135,13 @@ S9xNetplayStartServer (void)
 
     flags = CPU.Flags;
 
-    if (*(gui_config->netplay_last_rom) == 0 ||
-        top_level->try_open_rom (gui_config->netplay_last_rom))
+    if (gui_config->netplay_last_rom.empty () ||
+        !top_level->try_open_rom (gui_config->netplay_last_rom.c_str ()))
     {
         return;
     }
 
-    Settings.NetPlayServer = TRUE;
+    Settings.NetPlayServer = true;
     NPServer.SyncByReset = gui_config->netplay_sync_reset;
     NPServer.SendROMImageOnConnect = gui_config->netplay_send_rom;
 
@@ -162,18 +158,16 @@ S9xNetplayStartServer (void)
 
     S9xROMLoaded ();
 
-    gui_config->netplay_activated = TRUE;
-    gui_config->netplay_server_up = TRUE;
+    gui_config->netplay_activated = true;
+    gui_config->netplay_server_up = true;
 
     CPU.Flags = flags;
 
     top_level->configure_widgets ();
-
-    return;
 }
 
 void
-S9xNetplayDialogOpen (void)
+S9xNetplayDialogOpen ()
 {
     Snes9xNetplayDialog *np_dialog;
 
@@ -201,12 +195,10 @@ S9xNetplayDialogOpen (void)
     delete np_dialog;
 
     top_level->unpause_from_focus_change ();
-
-    return;
 }
 
 int
-S9xNetplaySyncSpeed (void)
+S9xNetplaySyncSpeed ()
 {
     if (!Settings.NetPlay || !NetPlay.Connected)
         return 0;
@@ -223,7 +215,7 @@ S9xNetplaySyncSpeed (void)
         // No heartbeats already arrived, have to wait for one.
         NetPlay.PendingWait4Sync = !S9xNPWaitForHeartBeatDelay (100);
 
-        IPPU.RenderThisFrame = TRUE;
+        IPPU.RenderThisFrame = true;
         IPPU.SkippedFrames = 0;
     }
     else
@@ -238,16 +230,16 @@ S9xNetplaySyncSpeed (void)
         {
             if ((unsigned int) difference <= (NetPlay.MaxBehindFrameCount / 2))
             {
-                NetPlay.Waiting4EmulationThread = FALSE;
-                S9xNPSendPause (FALSE);
+                NetPlay.Waiting4EmulationThread = false;
+                S9xNPSendPause (false);
             }
         }
         else
         {
             if ((unsigned int) difference >= (NetPlay.MaxBehindFrameCount))
             {
-                NetPlay.Waiting4EmulationThread = TRUE;
-                S9xNPSendPause (TRUE);
+                NetPlay.Waiting4EmulationThread = true;
+                S9xNPSendPause (true);
             }
         }
 
@@ -256,11 +248,11 @@ S9xNetplaySyncSpeed (void)
         if (IPPU.SkippedFrames < NetPlay.MaxFrameSkip)
         {
             IPPU.SkippedFrames++;
-            IPPU.RenderThisFrame = FALSE;
+            IPPU.RenderThisFrame = false;
         }
         else
         {
-            IPPU.RenderThisFrame = TRUE;
+            IPPU.RenderThisFrame = true;
             IPPU.SkippedFrames = 0;
         }
     }
@@ -275,9 +267,9 @@ S9xNetplaySyncSpeed (void)
 }
 
 int
-S9xNetplayPush (void)
+S9xNetplayPush ()
 {
-    static int statusbar_state = FALSE;
+    static int statusbar_state = false;
 
     if (gui_config->netplay_activated &&
         (!Settings.NetPlay || !NetPlay.Connected))
@@ -288,26 +280,26 @@ S9xNetplayPush (void)
 
     if (NetPlay.PendingWait4Sync && !S9xNPWaitForHeartBeatDelay (100))
     {
-        S9xProcessEvents (FALSE);
+        S9xProcessEvents (false);
 
         S9xSoundStop ();
-        NetPlay.Paused = TRUE;
+        NetPlay.Paused = true;
 
-        if (statusbar_state == FALSE)
+        if (statusbar_state == false)
         {
             top_level->update_statusbar ();
-            statusbar_state = TRUE;
+            statusbar_state = true;
         }
 
         return 1;
     }
 
-    NetPlay.Paused = FALSE;
+    NetPlay.Paused = false;
 
     if (statusbar_state)
     {
         top_level->update_statusbar ();
-        statusbar_state = FALSE;
+        statusbar_state = false;
     }
 
     S9xSoundStart ();
@@ -322,7 +314,7 @@ S9xNetplayPush (void)
 
     if (NetPlay.PendingWait4Sync)
     {
-        NetPlay.PendingWait4Sync = FALSE;
+        NetPlay.PendingWait4Sync = false;
         NetPlay.FrameCount++;
         S9xNPStepJoypadHistory ();
     }
@@ -331,15 +323,13 @@ S9xNetplayPush (void)
 }
 
 void
-S9xNetplayPop (void)
+S9xNetplayPop ()
 {
     if (!Settings.NetPlay)
         return;
 
     for (int i = 0; i < 8; i++)
         MovieSetJoypad (i, local_joypads[i]);
-
-    return;
 }
 
 

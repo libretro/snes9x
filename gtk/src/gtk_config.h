@@ -1,162 +1,165 @@
+/*****************************************************************************\
+     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                This file is licensed under the Snes9x License.
+   For further information, consult the LICENSE file in the root directory.
+\*****************************************************************************/
+
 #ifndef __GTK_CONFIG_H
 #define __GTK_CONFIG_H
 
-#include <sys/time.h>
-#include <libxml/parser.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
+#include <string>
 
 #include "gtk_control.h"
-#include "snes_ntsc.h"
+#include "filter/snes_ntsc.h"
 
-#define HWA_NONE                0
-#define HWA_OPENGL              1
-#define HWA_XV                  2
+enum {
+    HWA_NONE = 0,
+    HWA_OPENGL = 1,
+    HWA_XV = 2
+};
 
-#define HIRES_MERGE             0
-#define HIRES_NORMAL            1
-#define HIRES_SCALE             2
+enum {
+    HIRES_MERGE = 0,
+    HIRES_NORMAL = 1,
+    HIRES_SCALE = 2
+};
 
-#define ESC_TOGGLE_MENUBAR      0
-#define ESC_EXIT_FULLSCREEN     1
-#define ESC_EXIT_SNES9X         2
+enum {
+    ESC_TOGGLE_MENUBAR = 0,
+    ESC_EXIT_FULLSCREEN = 1,
+    ESC_EXIT_SNES9X = 2
+};
+
+enum {
+    THROTTLE_TIMER = 0,
+    THROTTLE_TIMER_FRAMESKIP = 1,
+    THROTTLE_SOUND_SYNC = 2,
+    THROTTLE_NONE = 3
+};
 
 class Snes9xConfig
 {
-    public:
-        Snes9xConfig (void);
-        int load_config_file (void);
-        int save_config_file (void);
-        int load_defaults (void);
-        void reconfigure (void);
-        void rebind_keys (void);
+  public:
+    Snes9xConfig ();
+    int load_config_file ();
+    int save_config_file ();
+    int load_defaults ();
+    void rebind_keys ();
+    void flush_joysticks ();
+    void set_joystick_mode (int mode);
+    void joystick_register_centers ();
 
-        /* XML parsers */
-        int parse_snes9x (xmlNodePtr node);
-        int parse_preferences (xmlNodePtr node);
-        int parse_option (xmlNodePtr node);
-        int parse_joypad (xmlNodePtr node);
-        int parse_binding (xmlNodePtr node, int joypad_number);
-        int parse_controls (xmlNodePtr node);
-        int set_option (const char *name, const char *value);
+    /* Screen options */
+    bool full_screen_on_open;
+    bool change_display_resolution;
+    bool fullscreen;
+    bool ui_visible;
+    bool statusbar_visible;
+    int default_esc_behavior;
+    bool prevent_screensaver;
+    int xrr_index;
+    bool scale_to_fit;
+    bool maintain_aspect_ratio;
+    int aspect_ratio;
+    int scale_method;
+    bool overscan;
+    bool multithreading;
+    int hires_effect;
+    bool force_inverted_byte_order;
 
-#ifdef USE_JOYSTICK
-        void flush_joysticks (void);
-        void set_joystick_mode (int mode);
-        void joystick_register_centers (void);
-        int parse_calibration (xmlNodePtr node);
-        int parse_axis (xmlNodePtr node, int joystick_number);
-#endif
+    snes_ntsc_setup_t ntsc_setup;
+    int ntsc_format;
+    float ntsc_hue;
+    float ntsc_saturation;
+    float ntsc_contrast;
+    float ntsc_brightness;
+    float ntsc_sharpness;
+    float ntsc_artifacts;
+    float ntsc_gamma;
+    float ntsc_resolution;
+    float ntsc_fringing;
+    float ntsc_bleed;
+    float ntsc_merge_fields;
+    int ntsc_scanline_intensity;
+    int scanline_filter_intensity;
+    int hw_accel;
+    bool allow_opengl;
+    bool allow_xv;
+    bool allow_xrandr;
 
-        /* Screen options */
-        unsigned char full_screen_on_open;
-        unsigned char change_display_resolution;
-        unsigned char fullscreen;
-        unsigned char ui_visible;
-        unsigned char statusbar_visible;
-        unsigned char default_esc_behavior;
-        unsigned char prevent_screensaver;
-        int           xrr_index;
-        unsigned char scale_to_fit;
-        unsigned char maintain_aspect_ratio;
-        int           aspect_ratio;
-        unsigned int  scale_method;
-        unsigned char overscan;
-        unsigned char multithreading;
-        int           hires_effect;
-        unsigned char force_inverted_byte_order;
+    /* Data options */
+    int save_sram_after_secs;
+    std::string sram_directory;
+    std::string savestate_directory;
+    std::string cheat_directory;
+    std::string patch_directory;
+    std::string export_directory;
+    std::string last_directory;
+    std::string last_shader_directory;
 
-        snes_ntsc_setup_t ntsc_setup;
-        unsigned char ntsc_format;
-        float         ntsc_hue;
-        float         ntsc_saturation;
-        float         ntsc_contrast;
-        float         ntsc_brightness;
-        float         ntsc_sharpness;
-        float         ntsc_artifacts;
-        float         ntsc_gamma;
-        float         ntsc_resolution;
-        float         ntsc_fringing;
-        float         ntsc_bleed;
-        float         ntsc_merge_fields;
-        unsigned int  ntsc_scanline_intensity;
-        unsigned int  scanline_filter_intensity;
-        unsigned char hw_accel;
-        unsigned char allow_opengl;
-        unsigned char allow_xv;
-        unsigned char allow_xrandr;
+    /* Controls */
+    JoypadBinding pad[NUM_JOYPADS];
+    Binding       shortcut[NUM_EMU_LINKS];
 
-        /* Data options */
-        unsigned char save_sram_after_secs;
-        char          sram_directory [PATH_MAX];
-        char          savestate_directory [PATH_MAX];
-        char          cheat_directory [PATH_MAX];
-        char          patch_directory [PATH_MAX];
-        char          export_directory [PATH_MAX];
-        char          last_directory [PATH_MAX];
-        char          last_shader_directory [PATH_MAX];
+    /* Netplay */
+    bool netplay_is_server;
+    bool netplay_sync_reset;
+    bool netplay_send_rom;
+    int netplay_default_port;
+    int netplay_max_frame_loss;
+    std::string netplay_last_rom;
+    std::string netplay_last_host;
+    int netplay_last_port;
+    bool netplay_activated;
+    bool netplay_server_up;
 
-        /* Controls */
-        JoypadBinding pad[NUM_JOYPADS];
-        Binding       shortcut[NUM_EMU_LINKS];
+    /* Operational */
+    int sound_driver;
+    bool mute_sound;
+    bool mute_sound_turbo;
+    int sound_buffer_size;
+    int sound_playback_rate;
+    bool auto_input_rate;
+    int sound_input_rate;
+    bool rom_loaded;
+    int window_width, window_height;
+    int preferences_width, preferences_height;
+    int shader_parameters_width, shader_parameters_height;
+    int current_display_tab;
+    bool pause_emulation_on_switch;
+    int num_threads;
+    bool screensaver_needs_reset;
+    bool modal_dialogs;
 
-        /* Netplay */
-        int           netplay_is_server;
-        int           netplay_sync_reset;
-        int           netplay_send_rom;
-        int           netplay_default_port;
-        int           netplay_max_frame_loss;
-        char          netplay_last_rom [PATH_MAX];
-        char          netplay_last_host [PATH_MAX];
-        int           netplay_last_port;
-        int           netplay_activated;
-        int           netplay_server_up;
+    bool pointer_is_visible;
+    gint64 pointer_timestamp;
 
-        /* Operational */
-        int           sound_driver;
-        int           mute_sound;
-        int           mute_sound_turbo;
-        int           sound_buffer_size;
-        int           sound_playback_rate;
-        int           auto_input_rate;
-        int           sound_input_rate;
-        int           rom_loaded;
-        int           window_width, window_height;
-        int           preferences_width, preferences_height;
-        int           pause_emulation_on_switch;
-        int           num_threads;
-        unsigned char screensaver_needs_reset;
-        int           modal_dialogs;
+    unsigned int rewind_granularity;
+    unsigned int rewind_buffer_size;
 
-        int            pointer_is_visible;
-        struct timeval pointer_timestamp;
-        
-        unsigned int   rewind_granularity;
-        unsigned int   rewind_buffer_size;
+    int current_save_slot;
 
-        XRRScreenResources *xrr_screen_resources;
-        XRRCrtcInfo        *xrr_crtc_info;
+    XRRScreenResources *xrr_screen_resources;
+    XRRCrtcInfo *xrr_crtc_info;
 
 #ifdef USE_OPENGL
-        unsigned char sync_to_vblank;
-        unsigned char opengl_activated;
-        unsigned char use_pbos;
-        int           pbo_format;
-        unsigned char npot_textures;
-        unsigned char use_shaders;
-        char          fragment_shader[PATH_MAX];
-        char          vertex_shader[PATH_MAX];
-        unsigned char sync_every_frame;
+    bool sync_to_vblank;
+    bool use_pbos;
+    int pbo_format;
+    bool npot_textures;
+    bool use_shaders;
+    std::string shader_filename;
+    bool use_glfinish;
+    bool use_sync_control;
 #endif
 
-#ifdef USE_JOYSTICK
-        JoyDevice **joystick;
-        int       joystick_threshold;
-#endif
-
+    JoyDevice **joystick;
+    int joystick_threshold;
 };
 
-char *get_config_dir (void);
-char *get_config_file_name (void);
+std::string get_config_dir ();
+std::string get_config_file_name ();
 
 #endif /* __GTK_CONFIG_H */

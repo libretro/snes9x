@@ -19,7 +19,6 @@ unsigned SMP::mmio_read(unsigned addr) {
   case 0xf5:
   case 0xf6:
   case 0xf7:
-    synchronize_cpu();
     return cpu.port_read(addr);
 
   case 0xf8:
@@ -52,13 +51,33 @@ unsigned SMP::mmio_read(unsigned addr) {
 }
 
 void SMP::mmio_write(unsigned addr, unsigned data) {
+
+  if (addr >= 0xffc0) {
+    if (status.iplrom_enable)
+      highmem[addr & 0x3f] = data;
+    else
+      apuram[addr] = data;
+    return;
+  }
+
   switch(addr) {
 
   case 0xf1:
-    status.iplrom_enable = data & 0x80;
+    if (((data & 0x80) > 0) != status.iplrom_enable) {
+      if (status.iplrom_enable)
+      {
+        status.iplrom_enable = false;
+        memcpy(&apuram[0xffc0], highmem, 64);
+      }
+      else
+      {
+        status.iplrom_enable = true;
+        memcpy(highmem, &apuram[0xffc0], 64);
+        memcpy(&apuram[0xffc0], iplrom, 64);
+      }
+    }
 
     if(data & 0x30) {
-      synchronize_cpu();
       if(data & 0x20) {
         cpu.port_write(3, 0x00);
         cpu.port_write(2, 0x00);
@@ -102,7 +121,6 @@ void SMP::mmio_write(unsigned addr, unsigned data) {
   case 0xf5:
   case 0xf6:
   case 0xf7:
-    synchronize_cpu();
     port_write(addr, data);
     break;
 
@@ -125,6 +143,7 @@ void SMP::mmio_write(unsigned addr, unsigned data) {
   case 0xfc:
     timer2.target = data;
     break;
-
   }
+
+  apuram[addr] = data;  //all writes go to RAM, even MMIO writes
 }
