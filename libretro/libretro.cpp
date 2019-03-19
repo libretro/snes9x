@@ -1767,9 +1767,9 @@ bool8 S9xDeinitUpdate(int width, int height)
     if(blargg_filter)
     {
         if(width == 512)
-            snes_ntsc_blit_hires(snes_ntsc, GFX.Screen, GFX.Pitch/2, 0, width, height, snes_ntsc_buffer, GFX.Pitch);
+            snes_ntsc_blit_hires((snes_ntsc_t const*)snes_ntsc, (SNES_NTSC_IN_T const*)GFX.Screen, (long)GFX.Pitch/2, (int)0, (int)width, (int)height, (void*)snes_ntsc_buffer, (long)GFX.Pitch);
         else
-            snes_ntsc_blit(snes_ntsc, GFX.Screen, GFX.Pitch/2, 0, width, height, snes_ntsc_buffer, GFX.Pitch);
+            snes_ntsc_blit((snes_ntsc_t const*)snes_ntsc, (SNES_NTSC_IN_T const*)GFX.Screen, (long)GFX.Pitch/2, (int)0, (int)width, (int)height, (void*)snes_ntsc_buffer, (long)GFX.Pitch);
 
         video_cb(snes_ntsc_buffer + ((int)(GFX.Pitch >> 1) * overscan_offset), MAX_SNES_WIDTH_NTSC, height, GFX.Pitch);
     }
