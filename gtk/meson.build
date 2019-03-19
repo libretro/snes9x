@@ -1,6 +1,6 @@
 project('snes9x-gtk',
         ['c', 'cpp'],
-        version: '1.58',
+        version: '1.60',
         default_options: ['cpp_std=c++11'])
 
 args = ['-DSNES9X_GTK', '-DUNZIP_SUPPORT', '-DNETPLAY_SUPPORT', '-DJMA_SUPPORT', '-Wall', '-W', '-Wno-unused-parameter']
@@ -85,7 +85,9 @@ if slang and opengl
   if not meson.get_compiler('cpp').compiles('#include "' + spirv_cross_hpp + '"')
     slang = false
     warns += 'Slang support needs the SPIRV-Cross directory in ../shaders'
-    warns += 'It can be downloaded with git submodule init; git submodule update'
+    warns += 'It can be downloaded with:'
+    warns += '  git submodule init ../shaders/SPIRV-Cross'
+    warns += '  git submodule update ../shaders/SPIRV-Cross'
   endif
 endif
 
@@ -95,9 +97,10 @@ if slang and opengl
   osdependent_dep = c_compiler.find_library('OSDependent', required: false)
   ogl_compiler_dep = c_compiler.find_library('OGLCompiler', required: false)
   spv_remapper_dep = c_compiler.find_library('SPVRemapper', required: false)
+  resource_limits_dep = c_compiler.find_library('glslang-default-resource-limits', required:false)
 
-  if glslang_dep.found() and spirv_dep.found() and osdependent_dep.found() and ogl_compiler_dep.found() and spv_remapper_dep.found()
-    deps += [glslang_dep, spirv_dep, osdependent_dep, ogl_compiler_dep, spv_remapper_dep]
+  if glslang_dep.found() and spirv_dep.found() and osdependent_dep.found() and ogl_compiler_dep.found() and spv_remapper_dep.found() and resource_limits_dep.found()
+    deps += [glslang_dep, spirv_dep, osdependent_dep, ogl_compiler_dep, spv_remapper_dep, resource_limits_dep]
 
     args += ['-DUSE_SLANG', '-DSPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS']
     srcs += ['../shaders/slang.cpp']

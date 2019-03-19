@@ -189,6 +189,14 @@ void S9xFixColourBrightness (void)
 {
 	IPPU.XB = mul_brightness[PPU.Brightness];
 
+	for (int i = 0; i < 64; i++)
+	{
+		if (i > IPPU.XB[0x1f])
+			brightness_cap[i] = IPPU.XB[0x1f];
+		else
+			brightness_cap[i] = i;
+	}
+
 	for (int i = 0; i < 256; i++)
 	{
 		IPPU.Red[i]   = IPPU.XB[(PPU.CGDATA[i])       & 0x1f];
@@ -1395,8 +1403,7 @@ void S9xSetCPU (uint8 Byte, uint16 Address)
 				{
 					// FIXME: triggered at HC+=6, checked just before the final CPU cycle,
 					// then, when to call S9xOpcode_NMI()?
-					CPU.NMIPending = TRUE;
-					Timings.NMITriggerPos = CPU.Cycles + 6 + 6;
+					Timings.IRQFlagChanging |= IRQ_TRIGGER_NMI;
 
 					#ifdef DEBUGGER
 					if (Settings.TraceHCEvent)
@@ -1888,6 +1895,7 @@ void S9xSoftResetPPU (void)
 	memset(IPPU.TileCached[TILE_4BIT_ODD], 0,  MAX_4BIT_TILES);
 	PPU.VRAMReadBuffer = 0; // XXX: FIXME: anything better?
 	GFX.InterlaceFrame = 0;
+	GFX.DoInterlace = 0;
 	IPPU.Interlace = FALSE;
 	IPPU.InterlaceOBJ = FALSE;
 	IPPU.DoubleWidthPixels = FALSE;

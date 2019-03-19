@@ -68,7 +68,7 @@ private:
 	void DestroyDrawSurface(void);
 	bool ChangeDrawSurfaceSize(unsigned int width, unsigned int height);
 	void SetupVertices();
-    bool ShaderAailable();
+    bool ShaderAvailable();
     bool NPOTAvailable();
 
 public:
@@ -81,7 +81,8 @@ public:
 	bool ApplyDisplayChanges(void);
 	bool SetFullscreen(bool fullscreen);
 	void SetSnes9xColorFormat(void);
-	void EnumModes(std::vector<dMode> *modeVector);	
+	void EnumModes(std::vector<dMode> *modeVector);
+    void SetSwapInterval(int frames);
 	GLSLShader *GetActiveShader()
 	{
 		return glslShader;

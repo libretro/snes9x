@@ -5,7 +5,7 @@
 \*****************************************************************************/
 
 /*****************************************************************************/
-/*  Snes9X: Win32                                                            */
+/*  Snes9x: Win32                                                            */
 /*****************************************************************************/
 #if !defined(SNES9X_H_INCLUDED)
 #define SNES9X_H_INCLUDED
@@ -156,6 +156,7 @@ struct sGUI {
 	bool Vsync;
 	bool ReduceInputLag;
 	bool shaderEnabled;
+    bool DWMSync;
 	TCHAR D3DshaderFileName[MAX_PATH];
 	TCHAR OGLshaderFileName[MAX_PATH];
 

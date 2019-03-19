@@ -249,6 +249,15 @@ event_game_data_clear (GtkEntry *entry,
     gtk_entry_set_text (entry, SAME_AS_GAME);
 }
 
+static void event_binding_icon_clear(GtkEntry *entry,
+                                     GtkEntryIconPosition icon_pos,
+                                     GdkEvent *event,
+                                     gpointer user_data)
+{
+    auto window = (Snes9xPreferences *)user_data;
+    window->clear_binding(gtk_buildable_get_name(GTK_BUILDABLE(entry)));
+}
+
 static void
 event_game_data_browse (GtkButton *widget, gpointer data)
 {
@@ -336,20 +345,20 @@ event_scale_method_changed (GtkComboBox *widget, gpointer user_data)
 
     if (gtk_combo_box_get_active (combo) == FILTER_NTSC)
     {
-        gtk_widget_show (window->get_widget ("ntsc_frame"));
+        gtk_widget_show (window->get_widget ("ntsc_alignment"));
     }
     else
     {
-        gtk_widget_hide (window->get_widget ("ntsc_frame"));
+        gtk_widget_hide (window->get_widget ("ntsc_alignment"));
     }
 
     if (gtk_combo_box_get_active (combo) == FILTER_SCANLINES)
     {
-        gtk_widget_show (window->get_widget ("scanline_filter_frame"));
+        gtk_widget_show (window->get_widget ("scanline_alignment"));
     }
     else
     {
-        gtk_widget_hide (window->get_widget ("scanline_filter_frame"));
+        gtk_widget_hide (window->get_widget ("scanline_alignment"));
     }
 }
 
@@ -418,7 +427,7 @@ event_input_rate_changed (GtkRange *range, gpointer data)
 {
     char text[256];
     GtkLabel *label = GTK_LABEL (data);
-    double value = gtk_range_get_value (range) / 32040.0 * 60.09881389744051;
+    double value = gtk_range_get_value (range) / 32000.0 * 60.09881389744051;
 
     snprintf (text, 256, "%.4f hz", value);
 
@@ -534,6 +543,27 @@ Snes9xPreferences::Snes9xPreferences (Snes9xConfig *config) :
                            get_widget ("relative_video_rate"),
                            NULL,
                            (GConnectFlags) 0);
+
+    for (int i = 0; ; i++)
+    {
+        const BindingLink &link = b_links[i];
+        if (!link.button_name)
+        break;
+
+        GtkWidget *entry = get_widget(link.button_name);
+        gtk_entry_set_icon_from_icon_name(GTK_ENTRY(entry),
+                                          GTK_ENTRY_ICON_SECONDARY,
+                                          "edit-clear");
+        gtk_entry_set_icon_activatable(GTK_ENTRY(entry),
+                                       GTK_ENTRY_ICON_SECONDARY,
+                                       true);
+        g_signal_connect_data((gpointer)entry,
+                              "icon-release",
+                              G_CALLBACK(event_binding_icon_clear),
+                              (gpointer)this,
+                              NULL,
+                              (GConnectFlags)0);
+    }
 }
 
 Snes9xPreferences::~Snes9xPreferences ()
@@ -660,20 +690,20 @@ Snes9xPreferences::move_settings_to_dialog ()
 
     if (config->scale_method == FILTER_NTSC)
     {
-        gtk_widget_show (get_widget ("ntsc_frame"));
+        gtk_widget_show (get_widget ("ntsc_alignment"));
     }
     else
     {
-        gtk_widget_hide (get_widget ("ntsc_frame"));
+        gtk_widget_hide (get_widget ("ntsc_alignment"));
     }
 
     if (config->scale_method == FILTER_SCANLINES)
     {
-        gtk_widget_show (get_widget ("scanline_filter_frame"));
+        gtk_widget_show (get_widget ("scanline_alignment"));
     }
     else
     {
-        gtk_widget_hide (get_widget ("scanline_filter_frame"));
+        gtk_widget_hide (get_widget ("scanline_alignment"));
     }
 
     load_ntsc_settings ();
@@ -685,8 +715,8 @@ Snes9xPreferences::move_settings_to_dialog ()
 
 #ifdef USE_OPENGL
     set_check ("sync_to_vblank",            config->sync_to_vblank);
-    set_check ("sync_every_frame",          config->sync_every_frame);
-    set_check ("use_fences",                config->use_fences);
+    set_check ("use_glfinish",              config->use_glfinish);
+    set_check ("use_sync_control",          config->use_sync_control);
     set_check ("use_pbos",                  config->use_pbos);
     set_combo ("pixel_format",              config->pbo_format == 16 ? 0 : 1);
     set_check ("npot_textures",             config->npot_textures);
@@ -829,6 +859,7 @@ Snes9xPreferences::get_settings_from_dialog ()
     int pbo_format = get_combo ("pixel_format") == 1 ? 32 : 16;
 
     if (config->sync_to_vblank != get_check ("sync_to_vblank") ||
+        config->use_sync_control != get_check ("use_sync_control") ||
         config->npot_textures != get_check ("npot_textures") ||
         config->use_pbos != get_check ("use_pbos") ||
         config->pbo_format !=  pbo_format ||
@@ -842,8 +873,8 @@ Snes9xPreferences::get_settings_from_dialog ()
     config->use_pbos                  = get_check ("use_pbos");
     config->npot_textures             = get_check ("npot_textures");
     config->use_shaders               = get_check ("use_shaders");
-    config->sync_every_frame          = get_check ("sync_every_frame");
-    config->use_fences                = get_check ("use_fences");
+    config->use_glfinish              = get_check ("use_glfinish");
+    config->use_sync_control          = get_check ("use_sync_control");
 
     config->shader_filename           = get_entry_text ("fragment_shader");
 
@@ -1087,6 +1118,8 @@ Snes9xPreferences::show ()
     if (config->preferences_width > 0 && config->preferences_height > 0)
         resize (config->preferences_width, config->preferences_height);
 
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(get_widget("display_notebook")), config->current_display_tab);
+
     for (close_dialog = false; !close_dialog; )
     {
         gtk_widget_show (window);
@@ -1094,6 +1127,7 @@ Snes9xPreferences::show ()
 
         config->preferences_width = get_width ();
         config->preferences_height = get_height ();
+        config->current_display_tab = gtk_notebook_get_current_page(GTK_NOTEBOOK(get_widget("display_notebook")));
 
         switch (result)
         {
@@ -1224,11 +1258,45 @@ Snes9xPreferences::get_focused_binding ()
     return -1;
 }
 
+void Snes9xPreferences::clear_binding(const char *name)
+{
+    Binding unset;
+    int i;
+
+    for (i = 0; i < NUM_JOYPAD_LINKS; i++)
+    {
+        if (!strcmp(name, b_links[i].button_name))
+        {
+            int current_joypad = get_combo("control_combo");
+            pad[current_joypad].data[i] = unset;
+            break;
+        }
+    }
+    if (i == NUM_JOYPAD_LINKS)
+    {
+        for (i = NUM_JOYPAD_LINKS; b_links[i].button_name; i++)
+        {
+            if (!strcmp(name, b_links[i].button_name))
+            {
+                shortcut[i - NUM_JOYPAD_LINKS] = unset;
+                break;
+            }
+        }
+    }
+
+    if (b_links[i].button_name)
+    {
+        char buf[256];
+        unset.to_string(buf);
+        set_entry_text(b_links[i].button_name, buf);
+    }
+}
+
 void
 Snes9xPreferences::bindings_to_dialog (int joypad)
 {
     char    name[256];
-    Binding *bindings = (Binding *) &pad[joypad];
+    Binding *bindings = (Binding *) &pad[joypad].data;
 
     set_combo ("control_combo", joypad);
 

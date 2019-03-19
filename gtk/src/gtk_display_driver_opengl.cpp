@@ -88,7 +88,6 @@ S9xOpenGLDisplayDriver::S9xOpenGLDisplayDriver (Snes9xWindow *window,
     this->window = window;
     this->config = config;
     this->drawing_area = GTK_WIDGET (window->drawing_area);
-    fence = NULL;
 }
 
 void S9xOpenGLDisplayDriver::update (int width, int height, int yoffset)
@@ -609,9 +608,6 @@ bool S9xOpenGLDisplayDriver::create_context()
     else
         core = false;
 
-    if (version >= 31 || epoxy_has_gl_extension ("GL_ARB_sync"))
-        fences = true;
-
     return true;
 }
 
@@ -666,16 +662,10 @@ void S9xOpenGLDisplayDriver::swap_buffers ()
 {
     context->swap_buffers ();
 
-    if (config->sync_every_frame && !config->use_fences)
+    if (config->use_glfinish && !config->use_sync_control)
     {
         usleep (0);
         glFinish ();
-    }
-    else if (config->use_fences && fences)
-    {
-        if (fence)
-            glDeleteSync (fence);
-        fence = glFenceSync (GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 }
 
@@ -740,14 +730,10 @@ int S9xOpenGLDisplayDriver::query_availability ()
 
 bool S9xOpenGLDisplayDriver::is_ready ()
 {
-    if (!fence)
+    if (context->ready())
+    {
         return true;
+    }
 
-    if (glClientWaitSync (fence, GL_SYNC_FLUSH_COMMANDS_BIT, 0) == GL_TIMEOUT_EXPIRED)
-        return false;
-
-    glDeleteSync (fence);
-    fence = NULL;
-
-    return true;
+    return false;
 }

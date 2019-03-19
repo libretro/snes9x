@@ -120,7 +120,7 @@ bool COpenGL::Initialize(HWND hWnd)
 		cgShader = new CGLCG(cgContext);
 	}
 
-    if (ShaderAailable() && NPOTAvailable()) {
+    if (ShaderAvailable() && NPOTAvailable()) {
         glslShader = new GLSLShader();
     }
 
@@ -186,7 +186,7 @@ void COpenGL::CreateDrawSurface(unsigned int width, unsigned int height)
 		outTextureHeight = height;
 		glGenTextures(1,&drawTexture);
 		glBindTexture(GL_TEXTURE_2D,drawTexture);
-		glTexImage2D(GL_TEXTURE_2D,0,GL_RGB, outTextureWidth, outTextureHeight,0,GL_RGB,GL_UNSIGNED_SHORT_5_6_5,NULL);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, outTextureWidth, outTextureHeight,0,GL_RGB,GL_UNSIGNED_SHORT_5_6_5,NULL);
 		if(pboFunctionsLoaded) {
 			glGenBuffers(1,&drawBuffer);
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER,drawBuffer);
@@ -284,7 +284,7 @@ void COpenGL::Render(SSurface Src)
 
 	if(pboFunctionsLoaded) {
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, drawBuffer);
-		Dst.Surface = (unsigned char *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER,GL_READ_WRITE);
+		Dst.Surface = (unsigned char *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 	} else {
 		Dst.Surface = noPboBuffer;
 	}
@@ -384,6 +384,12 @@ bool COpenGL::ChangeRenderSize(unsigned int newWidth, unsigned int newHeight)
 	return true;
 }
 
+void COpenGL::SetSwapInterval(int frames)
+{
+    if (wglSwapIntervalEXT)
+        wglSwapIntervalEXT(frames);
+}
+
 bool COpenGL::ApplyDisplayChanges(void)
 {
 	if(wglSwapIntervalEXT) {
@@ -436,7 +442,6 @@ void COpenGL::SetSnes9xColorFormat()
 	GUI.BlueShift = 0;
 	GUI.GreenShift = 6;
 	GUI.RedShift = 11;
-	S9xSetRenderPixelFormat (RGB565);
 	S9xBlit2xSaIFilterInit();
 	S9xBlitHQ2xFilterInit();
 	GUI.NeedDepthConvert = FALSE;
@@ -760,7 +765,7 @@ bool COpenGL::SetShadersGLSL_OLD(const TCHAR *glslFileName)
 	return true;
 }
 
-bool COpenGL::ShaderAailable()
+bool COpenGL::ShaderAvailable()
 {
     const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
 

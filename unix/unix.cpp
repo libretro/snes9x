@@ -1484,8 +1484,8 @@ int main (int argc, char **argv)
 	Settings.FrameTimeNTSC = 16667;
 	Settings.SixteenBitSound = TRUE;
 	Settings.Stereo = TRUE;
-	Settings.SoundPlaybackRate = 32000;
-	Settings.SoundInputRate = 31950;
+	Settings.SoundPlaybackRate = 48000;
+	Settings.SoundInputRate = 31920;
 	Settings.SupportHiRes = TRUE;
 	Settings.Transparency = TRUE;
 	Settings.AutoDisplayMessages = TRUE;
@@ -1537,14 +1537,10 @@ int main (int argc, char **argv)
 		exit(1);
 	}
 
-	S9xInitSound(unixSettings.SoundBufferSize, 0);
+	S9xInitSound(unixSettings.SoundBufferSize);
 	S9xSetSoundMute(TRUE);
 
 	S9xReportControllers();
-
-#ifdef GFX_MULTI_FORMAT
-	S9xSetRenderPixelFormat(RGB565);
-#endif
 
 	uint32	saved_flags = CPU.Flags;
 	bool8	loaded = FALSE;

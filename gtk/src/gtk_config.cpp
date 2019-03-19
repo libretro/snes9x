@@ -115,6 +115,7 @@ int Snes9xConfig::load_defaults ()
     preferences_height = -1;
     shader_parameters_width = -1;
     shader_parameters_height = -1;
+    current_display_tab = 0;
     sram_directory.clear ();
     export_directory.clear ();
     savestate_directory.clear ();
@@ -150,11 +151,11 @@ int Snes9xConfig::load_defaults ()
     npot_textures = false;
     use_shaders = false;
     shader_filename.clear ();
-    sync_every_frame = false;
-    use_fences = false;
+    use_glfinish = false;
+    use_sync_control = false;
 #endif
 
-    /* Snes9X Variables */
+    /* Snes9x Variables */
     Settings.MouseMaster = true;
     Settings.SuperScopeMaster = true;
     Settings.JustifierMaster = true;
@@ -167,9 +168,9 @@ int Snes9xConfig::load_defaults ()
     Settings.SixteenBitSound = true;
     Settings.Stereo = true;
     Settings.ReverseStereo = false;
-    Settings.SoundPlaybackRate = 44100;
+    Settings.SoundPlaybackRate = 48000;
     Settings.StopEmulation = true;
-    Settings.FrameTimeNTSC = 16666;
+    Settings.FrameTimeNTSC = 16639;
     Settings.FrameTimePAL = 20000;
     Settings.SupportHiRes = true;
     Settings.FrameTime = Settings.FrameTimeNTSC;
@@ -266,8 +267,8 @@ int Snes9xConfig::save_config_file ()
 #undef z
 #define z "OpenGL::"
     outbool   (cf, z"VSync", sync_to_vblank);
-    outbool   (cf, z"glFinish", sync_every_frame);
-    outbool   (cf, z"glFenceSync", use_fences);
+    outbool   (cf, z"glFinish", use_glfinish);
+    outbool   (cf, z"SyncControl", use_sync_control);
     outbool   (cf, z"UsePixelBufferObjects", use_pbos);
     cf.SetInt     (z"PixelBufferObjectBitDepth", pbo_format);
     outbool   (cf, z"UseNonPowerOfTwoTextures", npot_textures);
@@ -306,6 +307,7 @@ int Snes9xConfig::save_config_file ()
     cf.SetInt (z"PreferencesHeight", preferences_height);
     cf.SetInt (z"ShaderParametersWidth", shader_parameters_width);
     cf.SetInt (z"ShaderParametersHeight", shader_parameters_height);
+    cf.SetInt (z"CurrentDisplayTab", current_display_tab);
     outbool (cf, z"UIVisible", ui_visible);
     outbool (cf, z"StatusBarVisible", statusbar_visible);
     if (default_esc_behavior != ESC_TOGGLE_MENUBAR)
@@ -495,8 +497,8 @@ int Snes9xConfig::load_config_file ()
 #undef z
 #define z "OpenGL::"
     inbool (z"VSync", sync_to_vblank);
-    inbool (z"glFinish", sync_every_frame);
-    inbool (z"glFenceSync", use_fences);
+    inbool (z"glFinish", use_glfinish);
+    inbool (z"SyncControl", use_sync_control);
     inbool (z"UsePixelBufferObjects", use_pbos);
     inint  (z"PixelBufferObjectBitDepth", pbo_format);
     inbool (z"UseNonPowerOfTwoTextures", npot_textures);
@@ -535,6 +537,7 @@ int Snes9xConfig::load_config_file ()
     inint (z"PreferencesHeight", preferences_height);
     inint (z"ShaderParametersWidth", shader_parameters_width);
     inint (z"ShaderParametersHeight", shader_parameters_height);
+    inint (z"CurrentDisplayTab", current_display_tab);
     inbool (z"UIVisible", ui_visible);
     inbool (z"StatusBarVisible", statusbar_visible);
     inbool (z"Fullscreen", fullscreen);

@@ -133,7 +133,7 @@ S9xPortSoundInit ()
             Settings.SoundInputRate = top_level->get_auto_input_rate ();
             if (Settings.SoundInputRate == 0.0)
             {
-                Settings.SoundInputRate = 31950;
+                Settings.SoundInputRate = 31920;
                 gui_config->auto_input_rate = 0;
             }
         }
@@ -144,10 +144,7 @@ S9xPortSoundInit ()
 
         Settings.SoundPlaybackRate = playback_rates[gui_config->sound_playback_rate];
 
-        if (gui_config->sound_driver == sdl_driver)
-            S9xInitSound(0, 0);
-        else
-            S9xInitSound(0, 0);
+        S9xInitSound(0);
 
         S9xSetSoundMute (false);
     }

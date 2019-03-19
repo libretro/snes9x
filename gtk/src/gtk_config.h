@@ -127,6 +127,7 @@ class Snes9xConfig
     int window_width, window_height;
     int preferences_width, preferences_height;
     int shader_parameters_width, shader_parameters_height;
+    int current_display_tab;
     bool pause_emulation_on_switch;
     int num_threads;
     bool screensaver_needs_reset;
@@ -150,8 +151,8 @@ class Snes9xConfig
     bool npot_textures;
     bool use_shaders;
     std::string shader_filename;
-    bool sync_every_frame;
-    bool use_fences;
+    bool use_glfinish;
+    bool use_sync_control;
 #endif
 
     JoyDevice **joystick;
