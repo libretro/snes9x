@@ -3,7 +3,9 @@
 #ifndef SNES_NTSC_CONFIG_H
 #define SNES_NTSC_CONFIG_H
 
-#if !defined(SNES9X_GTK) && !defined(_WIN32)
+#include "../port.h"
+
+#if RED_SHIFT_BITS == 10
 /* Format of source pixels */
 #define SNES_NTSC_IN_FORMAT SNES_NTSC_RGB15
 /* #define SNES_NTSC_IN_FORMAT SNES_NTSC_RGB16 */

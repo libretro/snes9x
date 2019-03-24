@@ -100,6 +100,18 @@ typedef size_t					pint;
 #endif	// HAVE_STDINT_H
 #endif	// snes9x_types_defined
 
+#ifndef __cplusplus
+#if defined(_MSC_VER) && !defined(SN_TARGET_PS3)
+/* Hack applied for MSVC when compiling in C89 mode
+ * as it isn't C99-compliant. */
+#define bool unsigned char
+#define true 1
+#define false 0
+#else
+#include <stdbool.h>
+#endif
+#endif
+
 #ifndef TRUE
 #define TRUE	1
 #endif
