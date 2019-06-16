@@ -52,6 +52,8 @@ static int g_screen_gun_height = SNES_HEIGHT;
 
 uint16 *screen_buffer = NULL;
 
+static unsigned snes_devices[8];
+
 char g_rom_dir[1024];
 char g_basename[1024];
 
@@ -152,6 +154,76 @@ static overscan_mode crop_overscan_mode = OVERSCAN_CROP_ON; // default to crop
 static aspect_mode aspect_ratio_mode = ASPECT_RATIO_4_3; // default to 4:3
 static bool rom_loaded = false;
 
+
+static const struct retro_controller_description port_1[] = {
+    { "None", RETRO_DEVICE_NONE },
+    { "Controller", RETRO_DEVICE_JOYPAD },
+    { "Mouse", RETRO_DEVICE_MOUSE },
+};
+
+static const struct retro_controller_description port_2[] = {
+    { "None", RETRO_DEVICE_NONE },
+    { "Controller", RETRO_DEVICE_JOYPAD },
+    { "Mouse", RETRO_DEVICE_MOUSE },
+    { "Multitap", RETRO_DEVICE_JOYPAD_MULTITAP },
+    { "SuperScope", RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE },
+    { "Justifier", RETRO_DEVICE_LIGHTGUN_JUSTIFIER },
+    { "M.A.C.S. Rifle", RETRO_DEVICE_LIGHTGUN_MACS_RIFLE },
+};
+
+static const struct retro_controller_description port_justifier_2[] = {
+    { "None", RETRO_DEVICE_NONE },
+    { "Justifier (2P)", RETRO_DEVICE_LIGHTGUN_JUSTIFIER_2 },
+};
+
+static const struct retro_controller_description port_controller[] = {
+    { "None", RETRO_DEVICE_NONE },
+    { "Controller", RETRO_DEVICE_JOYPAD },
+};
+
+static struct retro_controller_info ports_table[ 8 ];
+
+static void submit_ports_table()
+{
+    int i;
+    retro_controller_info* p = ports_table;
+    
+    p->types = port_1;
+    p->num_types = 4;
+    ++p;
+
+    p->types = port_2;
+    p->num_types = 7;
+    ++p;
+    
+    switch ( snes_devices[ 1 ] )
+    {
+        
+    case RETRO_DEVICE_LIGHTGUN_JUSTIFIER:
+        p->types = port_justifier_2;
+        p->num_types = 2;
+        ++p;
+        break;
+        
+    case RETRO_DEVICE_JOYPAD_MULTITAP:
+        for ( i = 0; i < 3; ++i )
+        {        
+            p->types = port_controller;
+            p->num_types = 2;
+            ++p;
+        }
+        break;
+        
+    }; // port 1 selection
+
+    // terminator
+    p->types = nullptr;
+    p->num_types = 0;
+    ++p;
+    
+    environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)ports_table);
+}
+
 void retro_set_environment(retro_environment_t cb)
 {
     environ_cb = cb;
@@ -223,47 +295,7 @@ void retro_set_environment(retro_environment_t cb)
 
     environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
 
-    static const struct retro_controller_description port_1[] = {
-        { "None", RETRO_DEVICE_NONE },
-        { "SNES Joypad", RETRO_DEVICE_JOYPAD },
-        { "SNES Mouse", RETRO_DEVICE_MOUSE },
-        { "Multitap", RETRO_DEVICE_JOYPAD_MULTITAP },
-    };
-
-    static const struct retro_controller_description port_2[] = {
-        { "None", RETRO_DEVICE_NONE },
-        { "SNES Joypad", RETRO_DEVICE_JOYPAD },
-        { "SNES Mouse", RETRO_DEVICE_MOUSE },
-        { "Multitap", RETRO_DEVICE_JOYPAD_MULTITAP },
-        { "SuperScope", RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE },
-        { "Justifier", RETRO_DEVICE_LIGHTGUN_JUSTIFIER },
-        { "M.A.C.S. Rifle", RETRO_DEVICE_LIGHTGUN_MACS_RIFLE },
-    };
-
-    static const struct retro_controller_description port_3[] = {
-        { "None", RETRO_DEVICE_NONE },
-        { "SNES Joypad", RETRO_DEVICE_JOYPAD },
-        { "Justifier (2P)", RETRO_DEVICE_LIGHTGUN_JUSTIFIER_2 },
-    };
-
-    static const struct retro_controller_description port_extra[] = {
-        { "None", RETRO_DEVICE_NONE },
-        { "SNES Joypad", RETRO_DEVICE_JOYPAD },
-    };
-
-    static const struct retro_controller_info ports[] = {
-        { port_1, 4 },
-        { port_2, 7 },
-        { port_3, 3 },
-        { port_extra, 2 },
-        { port_extra, 2 },
-        { port_extra, 2 },
-        { port_extra, 2 },
-        { port_extra, 2 },
-        {},
-    };
-
-    environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)ports);
+    submit_ports_table();
 }
 
 char *get_cursor_color(const char *name)
@@ -776,7 +808,6 @@ void retro_reset()
     S9xSoftReset();
 }
 
-static unsigned snes_devices[8];
 void retro_set_controller_port_device(unsigned port, unsigned device)
 {
     if (port < 8)
@@ -790,7 +821,17 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
                 break;
             case RETRO_DEVICE_JOYPAD_MULTITAP:
                 S9xSetController(port, CTL_MP5, port * offset, port * offset + 1, port * offset + 2, port * offset + 3);
-                snes_devices[port] = RETRO_DEVICE_JOYPAD_MULTITAP;
+                if ( port < 2 )
+                {
+	                snes_devices[port] = RETRO_DEVICE_JOYPAD_MULTITAP;
+				}
+				else
+				{
+					if (log_cb)
+						log_cb(RETRO_LOG_ERROR, "Invalid multitap assignment to port %d, must be port 0 or 1.\n", port);
+					S9xSetController(port, CTL_NONE, 0, 0, 0, 0);
+					snes_devices[port] = RETRO_DEVICE_NONE;
+				}
                 break;
             case RETRO_DEVICE_MOUSE:
                 S9xSetController(port, CTL_MOUSE, port, 0, 0, 0);
@@ -833,6 +874,9 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
         }
 
         S9xControlsSoftReset();
+        
+        // submit changes in port-count to the front-end, e.g. multi-tap or justifier attached.
+        submit_ports_table();
     }
     else if(device != RETRO_DEVICE_NONE)
         log_cb(RETRO_LOG_INFO, "Nonexistent Port (%d).\n", port);
