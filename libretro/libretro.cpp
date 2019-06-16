@@ -189,7 +189,7 @@ static void submit_ports_table()
     retro_controller_info* p = ports_table;
     
     p->types = port_1;
-    p->num_types = 4;
+    p->num_types = 3;
     ++p;
 
     p->types = port_2;
