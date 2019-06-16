@@ -821,17 +821,17 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
                 break;
             case RETRO_DEVICE_JOYPAD_MULTITAP:
                 S9xSetController(port, CTL_MP5, port * offset, port * offset + 1, port * offset + 2, port * offset + 3);
-                if ( port < 2 )
+                if ( port != 1 )
                 {
 	                snes_devices[port] = RETRO_DEVICE_JOYPAD_MULTITAP;
-				}
-				else
-				{
-					if (log_cb)
-						log_cb(RETRO_LOG_ERROR, "Invalid multitap assignment to port %d, must be port 0 or 1.\n", port);
-					S9xSetController(port, CTL_NONE, 0, 0, 0, 0);
-					snes_devices[port] = RETRO_DEVICE_NONE;
-				}
+                }
+                else
+                {
+                    if (log_cb)
+                        log_cb(RETRO_LOG_ERROR, "Invalid multitap assignment to port %d, must be port 1.\n", port);
+                    S9xSetController(port, CTL_NONE, 0, 0, 0, 0);
+                    snes_devices[port] = RETRO_DEVICE_NONE;
+                }
                 break;
             case RETRO_DEVICE_MOUSE:
                 S9xSetController(port, CTL_MOUSE, port, 0, 0, 0);
