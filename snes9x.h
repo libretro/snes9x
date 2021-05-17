@@ -312,6 +312,7 @@ struct SSettings
 	int	OneSlowClockCycle;
 	int	TwoClockCycles;
 	int	MaxSpriteTilesPerLine;
+	int	ChannelsVolumePercent[9];
 };
 
 struct SSNESGameFixes

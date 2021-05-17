@@ -340,19 +340,19 @@ static void update_variables(void)
     }
     else
         Settings.UpAndDown = false;
-
-    strcpy(key, "snes9x_sndchan_x");
+    
+    strcpy(key, "snes9x_sndchan_volume_x");
     var.key=key;
     for (int i=0;i<8;i++)
     {
-        key[strlen("snes9x_sndchan_")]='1'+i;
+        key[strlen("snes9x_sndchan_volume_")]='1'+i;
         var.value=NULL;
-        if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value))
-            disabled_channels|=1<<i;
+        if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+        {
+            Settings.ChannelsVolumePercent[i] = atoi(var.value);
+        }
     }
-    S9xSetSoundControl(disabled_channels^0xFF);
-
-
+    
     int disabled_layers=0;
     strcpy(key, "snes9x_layer_x");
     for (int i=0;i<5;i++)
@@ -735,14 +735,14 @@ static void update_variables(void)
                 "snes9x_layer_5",
                 "snes9x_gfx_clip",
                 "snes9x_gfx_transp",
-                "snes9x_sndchan_1",
-                "snes9x_sndchan_2",
-                "snes9x_sndchan_3",
-                "snes9x_sndchan_4",
-                "snes9x_sndchan_5",
-                "snes9x_sndchan_6",
-                "snes9x_sndchan_7",
-                "snes9x_sndchan_8"
+                "snes9x_sndchan_volume_1",
+                "snes9x_sndchan_volume_2",
+                "snes9x_sndchan_volume_3",
+                "snes9x_sndchan_volume_4",
+                "snes9x_sndchan_volume_5",
+                "snes9x_sndchan_volume_6",
+                "snes9x_sndchan_volume_7",
+                "snes9x_sndchan_volume_8"
             };
 
             option_display.visible = show_advanced_av_settings;
@@ -1162,12 +1162,6 @@ bool retro_load_game(const struct retro_game_info *game)
             for(int lcv = 0; lcv < 0x20000; lcv++)
                 Memory.RAM[lcv] = rand() % 256;
         }
-
-        // restore disabled sound channels
-        if (disabled_channels)
-        {
-            S9xSetSoundControl(disabled_channels^0xFF);
-        }
     }
 
     if (!rom_loaded && log_cb)
@@ -1368,6 +1362,15 @@ void retro_init(void)
     Settings.CartBName[0] = 0;
     Settings.AutoSaveDelay = 1;
     Settings.DontSaveOopsSnapshot = TRUE;
+    Settings.ChannelsVolumePercent[0] = 100;
+    Settings.ChannelsVolumePercent[1] = 100;
+    Settings.ChannelsVolumePercent[2] = 100;
+    Settings.ChannelsVolumePercent[3] = 100;
+    Settings.ChannelsVolumePercent[4] = 100;
+    Settings.ChannelsVolumePercent[5] = 100;
+    Settings.ChannelsVolumePercent[6] = 100;
+    Settings.ChannelsVolumePercent[7] = 100;
+    Settings.ChannelsVolumePercent[8] = 100;
 
     CPU.Flags = 0;
 
@@ -2011,12 +2014,6 @@ bool retro_unserialize(const void* data, size_t size)
     }
     if (S9xUnfreezeGameMem((const uint8_t*)data,size) != SUCCESS)
         return false;
-
-    // restore disabled sound channels
-    if (disabled_channels)
-    {
-        S9xSetSoundControl(disabled_channels^0xFF);
-    }
 
     return true;
 }
