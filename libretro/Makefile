@@ -68,17 +68,9 @@ ifneq (,$(findstring unix,$(platform)))
    # ARM
    ifneq (,$(findstring armv,$(platform)))
       CXXFLAGS += -DARM
-   # Raspberry Pi variants
+   # Raspberry Pi variants: modern GCC provides the right flags for each model.
    else ifneq (,$(findstring rpi,$(platform)))
-      CXXFLAGS += -DARM
-     ifneq (,$(findstring rpi1,$(platform)))
-	 CXXFLAGS += -marm -march=armv6j -mfpu=vfp -mfloat-abi=hard
-     else ifneq (,$(findstring rpi2,$(platform)))
-	 CXXFLAGS += -marm -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
-     else ifneq (,$(findstring rpi3,$(platform)))
-	 CXXFLAGS += -marm -mcpu=cortex-a53 -mfpu=neon-fp-armv8 -mfloat-abi=hard
-     else ifneq (,$(findstring rpi4_64,$(platform)))
-	 CXXFLAGS += -march=armv8-a+crc+simd -mtune=cortex-a72
+      FLAGS += -DARM -march=native -mcpu=native -ftree-vectorize -pipe -fomit-frame-pointer
    endif
 endif
 
