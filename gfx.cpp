@@ -49,15 +49,13 @@ bool8 S9xGraphicsInit (void)
 	S9xInitTileRenderer();
 	memset(BlackColourMap, 0, 256 * sizeof(uint16));
 
-	GFX.RealPPL = GFX.Pitch >> 1;
 	IPPU.OBJChanged = TRUE;
 	Settings.BG_Forced = 0;
 	S9xFixColourBrightness();
 	S9xBuildDirectColourMaps();
 
+	GFX.Screen = &GFX.ScreenBuffer[GFX.RealPPL * 32];
 	GFX.ZERO = (uint16 *) malloc(sizeof(uint16) * 0x10000);
-
-	GFX.ScreenSize = GFX.Pitch / 2 * SNES_HEIGHT_EXTENDED * (Settings.SupportHiRes ? 2 : 1);
 	GFX.SubScreen  = (uint16 *) malloc(GFX.ScreenSize * sizeof(uint16));
 	GFX.ZBuffer    = (uint8 *)  malloc(GFX.ScreenSize);
 	GFX.SubZBuffer = (uint8 *)  malloc(GFX.ScreenSize);
@@ -100,6 +98,9 @@ bool8 S9xGraphicsInit (void)
 		}
 	}
 
+	GFX.EndScreenRefreshCallback = NULL;
+	GFX.EndScreenRefreshCallbackData = NULL;
+
 	return (TRUE);
 }
 
@@ -109,6 +110,9 @@ void S9xGraphicsDeinit (void)
 	if (GFX.SubScreen)  { free(GFX.SubScreen);  GFX.SubScreen  = NULL; }
 	if (GFX.ZBuffer)    { free(GFX.ZBuffer);    GFX.ZBuffer    = NULL; }
 	if (GFX.SubZBuffer) { free(GFX.SubZBuffer); GFX.SubZBuffer = NULL; }
+
+	GFX.EndScreenRefreshCallback = NULL;
+	GFX.EndScreenRefreshCallbackData = NULL;
 }
 
 void S9xGraphicsScreenResize (void)
@@ -121,19 +125,11 @@ void S9xGraphicsScreenResize (void)
 		
 	if (Settings.SupportHiRes && (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires))
 	{
-		GFX.RealPPL = GFX.Pitch >> 1;
 		IPPU.DoubleWidthPixels = TRUE;
 		IPPU.RenderedScreenWidth = SNES_WIDTH << 1;
 	}
 	else
 	{
-		#ifdef USE_OPENGL
-		if (Settings.OpenGLEnable)
-			GFX.RealPPL = SNES_WIDTH;
-		else
-		#endif
-			GFX.RealPPL = GFX.Pitch >> 1;
-
 		IPPU.DoubleWidthPixels = FALSE;
 		IPPU.RenderedScreenWidth = SNES_WIDTH;
 	}
@@ -273,6 +269,15 @@ void S9xEndScreenRefresh (void)
 			}
 		}
 	}
+
+	if (GFX.EndScreenRefreshCallback)
+		GFX.EndScreenRefreshCallback(GFX.EndScreenRefreshCallbackData);
+}
+
+void S9xSetEndScreenRefreshCallback(const SGFX::Callback cb, void *const data)
+{
+	GFX.EndScreenRefreshCallback = cb;
+	GFX.EndScreenRefreshCallbackData = data;
 }
 
 void RenderLine (uint8 C)
@@ -471,27 +476,6 @@ void S9xUpdateScreen (void)
 		{
 			if (!IPPU.DoubleWidthPixels && (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires))
 			{
-				#ifdef USE_OPENGL
-				if (Settings.OpenGLEnable && GFX.RealPPL == 256)
-				{
-					// Have to back out of the speed up hack where the low res.
-					// SNES image was rendered into a 256x239 sized buffer,
-					// ignoring the true, larger size of the buffer.
-					GFX.RealPPL = GFX.Pitch >> 1;
-
-					for (int32 y = (int32) GFX.StartY - 1; y >= 0; y--)
-					{
-						uint16	*p = GFX.Screen + y * GFX.PPL     + 255;
-						uint16	*q = GFX.Screen + y * GFX.RealPPL + 510;
-
-						for (int x = 255; x >= 0; x--, p--, q -= 2)
-							*q = *(q + 1) = *p;
-					}
-
-					GFX.PPL = GFX.RealPPL; // = GFX.Pitch >> 1 above
-				}
-				else
-				#endif
 				// Have to back out of the regular speed hack
 				for (uint32 y = 0; y < GFX.StartY; y++)
 				{
