@@ -795,6 +795,24 @@ static void update_variables(void)
     }
 }
 
+static void S9xEndScreenRefreshCallback(void*)
+{
+    if (Settings.Mute) {
+        S9xClearSamples();
+        return;
+    }
+
+    static std::vector<int16_t> audio_buffer;
+
+    size_t avail = S9xGetSampleCount();
+
+    if (audio_buffer.size() < avail)
+        audio_buffer.resize(avail);
+
+    S9xMixSamples((uint8*)&audio_buffer[0], avail);
+    audio_batch_cb(&audio_buffer[0], avail >> 1);
+}
+
 void retro_get_system_info(struct retro_system_info *info)
 {
     memset(info,0,sizeof(retro_system_info));
@@ -1446,12 +1464,10 @@ void retro_init(void)
     S9xSetSoundMute(FALSE);
     S9xSetSamplesAvailableCallback(NULL, NULL);
 
-    GFX.Pitch = MAX_SNES_WIDTH_NTSC * sizeof(uint16);
-    screen_buffer = (uint16*) calloc(1, GFX.Pitch * (MAX_SNES_HEIGHT + 16));
-    GFX.Screen = screen_buffer + (GFX.Pitch >> 1) * 16;
-    ntsc_screen_buffer = (uint16*) calloc(1, GFX.Pitch * (MAX_SNES_HEIGHT + 16));
-    snes_ntsc_buffer = ntsc_screen_buffer + (GFX.Pitch >> 1) * 16;
+    ntsc_screen_buffer = (uint16*) calloc(1, MAX_SNES_WIDTH_NTSC * 2 * (MAX_SNES_HEIGHT + 16));
+    snes_ntsc_buffer = ntsc_screen_buffer + (MAX_SNES_WIDTH_NTSC >> 1) * 16;
     S9xGraphicsInit();
+    S9xSetEndScreenRefreshCallback(S9xEndScreenRefreshCallback, NULL);
 
     S9xInitInputDevices();
     for (int i = 0; i < 2; i++)
@@ -1992,16 +2008,6 @@ void retro_run()
     poll_cb();
     report_buttons();
     S9xMainLoop();
-
-    static std::vector<int16_t> audio_buffer;
-
-    size_t avail = S9xGetSampleCount();
-
-    if (audio_buffer.size() < avail)
-        audio_buffer.resize(avail);
-
-    S9xMixSamples((uint8*)&audio_buffer[0], avail);
-    audio_batch_cb(&audio_buffer[0], avail >> 1);
 }
 
 void retro_deinit()
@@ -2204,11 +2210,11 @@ bool8 S9xDeinitUpdate(int width, int height)
         burst_phase = (burst_phase + 1) % 3;
 
         if (width == 512)
-            snes_ntsc_blit_hires(snes_ntsc, GFX.Screen, GFX.Pitch / 2, burst_phase, width, height, snes_ntsc_buffer, GFX.Pitch);
+            snes_ntsc_blit_hires(snes_ntsc, GFX.Screen, GFX.Pitch / 2, burst_phase, width, height, snes_ntsc_buffer, MAX_SNES_WIDTH_NTSC * 2);
         else
-            snes_ntsc_blit(snes_ntsc, GFX.Screen, GFX.Pitch / 2, burst_phase, width, height, snes_ntsc_buffer, GFX.Pitch);
+            snes_ntsc_blit(snes_ntsc, GFX.Screen, GFX.Pitch / 2, burst_phase, width, height, snes_ntsc_buffer, MAX_SNES_WIDTH_NTSC * 2);
 
-        video_cb(snes_ntsc_buffer + ((int)(GFX.Pitch >> 1) * overscan_offset), SNES_NTSC_OUT_WIDTH(256), height, GFX.Pitch);
+        video_cb(snes_ntsc_buffer + ((int)(MAX_SNES_WIDTH_NTSC) * overscan_offset), SNES_NTSC_OUT_WIDTH(256), height, MAX_SNES_WIDTH_NTSC * 2);
     }
     else if (width == MAX_SNES_WIDTH && hires_blend)
     {
