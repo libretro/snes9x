@@ -145,18 +145,6 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
       NULL
    },
    {
-      "snes9x_gfx_hires",
-      "Hi-Res Modunu Etkinleştir",
-      NULL,
-      "Oyunların hi-res moduna (512x448) geçmesine izin verir veya tüm içeriği 256x224'te (ezilmiş piksellerle) çıkmaya zorlar.",
-      NULL,
-      NULL,
-      {
-         { NULL, NULL },
-      },
-      NULL
-   },
-   {
       "snes9x_hires_blend",
       "Hi-Res Karışımı",
       NULL,

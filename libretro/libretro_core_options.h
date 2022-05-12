@@ -125,20 +125,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "enabled"
    },
    {
-      "snes9x_gfx_hires",
-      "Enable Hi-Res Mode",
-      NULL,
-      "Allow games to switch to hi-res mode (512x448) or force all content to output at 256x224 (with crushed pixels).",
-      NULL,
-      NULL,
-      {
-         { "enabled",  NULL },
-         { "disabled", NULL },
-         { NULL, NULL },
-      },
-      "enabled"
-   },
-   {
       "snes9x_hires_blend",
       "Hi-Res Blending",
       NULL,

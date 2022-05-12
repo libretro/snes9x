@@ -49,7 +49,6 @@
 #include "controls.h"
 #include "cheats.h"
 #include "movie.h"
-#include "logger.h"
 #include "display.h"
 #include "conffile.h"
 #ifdef NETPLAY_SUPPORT
@@ -1648,7 +1647,6 @@ int main (int argc, char **argv)
 	Settings.Stereo = TRUE;
 	Settings.SoundPlaybackRate = 48000;
 	Settings.SoundInputRate = 31950;
-	Settings.SupportHiRes = TRUE;
 	Settings.Transparency = TRUE;
 	Settings.AutoDisplayMessages = TRUE;
 	Settings.InitialInfoStringTimeout = 120;
