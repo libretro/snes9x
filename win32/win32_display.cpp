@@ -19,6 +19,7 @@
 #include "CDirectDraw.h"
 #endif
 #include "COpenGL.h"
+#include "CVulkan.h"
 #include "IS9xDisplayOutput.h"
 
 #include "../filter/hq2x.h"
@@ -31,6 +32,7 @@ CDirect3D Direct3D;
 CDirectDraw DirectDraw;
 #endif
 COpenGL OpenGL;
+CVulkan VulkanDriver;
 SSurface Src = {0};
 extern BYTE *ScreenBufferBlend;
 
@@ -104,7 +106,11 @@ returns true if successful, false otherwise
 */
 bool WinDisplayReset(void)
 {
+	const TCHAR* driverNames[] = { TEXT("DirectDraw"), TEXT("Direct3D"), TEXT("OpenGL"), TEXT("Vulkan") };
+	static bool VulkanUsed = false;
+	static bool OpenGLUsed = false;
 	S9xDisplayOutput->DeInitialize();
+
 	switch(GUI.outputMethod) {
 		default:
 		case DIRECT3D:
@@ -116,17 +122,62 @@ bool WinDisplayReset(void)
 			break;
 #endif
 		case OPENGL:
+			if (VulkanUsed)
+			{
+				MessageBox(GUI.hWnd, TEXT("Changing to OpenGL requires a restart if you've already used Vulkan"), TEXT("Snes9x Display Driver"), MB_OK);
+				break;
+			}
 			S9xDisplayOutput = &OpenGL;
 			break;
+		case VULKAN:
+			if (OpenGLUsed)
+			{
+				MessageBox(GUI.hWnd, TEXT("Changing to Vulkan requires a restart if you've already used OpenGL"), TEXT("Snes9x Display Driver"), MB_OK);
+				break;
+			}
+			S9xDisplayOutput = &VulkanDriver;
+			break;
 	}
-	if(S9xDisplayOutput->Initialize(GUI.hWnd)) {
+
+	bool initialized = S9xDisplayOutput->Initialize(GUI.hWnd);
+
+	if (!initialized) {
+		S9xDisplayOutput->DeInitialize();
+		Sleep(500);
+
+		auto oldDriverName = driverNames[GUI.outputMethod];
+
+		if (GUI.outputMethod == VULKAN)
+		{
+			GUI.outputMethod = OPENGL;
+			S9xDisplayOutput = &OpenGL;
+		}
+		else
+		{
+			GUI.outputMethod = DIRECT3D;
+			S9xDisplayOutput = &Direct3D;
+		}
+
+		auto newDriverName = driverNames[GUI.outputMethod];
+		TCHAR msg[512];
+		_stprintf(msg, TEXT("Couldn't load selected driver: %s. Trying %s."), oldDriverName, newDriverName);
+		MessageBox(GUI.hWnd, msg, TEXT("Snes9x Display Driver"), MB_OK | MB_ICONERROR);
+
+		initialized = S9xDisplayOutput->Initialize(GUI.hWnd);
+	}
+
+	if (initialized) {
+		if (S9xDisplayOutput == &VulkanDriver)
+			VulkanUsed = true;
+		if (S9xDisplayOutput == &OpenGL)
+			OpenGLUsed = true;
 		S9xGraphicsDeinit();
-		S9xSetWinPixelFormat ();
+		S9xSetWinPixelFormat();
 		S9xGraphicsInit();
 
-        if (GUI.DWMSync)
-        {
-            HMODULE dwmlib = LoadLibrary(TEXT("dwmapi"));
+		if (GUI.DWMSync)
+		{
+			HMODULE dwmlib = LoadLibrary(TEXT("dwmapi"));
             DwmFlushProc = (DWMFLUSHPROC)GetProcAddress(dwmlib, "DwmFlush");
             DwmIsCompositionEnabledProc = (DWMISCOMPOSITIONENABLEDPROC)GetProcAddress(dwmlib, "DwmIsCompositionEnabled");
 
@@ -221,7 +272,7 @@ bool8 S9xInitUpdate (void)
 bool8 S9xContinueUpdate(int Width, int Height)
 {
 	// called every other frame during interlace
-	
+
     Src.Width = Width;
 	if(Height%SNES_HEIGHT)
 	    Src.Height = Height;
@@ -650,9 +701,59 @@ int WinGetAutomaticInputRate(void)
     return (int)newInputRate;
 }
 
-GLSLShader *WinGetActiveGLSLShader()
+void WinThrottleFramerate()
 {
-	return OpenGL.GetActiveShader();
+	static HANDLE throttle_timer = nullptr;
+	static int64_t PCBase, PCFrameTime, PCFrameTimeNTSC, PCFrameTimePAL, PCStart, PCEnd;
+
+	if (Settings.SkipFrames != AUTO_FRAMERATE)
+		return;
+
+	if (!throttle_timer)
+	{
+		QueryPerformanceFrequency((LARGE_INTEGER *)&PCBase);
+
+		PCFrameTimeNTSC = (int64_t)(PCBase / NTSC_PROGRESSIVE_FRAME_RATE);
+		PCFrameTimePAL = (int64_t)(PCBase / PAL_PROGRESSIVE_FRAME_RATE);
+
+		throttle_timer = CreateWaitableTimer(NULL, true, NULL);
+		QueryPerformanceCounter((LARGE_INTEGER *)&PCStart);
+	}
+
+    if (Settings.FrameTime == Settings.FrameTimeNTSC)
+        PCFrameTime = PCFrameTimeNTSC;
+    else if (Settings.FrameTime == Settings.FrameTimePAL)
+        PCFrameTime = PCFrameTimePAL;
+    else
+        PCFrameTime = (__int64)(PCBase * Settings.FrameTime / 1e6);
+
+	QueryPerformanceCounter((LARGE_INTEGER *)&PCEnd);
+	int64_t time_left_us = ((PCFrameTime - (PCEnd - PCStart)) * 1000000) / PCBase;
+
+	int64_t PCFrameTime_us = (int64_t)(PCFrameTime * 1000000.0 / PCBase);
+	if (time_left_us < -PCFrameTime_us / 10)
+	{
+		QueryPerformanceCounter((LARGE_INTEGER *)&PCStart);
+		return;
+	}
+	if (time_left_us > 0)
+	{
+		LARGE_INTEGER li;
+		li.QuadPart = -time_left_us * 10;
+		SetWaitableTimer(throttle_timer, &li, 0, NULL, NULL, false);
+		WaitForSingleObject(throttle_timer, INFINITE);
+	}
+	PCStart += PCFrameTime;
+}
+
+std::vector<ShaderParam> *WinGetShaderParameters()
+{
+    return S9xDisplayOutput->GetShaderParameters();
+}
+
+std::function<void(const char*)> WinGetShaderSaveFunction()
+{
+    return S9xDisplayOutput->GetShaderParametersSaveFunction();
 }
 
 /* Depth conversion functions begin */
