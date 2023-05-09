@@ -265,6 +265,7 @@ static const int	ptrspeeds[4] = { 1, 1, 4, 8 };
 	S(ToggleBG1), \
 	S(ToggleBG2), \
 	S(ToggleBG3), \
+	S(ToggleBackdrop), \
 	S(ToggleEmuTurbo), \
 	S(ToggleSprites), \
 	S(ToggleTransparency) \
@@ -328,14 +329,12 @@ static void DoGunLatch (int x, int y)
 
 	if (x > 295)
 		x = 295;
-	else
-	if (x < 40)
+	else if (x < 40)
 		x = 40;
 
 	if (y > PPU.ScreenHeight - 1)
 		y = PPU.ScreenHeight - 1;
-	else
-	if (y < 0)
+	else if (y < 0)
 		y = 0;
 
 	PPU.GunVLatch = (uint16) (y + 1);
@@ -1164,8 +1163,7 @@ s9xcommand_t S9xGetCommandT (const char *name)
 
 	if (!strcmp(name, "None"))
 		cmd.type = S9xNoMapping;
-	else
-	if (!strncmp(name, "Joypad", 6))
+	else if (!strncmp(name, "Joypad", 6))
 	{
 		if (name[6] < '1' || name[6] > '8' || name[7] != ' ')
 			return (cmd);
@@ -1176,24 +1174,15 @@ s9xcommand_t S9xGetCommandT (const char *name)
 			s = name + 13;
 
 			if (!strncmp(s, "Left/Right ", 11))	{ j = 0; i = 0; s += 11; }
-			else
-			if (!strncmp(s, "Right/Left ", 11))	{ j = 0; i = 1; s += 11; }
-			else
-			if (!strncmp(s, "Up/Down ",     8))	{ j = 1; i = 0; s +=  8; }
-			else
-			if (!strncmp(s, "Down/Up ",     8))	{ j = 1; i = 1; s +=  8; }
-			else
-			if (!strncmp(s, "Y/A ",         4))	{ j = 2; i = 0; s +=  4; }
-			else
-			if (!strncmp(s, "A/Y ",         4))	{ j = 2; i = 1; s +=  4; }
-			else
-			if (!strncmp(s, "X/B ",         4))	{ j = 3; i = 0; s +=  4; }
-			else
-			if (!strncmp(s, "B/X ",         4))	{ j = 3; i = 1; s +=  4; }
-			else
-			if (!strncmp(s, "L/R ",         4))	{ j = 4; i = 0; s +=  4; }
-			else
-			if (!strncmp(s, "R/L ",         4))	{ j = 4; i = 1; s +=  4; }
+			else if (!strncmp(s, "Right/Left ", 11))	{ j = 0; i = 1; s += 11; }
+			else if (!strncmp(s, "Up/Down ",     8))	{ j = 1; i = 0; s +=  8; }
+			else if (!strncmp(s, "Down/Up ",     8))	{ j = 1; i = 1; s +=  8; }
+			else if (!strncmp(s, "Y/A ",         4))	{ j = 2; i = 0; s +=  4; }
+			else if (!strncmp(s, "A/Y ",         4))	{ j = 2; i = 1; s +=  4; }
+			else if (!strncmp(s, "X/B ",         4))	{ j = 3; i = 0; s +=  4; }
+			else if (!strncmp(s, "B/X ",         4))	{ j = 3; i = 1; s +=  4; }
+			else if (!strncmp(s, "L/R ",         4))	{ j = 4; i = 0; s +=  4; }
+			else if (!strncmp(s, "R/L ",         4))	{ j = 4; i = 1; s +=  4; }
 			else
 				return (cmd);
 
@@ -1374,8 +1363,7 @@ s9xcommand_t S9xGetCommandT (const char *name)
 
 		if (*s == 'h')
 			cmd.axis.pointer.HV = 0;
-		else
-		if (*s == 'v')
+		else if (*s == 'v')
 			cmd.axis.pointer.HV = 1;
 		else
 			return (cmd);
@@ -1523,8 +1511,7 @@ s9xcommand_t S9xGetCommandT (const char *name)
 
 				j = i;
 			}
-			else
-			if (name[i] == ',')
+			else if (name[i] == ',')
 			{
 				free(c);
 				return (cmd);
@@ -1537,8 +1524,7 @@ s9xcommand_t S9xGetCommandT (const char *name)
 				{
 					if (name[i] == '+')
 						press = 1;
-					else
-					if (name[i] == '-')
+					else if (name[i] == '-')
 						press = 2;
 					else
 					{
@@ -2007,14 +1993,12 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 					uint16	x = r; r = st; st = x;
 					x = s; s = t; t = x;
 				}
-				else
-				if (cmd.button.joypad.turbo)
+				else if (cmd.button.joypad.turbo)
 				{
 					uint16	x = r; r = t; t = x;
 					x = s; s = st; st = x;
 				}
-				else
-				if (cmd.button.joypad.sticky)
+				else if (cmd.button.joypad.sticky)
 				{
 					uint16	x = r; r = s; s = x;
 					x = t; t = st; st = x;
@@ -2276,16 +2260,12 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 					case LoadOopsFile:
 					{
-						char	filename[PATH_MAX + 1];
-						char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], def[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
+						std::string filename = S9xGetFilename("oops", SNAPSHOT_DIR);
 
-						_splitpath(Memory.ROMFilename, drive, dir, def, ext);
-						snprintf(filename, PATH_MAX + 1, "%s%s%s.%.*s", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, _MAX_EXT - 1, "oops");
-
-						if (S9xUnfreezeGame(filename))
+						if (S9xUnfreezeGame(filename.c_str()))
 						{
-							snprintf(buf, 256, "%s.%.*s loaded", def, _MAX_EXT - 1, "oops");
-							S9xSetInfoString (buf);
+							snprintf(buf, 256, "%.240s.oops loaded", S9xBasename(Memory.ROMFilename).c_str());
+							S9xSetInfoString(buf);
 						}
 						else
 							S9xMessage(S9X_ERROR, S9X_FREEZE_FILE_NOT_FOUND, "Oops file not found");
@@ -2313,15 +2293,15 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 					case QuickLoad009:
 					case QuickLoad010:
 					{
-						char	filename[PATH_MAX + 1];
-						char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], def[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
+						std::string ext = std::to_string(i - QuickLoad000);
+						while (ext.length() < 3)
+							ext = '0' + ext;
 
-						_splitpath(Memory.ROMFilename, drive, dir, def, ext);
-						snprintf(filename, PATH_MAX + 1, "%s%s%s.%03d", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, i - QuickLoad000);
+						auto filename = S9xGetFilename(ext, SNAPSHOT_DIR);
 
-						if (S9xUnfreezeGame(filename))
+						if (S9xUnfreezeGame(filename.c_str()))
 						{
-							snprintf(buf, 256, "%s.%03d loaded", def, i - QuickLoad000);
+							snprintf(buf, 256, "%s loaded", S9xBasename(filename).c_str());
 							S9xSetInfoString(buf);
 						}
 						else
@@ -2342,16 +2322,16 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 					case QuickSave009:
 					case QuickSave010:
 					{
-						char	filename[PATH_MAX + 1];
-						char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], def[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
+						std::string ext = std::to_string(i - QuickSave000);
+						while (ext.length() < 3)
+							ext = '0' + ext;
 
-						_splitpath(Memory.ROMFilename, drive, dir, def, ext);
-						snprintf(filename, PATH_MAX + 1, "%s%s%s.%03d", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, def, i - QuickSave000);
+						auto filename = S9xGetFilename(ext, SNAPSHOT_DIR);
 
-						snprintf(buf, 256, "%s.%03d saved", def, i - QuickSave000);
+						snprintf(buf, 256, "%s saved", S9xBasename(filename).c_str());
 						S9xSetInfoString(buf);
 
-						S9xFreezeGame(filename);
+						S9xFreezeGame(filename.c_str());
 						break;
 					}
 
@@ -2379,6 +2359,26 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 					case SoundChannelsOn:
 						S9xToggleSoundChannel(8);
 						S9xSetInfoString("All sound channels on");
+						break;
+
+					case ToggleBackdrop:
+						switch (Settings.ForcedBackdrop)
+						{
+						case 0:
+							Settings.ForcedBackdrop = 0xf81f;
+							break;
+						case 0xf81f:
+							Settings.ForcedBackdrop = 0x07e0;
+							break;
+						case 0x07e0:
+							Settings.ForcedBackdrop = 0x07ff;
+							break;
+						default:
+							Settings.ForcedBackdrop = 0;
+							break;
+						}
+						sprintf(buf, "Setting backdrop to 0x%04x", Settings.ForcedBackdrop);
+						S9xSetInfoString(buf);
 						break;
 
 					case ToggleBG0:
@@ -2771,14 +2771,12 @@ static void UpdatePolledMouse (int i)
 		mouse[i - MOUSE0].delta_x = 0xff;
 		mouse[i - MOUSE0].old_x -= 127;
 	}
-	else
-	if (j < 0)
+	else if (j < 0)
 	{
 		mouse[i - MOUSE0].delta_x = 0x80 | -j;
 		mouse[i - MOUSE0].old_x = mouse[i - MOUSE0].cur_x;
 	}
-	else
-	if (j > 127)
+	else if (j > 127)
 	{
 		mouse[i - MOUSE0].delta_x = 0x7f;
 		mouse[i - MOUSE0].old_x += 127;
@@ -2796,14 +2794,12 @@ static void UpdatePolledMouse (int i)
 		mouse[i - MOUSE0].delta_y = 0xff;
 		mouse[i - MOUSE0].old_y -= 127;
 	}
-	else
-	if (j < 0)
+	else if (j < 0)
 	{
 		mouse[i - MOUSE0].delta_y = 0x80 | -j;
 		mouse[i - MOUSE0].old_y = mouse[i - MOUSE0].cur_y;
 	}
-	else
-	if (j > 127)
+	else if (j > 127)
 	{
 		mouse[i - MOUSE0].delta_y = 0x7f;
 		mouse[i - MOUSE0].old_y += 127;
@@ -3265,8 +3261,7 @@ void S9xControlEOF (void)
 			pseudopointer[n].x += pseudopointer[n].H_adj;
 			if (pseudopointer[n].x < 0)
 				pseudopointer[n].x = 0;
-			else
-			if (pseudopointer[n].x > 255)
+			else if (pseudopointer[n].x > 255)
 				pseudopointer[n].x = 255;
 
 			if (pseudopointer[n].H_var)
@@ -3289,8 +3284,7 @@ void S9xControlEOF (void)
 			pseudopointer[n].y += pseudopointer[n].V_adj;
 			if (pseudopointer[n].y < 0)
 				pseudopointer[n].y = 0;
-			else
-			if (pseudopointer[n].y > PPU.ScreenHeight - 1)
+			else if (pseudopointer[n].y > PPU.ScreenHeight - 1)
 				pseudopointer[n].y = PPU.ScreenHeight - 1;
 
 			if (pseudopointer[n].V_var)

@@ -8,7 +8,7 @@
 #define _SNES9X_H_
 
 #ifndef VERSION
-#define VERSION	"1.61"
+#define VERSION	"1.62.3"
 #endif
 
 #include "port.h"
@@ -61,6 +61,10 @@
 
 #define	NTSC_MASTER_CLOCK			21477272.727272 // 21477272 + 8/11 exact
 #define	PAL_MASTER_CLOCK			21281370.0
+#define NTSC_PROGRESSIVE_FRAME_RATE	60.09881389744051
+#define NTSC_INTERLACED_FRAME_RATE	59.94005994
+#define PAL_PROGRESSIVE_FRAME_RATE	50.006977968
+
 
 #define SNES_MAX_NTSC_VCOUNTER		262
 #define SNES_MAX_PAL_VCOUNTER		312
@@ -213,7 +217,7 @@ struct SSettings
 	bool8	JustifierMaster;
 	bool8	MultiPlayer5Master;
 	bool8	MacsRifleMaster;
-	
+
 	bool8	ForceLoROM;
 	bool8	ForceHiROM;
 	bool8	ForceHeader;
@@ -243,16 +247,19 @@ struct SSettings
 	bool8	Transparency;
 	uint8	BG_Forced;
 	bool8	DisableGraphicWindows;
+	uint16  ForcedBackdrop;
 
 	bool8	DisplayTime;
 	bool8	DisplayFrameRate;
 	bool8	DisplayWatchedAddresses;
 	bool8	DisplayPressedKeys;
 	bool8	DisplayMovieFrame;
+	bool	DisplayIndicators;
 	bool8	AutoDisplayMessages;
 	uint32	InitialInfoStringTimeout;
 	uint16	DisplayColor;
 	bool8	BilinearFilter;
+	bool	ShowOverscan;
 
 	bool8	Multi;
 	char	CartAName[PATH_MAX + 1];

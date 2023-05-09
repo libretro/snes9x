@@ -19,6 +19,7 @@
 #include "CDirectDraw.h"
 #endif
 #include "COpenGL.h"
+#include "CVulkan.h"
 #include "IS9xDisplayOutput.h"
 
 #include "../filter/hq2x.h"
@@ -31,6 +32,7 @@ CDirect3D Direct3D;
 CDirectDraw DirectDraw;
 #endif
 COpenGL OpenGL;
+CVulkan VulkanDriver;
 SSurface Src = {0};
 extern BYTE *ScreenBufferBlend;
 
@@ -57,7 +59,7 @@ void DoAVIVideoFrame();
 static void CheckOverscanOffset()
 {
 	int lines_to_skip = 0;
-	if (!GUI.HeightExtend)
+	if (!Settings.ShowOverscan)
 	{
 		if (Src.Height == SNES_HEIGHT_EXTENDED)
 			lines_to_skip = 7;
@@ -104,7 +106,11 @@ returns true if successful, false otherwise
 */
 bool WinDisplayReset(void)
 {
+	const TCHAR* driverNames[] = { TEXT("DirectDraw"), TEXT("Direct3D"), TEXT("OpenGL"), TEXT("Vulkan") };
+	static bool VulkanUsed = false;
+	static bool OpenGLUsed = false;
 	S9xDisplayOutput->DeInitialize();
+
 	switch(GUI.outputMethod) {
 		default:
 		case DIRECT3D:
@@ -116,17 +122,62 @@ bool WinDisplayReset(void)
 			break;
 #endif
 		case OPENGL:
+			if (VulkanUsed)
+			{
+				MessageBox(GUI.hWnd, TEXT("Changing to OpenGL requires a restart if you've already used Vulkan"), TEXT("Snes9x Display Driver"), MB_OK);
+				break;
+			}
 			S9xDisplayOutput = &OpenGL;
 			break;
+		case VULKAN:
+			if (OpenGLUsed)
+			{
+				MessageBox(GUI.hWnd, TEXT("Changing to Vulkan requires a restart if you've already used OpenGL"), TEXT("Snes9x Display Driver"), MB_OK);
+				break;
+			}
+			S9xDisplayOutput = &VulkanDriver;
+			break;
 	}
-	if(S9xDisplayOutput->Initialize(GUI.hWnd)) {
+
+	bool initialized = S9xDisplayOutput->Initialize(GUI.hWnd);
+
+	if (!initialized) {
+		S9xDisplayOutput->DeInitialize();
+		Sleep(500);
+
+		auto oldDriverName = driverNames[GUI.outputMethod];
+
+		if (GUI.outputMethod == VULKAN)
+		{
+			GUI.outputMethod = OPENGL;
+			S9xDisplayOutput = &OpenGL;
+		}
+		else
+		{
+			GUI.outputMethod = DIRECT3D;
+			S9xDisplayOutput = &Direct3D;
+		}
+
+		auto newDriverName = driverNames[GUI.outputMethod];
+		TCHAR msg[512];
+		_stprintf(msg, TEXT("Couldn't load selected driver: %s. Trying %s."), oldDriverName, newDriverName);
+		MessageBox(GUI.hWnd, msg, TEXT("Snes9x Display Driver"), MB_OK | MB_ICONERROR);
+
+		initialized = S9xDisplayOutput->Initialize(GUI.hWnd);
+	}
+
+	if (initialized) {
+		if (S9xDisplayOutput == &VulkanDriver)
+			VulkanUsed = true;
+		if (S9xDisplayOutput == &OpenGL)
+			OpenGLUsed = true;
 		S9xGraphicsDeinit();
-		S9xSetWinPixelFormat ();
+		S9xSetWinPixelFormat();
 		S9xGraphicsInit();
 
-        if (GUI.DWMSync)
-        {
-            HMODULE dwmlib = LoadLibrary(TEXT("dwmapi"));
+		if (GUI.DWMSync)
+		{
+			HMODULE dwmlib = LoadLibrary(TEXT("dwmapi"));
             DwmFlushProc = (DWMFLUSHPROC)GetProcAddress(dwmlib, "DwmFlush");
             DwmIsCompositionEnabledProc = (DWMISCOMPOSITIONENABLEDPROC)GetProcAddress(dwmlib, "DwmIsCompositionEnabled");
 
@@ -156,7 +207,7 @@ RECT CalculateDisplayRect(unsigned int sourceWidth,unsigned int sourceHeight,
 	double yFactor;
 	double minFactor;
 	double renderWidthCalc,renderHeightCalc;
-	int hExtend = GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
+	int hExtend = Settings.ShowOverscan ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
 	double snesAspect = (double)GUI.AspectWidth/hExtend;
 	RECT drawRect;
 
@@ -221,7 +272,7 @@ bool8 S9xInitUpdate (void)
 bool8 S9xContinueUpdate(int Width, int Height)
 {
 	// called every other frame during interlace
-	
+
     Src.Width = Width;
 	if(Height%SNES_HEIGHT)
 	    Src.Height = Height;
@@ -650,9 +701,59 @@ int WinGetAutomaticInputRate(void)
     return (int)newInputRate;
 }
 
-GLSLShader *WinGetActiveGLSLShader()
+void WinThrottleFramerate()
 {
-	return OpenGL.GetActiveShader();
+	static HANDLE throttle_timer = nullptr;
+	static int64_t PCBase, PCFrameTime, PCFrameTimeNTSC, PCFrameTimePAL, PCStart, PCEnd;
+
+	if (Settings.SkipFrames != AUTO_FRAMERATE)
+		return;
+
+	if (!throttle_timer)
+	{
+		QueryPerformanceFrequency((LARGE_INTEGER *)&PCBase);
+
+		PCFrameTimeNTSC = (int64_t)(PCBase / NTSC_PROGRESSIVE_FRAME_RATE);
+		PCFrameTimePAL = (int64_t)(PCBase / PAL_PROGRESSIVE_FRAME_RATE);
+
+		throttle_timer = CreateWaitableTimer(NULL, true, NULL);
+		QueryPerformanceCounter((LARGE_INTEGER *)&PCStart);
+	}
+
+    if (Settings.FrameTime == Settings.FrameTimeNTSC)
+        PCFrameTime = PCFrameTimeNTSC;
+    else if (Settings.FrameTime == Settings.FrameTimePAL)
+        PCFrameTime = PCFrameTimePAL;
+    else
+        PCFrameTime = (__int64)(PCBase * Settings.FrameTime / 1e6);
+
+	QueryPerformanceCounter((LARGE_INTEGER *)&PCEnd);
+	int64_t time_left_us = ((PCFrameTime - (PCEnd - PCStart)) * 1000000) / PCBase;
+
+	int64_t PCFrameTime_us = (int64_t)(PCFrameTime * 1000000.0 / PCBase);
+	if (time_left_us < -PCFrameTime_us / 10)
+	{
+		QueryPerformanceCounter((LARGE_INTEGER *)&PCStart);
+		return;
+	}
+	if (time_left_us > 0)
+	{
+		LARGE_INTEGER li;
+		li.QuadPart = -time_left_us * 10;
+		SetWaitableTimer(throttle_timer, &li, 0, NULL, NULL, false);
+		WaitForSingleObject(throttle_timer, INFINITE);
+	}
+	PCStart += PCFrameTime;
+}
+
+std::vector<ShaderParam> *WinGetShaderParameters()
+{
+    return S9xDisplayOutput->GetShaderParameters();
+}
+
+std::function<void(const char*)> WinGetShaderSaveFunction()
+{
+    return S9xDisplayOutput->GetShaderParametersSaveFunction();
 }
 
 /* Depth conversion functions begin */
@@ -787,189 +888,12 @@ void ConvertDepth (SSurface *src, SSurface *dst, RECT *srect)
 }
 
 /* Depth conversion functions end */
-
-
-/* The rest of the functions are recreations of the core string display functions with additional scaling.
-   They provide the possibility to render the messages into a surface other than the core GFX.Screen.
-*/
-
-void WinDisplayStringFromBottom (const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap)
+#include "snes9x_imgui.h"
+void S9xWinDisplayString(const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap, int type)
 {
-	if(Settings.StopEmulation)
+	if (S9xImGuiRunning() && !Settings.AutoDisplayMessages)
+	{
 		return;
-	if(Settings.AutoDisplayMessages) {
-		WinSetCustomDisplaySurface((void *)GFX.Screen, GFX.RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
-		WinDisplayStringInBuffer<uint16>(string, linesFromBottom, pixelsFromLeft, allowWrap);
-	} else
-		if(GUI.ScreenDepth == 32) {
-			WinDisplayStringInBuffer<uint32>(string, linesFromBottom, pixelsFromLeft, allowWrap);
-		} else {
-			WinDisplayStringInBuffer<uint16>(string, linesFromBottom, pixelsFromLeft, allowWrap);
-		}
-}
-
-static int	font_width = 8, font_height = 9;
-static void *displayScreen;
-int displayPpl, displayWidth, displayHeight, displayScale, fontwidth_scaled, fontheight_scaled;
-
-void WinSetCustomDisplaySurface(void *screen, int ppl, int width, int height, int scale)
-{
-	displayScreen=screen;
-	displayPpl=ppl;
-	displayWidth=width;
-	displayHeight=height;
-	displayScale=max(1,width/IPPU.RenderedScreenWidth);
-	fontwidth_scaled=font_width*displayScale;
-	fontheight_scaled=font_height*displayScale;
-}
-
-template<typename screenPtrType>
-void WinDisplayChar (screenPtrType *s, uint8 c)
-{
-	int h, w;
-
-	int	line   = ((c - 32) >> 4) * fontheight_scaled;
-	int	offset = ((c - 32) & 15) * fontwidth_scaled;
-
-	if (GUI.filterMessagFont && (displayScale == 2 || displayScale == 3))
-	{
-		if (displayScale == 2) {
-			for (h = 0; h < fontheight_scaled; h += 2, line += 2, s += 2 * displayPpl - fontwidth_scaled)
-				for (w = 0; w < fontwidth_scaled; w += 2, s += 2)
-					FontPixToScreenEPX((offset + w) / 2, line / 2, s);
-		}
-		else if (displayScale == 3) {
-			for (h = 0; h < fontheight_scaled; h += 3, line += 3, s += 3 * displayPpl - fontwidth_scaled)
-				for (w = 0; w < fontwidth_scaled; w += 3, s += 3)
-					FontPixToScreenEPXSimple3((offset + w) / 3, line / 3, s);
-		}
 	}
-	else
-	{
-		for(h=0; h<fontheight_scaled; h++, line++, s+=displayPpl-fontwidth_scaled)
-			for(w=0; w<fontwidth_scaled; w++, s++)
-				FontPixToScreen(font [(line)/displayScale] [(offset + w)/displayScale], s);
-	}
-}
-
-static inline void FontPixToScreen(char p, uint16 *s)
-{
-	if(p == '#')
-	{
-		*s = Settings.DisplayColor;
-	}
-	else if(p == '.')
-	{
-		static const uint16 black = BUILD_PIXEL(0,0,0);
-		*s = black;
-	}
-}
-
-static inline void FontPixToScreen(char p, uint32 *s)
-{
-#define CONVERT_16_TO_32(pixel) \
-    (((((pixel) >> 11)        ) << /*RedShift+3*/  19) | \
-     ((((pixel) >> 6)   & 0x1f) << /*GreenShift+3*/11) | \
-      (((pixel)         & 0x1f) << /*BlueShift+3*/ 3))
-
-	if(p == '#')
-	{
-		*s = CONVERT_16_TO_32(Settings.DisplayColor);
-	}
-	else if(p == '.')
-	{
-		static const uint32 black = CONVERT_16_TO_32(BUILD_PIXEL(0,0,0));
-		*s = black;
-	}
-}
-
-#define CHOOSE(c1) ((c1=='#'||X=='#') ? '#' : ((c1=='.'||X=='.') ? '.' : c1))
-
-template<typename screenPtrType>
-static inline void FontPixToScreenEPX(int x, int y, screenPtrType *s)
-{
-	const char X = font[y][x];                // E D H
-	const char A = x>0  ?font[y][x-1]:' ';    // A X C
-	const char C = x<143?font[y][x+1]:' ';    // F B G
-	if (A != C)
-	{
-		const char D = y>0  ?font[y-1][x]:' ';
-		const char B = y<125?font[y+1][x]:' ';
-		if (B != D)
-		{
-			FontPixToScreen((D == A) ? CHOOSE(D) : X, s);
-			FontPixToScreen((C == D) ? CHOOSE(C) : X, s+1);
-			FontPixToScreen((A == B) ? CHOOSE(A) : X, s+displayPpl);
-			FontPixToScreen((B == C) ? CHOOSE(B) : X, s+displayPpl+1);
-			return;
-		}
-	}
-	FontPixToScreen(X, s);
-	FontPixToScreen(X, s+1);
-	FontPixToScreen(X, s+displayPpl);
-	FontPixToScreen(X, s+displayPpl+1);
-}
-#undef CHOOSE
-
-#define CHOOSE(c1) ((X=='#') ? '#' : c1)
-template<typename screenPtrType>
-inline void FontPixToScreenEPXSimple3(int x, int y, screenPtrType *s)
-{
-	const char X = font[y][x];                // E D H
-	const char A = x>0  ?font[y][x-1]:' ';    // A X C
-	const char C = x<143?font[y][x+1]:' ';    // F B G
-	const char D = y>0  ?font[y-1][x]:' ';
-	const char B = y<125?font[y+1][x]:' ';
-	const bool XnE = y>0  &&x>0  ?(X != font[y-1][x-1]):X!=' ';
-	const bool XnF = y<125&&x<143?(X != font[y+1][x-1]):X!=' ';
-	const bool XnG = y<125&&x>0  ?(X != font[y+1][x+1]):X!=' ';
-	const bool XnH = y>0  &&x<143?(X != font[y-1][x+1]):X!=' ';
-	const bool DA = D == A && (XnE || CHOOSE(D)!=X);
-	const bool AB = A == B && (XnF || CHOOSE(A)!=X);
-	const bool BC = B == C && (XnG || CHOOSE(B)!=X);
-	const bool CD = C == D && (XnH || CHOOSE(C)!=X);
-	FontPixToScreen(DA ? A : X, s);
-	FontPixToScreen(X, s+1);
-	FontPixToScreen(CD ? C : X, s+2);
-	FontPixToScreen(X, s+displayPpl);
-	FontPixToScreen(X, s+displayPpl+1);
-	FontPixToScreen(X, s+displayPpl+2);
-	FontPixToScreen(AB ? A : X, s+displayPpl+displayPpl);
-	FontPixToScreen(X, s+displayPpl+displayPpl+1);
-	FontPixToScreen(BC ? C : X, s+displayPpl+displayPpl+2);
-}
-#undef CHOOSE
-
-template<typename screenPtrType>
-void WinDisplayStringInBuffer (const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap)
-{
-	if (linesFromBottom <= 0)
-		linesFromBottom = 1;
-
-	screenPtrType	*dst = (screenPtrType	*)displayScreen + (displayHeight - fontheight_scaled * linesFromBottom) * displayPpl + (int)(pixelsFromLeft * (float)displayWidth/IPPU.RenderedScreenWidth);
-
-	int	len = strlen(string);
-	int	max_chars = displayWidth / (fontwidth_scaled - displayScale);
-	int	char_count = 0;
-
-	for (int i = 0 ; i < len ; i++, char_count++)
-	{
-		if (char_count >= max_chars || (uint8) string[i] < 32)
-		{
-			if (!allowWrap)
-				break;
-
-			dst += fontheight_scaled * displayPpl - (fontwidth_scaled - displayScale) * max_chars;
-			if (dst >= (screenPtrType	*)displayScreen + displayHeight * displayPpl)
-				break;
-
-			char_count -= max_chars;
-		}
-
-		if ((uint8) string[i] < 32)
-			continue;
-
-		WinDisplayChar(dst, string[i]);
-		dst += fontwidth_scaled - displayScale;
-	}
+	S9xVariableDisplayString(string, linesFromBottom, pixelsFromLeft, allowWrap, type);
 }

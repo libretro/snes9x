@@ -28,6 +28,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithCheatItem:(nullable S9xCheatItem *)cheatItem saveCallback:(void (^)(void))saveCallback;
 
+- (void)updateSaveButton;
+
+@property (nonatomic, weak) IBOutlet NSTextField *codeField;
+@property (nonatomic, weak) IBOutlet NSTextField *descriptionField;
+@property (nonatomic, weak) IBOutlet NSTextField *addressField;
+@property (nonatomic, weak) IBOutlet NSTextField *valueField;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -40,7 +40,11 @@ extern TCHAR multiRomB[MAX_PATH];
 
 void S9xParseArg (char **argv, int &i, int argc)
 {
-	if (strcasecmp (argv [i], "-restore") == 0)
+	if (strcasecmp (argv [i], "-removeregistrykeys") == 0)
+	{
+		S9xWinRemoveRegistryKeys();
+	}
+	else if (strcasecmp (argv [i], "-restore") == 0)
 	{
 		WinDeleteRegistryEntries ();
 		WinSetDefaultValues	();
@@ -83,6 +87,7 @@ void WinSetDefaultValues ()
 	GUI.LockDirectories = false;
 	GUI.window_maximized = false;
 	GUI.EmulatedFullscreen = false;
+	GUI.FullscreenOnOpen = false;
 
 	WinDeleteRecentGamesList ();
 
@@ -760,8 +765,8 @@ void WinRegisterConfigItems()
 	AddBoolC("ShaderEnabled", GUI.shaderEnabled, false, "true to use pixel shader (if supported by output method)");
 	AddStringC("Direct3D:D3DShader", GUI.D3DshaderFileName, MAX_PATH, "", "shader filename for Direct3D mode (HLSL effect file or CG shader");
 	AddStringC("OpenGL:OGLShader", GUI.OGLshaderFileName, MAX_PATH, "", "shader filename for OpenGL mode (bsnes-style XML shader or CG shader)");
-	AddBoolC("OpenGL:DisablePBOs", GUI.OGLdisablePBOs, false, "do not use PBOs in OpenGL mode, even if the video card supports them");
-	AddBoolC("ExtendHeight", GUI.HeightExtend, false, "true to display an extra 15 pixels at the bottom, which few games use. Also increases AVI output size from 256x224 to 256x240.");
+	AddBoolC("OpenGL:DisablePBOs", GUI.OGLdisablePBOs, true, "do not use PBOs in OpenGL mode, even if the video card supports them");
+	AddBoolC("ExtendHeight", Settings.ShowOverscan, false, "true to display an extra 15 pixels at the bottom, which few games use. Also increases AVI output size from 256x224 to 256x240.");
 	AddBoolC("AlwaysCenterImage", GUI.AlwaysCenterImage,false, "true to center the image even if larger than window");
 	AddIntC("Window:Width", GUI.window_size.right, 512, "256=1x, 512=2x, 768=3x, 1024=4x, etc. (usually)");
 	AddIntC("Window:Height", GUI.window_size.bottom, 448, "224=1x, 448=2x, 672=3x,  896=4x, etc. (usually)");
@@ -789,12 +794,13 @@ void WinRegisterConfigItems()
 	AddUInt("Fullscreen:Depth", GUI.FullscreenMode.depth, 16);
 	AddUInt("Fullscreen:RefreshRate", GUI.FullscreenMode.rate, 60);
 	AddBool("Fullscreen:DoubleBuffered", GUI.DoubleBuffered, false);
+	AddBoolC("Fullscreen:FullscreenOnOpen", GUI.FullscreenOnOpen, false, "Change to fullscreen when opening a ROM.");
 	AddBoolC("Fullscreen:EmulateFullscreen", GUI.EmulateFullscreen, true,"true makes snes9x create a window that spans the entire screen when going fullscreen");
 	AddBoolC("HideMenu", GUI.HideMenu, false, "true to auto-hide the menu bar on startup.");
 	AddBoolC("Vsync", GUI.Vsync, false, "true to enable Vsync");
 	AddBoolC("ReduceInputLag", GUI.ReduceInputLag, false, "true to reduce input lag by hard synchronization");
     AddBoolC("DWMSync", GUI.DWMSync, false, "sync to DWM compositor if it is running");
-	AddBoolC("FilterMessageFont", GUI.filterMessagFont, true, "true to filter message font with EPX on 2x/3x scales if MessagesInImage is false)");
+	AddUIntC("OSDSize", GUI.OSDSize, 24, "Size of On-Screen Display");
 #undef CATEGORY
 #define CATEGORY "Settings"
 	AddUIntC("FrameSkip", Settings.SkipFrames, AUTO_FRAMERATE, "200=automatic (limits at 50/60 fps), 0=none, 1=skip every other, ...");
@@ -814,6 +820,7 @@ void WinRegisterConfigItems()
     AddUIntC("RewindGranularity", GUI.rewindGranularity, 1, "rewind granularity - rewind takes a snapshot each x frames");
 	AddBoolC("PauseWhenInactive", GUI.InactivePause, TRUE, "true to pause Snes9x when it is not the active window");
 	AddBoolC("CustomRomOpenDialog", GUI.CustomRomOpen, false, "false to use standard Windows open dialog for the ROM open dialog");
+	AddBoolC("AddToRegistry", GUI.AddToRegistry, true, "true to ask to add entries to registry for file type associations");
 	AddBoolC("AVIHiRes", GUI.AVIHiRes, false, "true to record AVI in Hi-Res scale");
 	AddBoolC("ConfirmSaveLoad", GUI.ConfirmSaveLoad, false, "true to ask for confirmation when saving/loading");
 //	AddUIntC("Language", GUI.Language, 0, "0=English, 1=Nederlands"); // NYI
@@ -931,6 +938,7 @@ void WinRegisterConfigItems()
 	ADD(QuitS9X);ADD(Rewind);
 	ADD(SaveFileSelect); ADD(LoadFileSelect);
 	ADD(Mute);
+	ADD(ToggleBackdrop);
 #undef ADD
 #undef ADDN
 #undef CATEGORY

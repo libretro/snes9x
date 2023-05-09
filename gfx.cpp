@@ -12,7 +12,6 @@
 #include "cheats.h"
 #include "movie.h"
 #include "screenshot.h"
-#include "font.h"
 #include "display.h"
 
 extern struct SCheatData		Cheat;
@@ -21,7 +20,6 @@ extern struct SLineMatrixData	LineMatrixData[240];
 
 void S9xComputeClipWindows (void);
 
-static int	font_width = 8, font_height = 9;
 void (*S9xCustomDisplayString) (const char *, int, int, bool, int) = NULL;
 
 static void SetupOBJ (void);
@@ -51,9 +49,11 @@ bool8 S9xGraphicsInit (void)
 
 	IPPU.OBJChanged = TRUE;
 	Settings.BG_Forced = 0;
+	Settings.ForcedBackdrop = 0;
 	S9xFixColourBrightness();
 	S9xBuildDirectColourMaps();
 
+	GFX.ScreenBuffer.resize(MAX_SNES_WIDTH * (MAX_SNES_HEIGHT + 64));
 	GFX.Screen = &GFX.ScreenBuffer[GFX.RealPPL * 32];
 	GFX.ZERO = (uint16 *) malloc(sizeof(uint16) * 0x10000);
 	GFX.SubScreen  = (uint16 *) malloc(GFX.ScreenSize * sizeof(uint16));
@@ -98,9 +98,6 @@ bool8 S9xGraphicsInit (void)
 		}
 	}
 
-	GFX.EndScreenRefreshCallback = NULL;
-	GFX.EndScreenRefreshCallbackData = NULL;
-
 	return (TRUE);
 }
 
@@ -110,9 +107,6 @@ void S9xGraphicsDeinit (void)
 	if (GFX.SubScreen)  { free(GFX.SubScreen);  GFX.SubScreen  = NULL; }
 	if (GFX.ZBuffer)    { free(GFX.ZBuffer);    GFX.ZBuffer    = NULL; }
 	if (GFX.SubZBuffer) { free(GFX.SubZBuffer); GFX.SubZBuffer = NULL; }
-
-	GFX.EndScreenRefreshCallback = NULL;
-	GFX.EndScreenRefreshCallbackData = NULL;
 }
 
 void S9xGraphicsScreenResize (void)
@@ -122,7 +116,7 @@ void S9xGraphicsScreenResize (void)
 	IPPU.Interlace    = Memory.FillRAM[0x2133] & 1;
 	IPPU.InterlaceOBJ = Memory.FillRAM[0x2133] & 2;
 	IPPU.PseudoHires = Memory.FillRAM[0x2133] & 8;
-		
+
 	if (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires)
 	{
 		IPPU.DoubleWidthPixels = TRUE;
@@ -146,7 +140,7 @@ void S9xGraphicsScreenResize (void)
 		GFX.PPL = GFX.RealPPL;
 		IPPU.DoubleHeightPixels = FALSE;
 		IPPU.RenderedScreenHeight = PPU.ScreenHeight;
-	}	
+	}
 }
 
 void S9xBuildDirectColourMaps (void)
@@ -160,13 +154,12 @@ void S9xBuildDirectColourMaps (void)
 
 void S9xStartScreenRefresh (void)
 {
-	GFX.InterlaceFrame = !GFX.InterlaceFrame;
 	if (GFX.DoInterlace)
 		GFX.DoInterlace--;
 
 	if (IPPU.RenderThisFrame)
 	{
-		if (!GFX.DoInterlace || !GFX.InterlaceFrame)
+		if (!GFX.DoInterlace || !S9xInterlaceField())
 		{
 			if (!S9xInitUpdate())
 			{
@@ -195,7 +188,7 @@ void S9xStartScreenRefresh (void)
 	}
 
 	if (GFX.InfoStringTimeout > 0 && --GFX.InfoStringTimeout == 0)
-		GFX.InfoString = NULL;
+		GFX.InfoString.clear();
 
 	IPPU.TotalEmulatedFrames++;
 }
@@ -206,7 +199,7 @@ void S9xEndScreenRefresh (void)
 	{
 		FLUSH_REDRAW();
 
-		if (GFX.DoInterlace && GFX.InterlaceFrame == 0)
+		if (GFX.DoInterlace && S9xInterlaceField() == 0)
 		{
 			S9xControlEOF();
 			S9xContinueUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
@@ -269,15 +262,6 @@ void S9xEndScreenRefresh (void)
 			}
 		}
 	}
-
-	if (GFX.EndScreenRefreshCallback)
-		GFX.EndScreenRefreshCallback(GFX.EndScreenRefreshCallbackData);
-}
-
-void S9xSetEndScreenRefreshCallback(const SGFX::Callback cb, void *const data)
-{
-	GFX.EndScreenRefreshCallback = cb;
-	GFX.EndScreenRefreshCallbackData = data;
 }
 
 void RenderLine (uint8 C)
@@ -329,7 +313,7 @@ static inline void RenderScreen (bool8 sub)
 	if (!sub)
 	{
 		GFX.S = GFX.Screen;
-		if (GFX.DoInterlace && GFX.InterlaceFrame)
+		if (GFX.DoInterlace && S9xInterlaceField())
 			GFX.S += GFX.RealPPL;
 		GFX.DB = GFX.ZBuffer;
 		GFX.Clip = IPPU.Clip[0];
@@ -515,7 +499,7 @@ void S9xUpdateScreen (void)
 		const uint16	black = BUILD_PIXEL(0, 0, 0);
 
 		GFX.S = GFX.Screen + GFX.StartY * GFX.PPL;
-		if (GFX.DoInterlace && GFX.InterlaceFrame)
+		if (GFX.DoInterlace && S9xInterlaceField())
 			GFX.S += GFX.RealPPL;
 
 		for (uint32 l = GFX.StartY; l <= GFX.EndY; l++, GFX.S += GFX.PPL)
@@ -576,7 +560,7 @@ static void SetupOBJ (void)
 
 	int	inc = IPPU.InterlaceOBJ ? 2 : 1;
 
-	int startline = (IPPU.InterlaceOBJ && GFX.InterlaceFrame) ? 1 : 0;
+	int startline = (IPPU.InterlaceOBJ && S9xInterlaceField()) ? 1 : 0;
 
 	// OK, we have three cases here. Either there's no priority, priority is
 	// normal FirstSprite, or priority is FirstSprite+Y. The first two are
@@ -623,8 +607,7 @@ static void SetupOBJ (void)
 			{
 				if (HPos < 0)
 					GFX.OBJVisibleTiles[S] = (GFX.OBJWidths[S] + HPos + 7) >> 3;
-				else
-				if (HPos + GFX.OBJWidths[S] > 255)
+				else if (HPos + GFX.OBJWidths[S] > 255)
 					GFX.OBJVisibleTiles[S] = (256 - HPos + 7) >> 3;
 				else
 					GFX.OBJVisibleTiles[S] = GFX.OBJWidths[S] >> 3;
@@ -695,8 +678,7 @@ static void SetupOBJ (void)
 			{
 				if (HPos < 0)
 					GFX.OBJVisibleTiles[S] = (GFX.OBJWidths[S] + HPos + 7) >> 3;
-				else
-				if (HPos + GFX.OBJWidths[S] >= 257)
+				else if (HPos + GFX.OBJWidths[S] >= 257)
 					GFX.OBJVisibleTiles[S] = (257 - HPos + 7) >> 3;
 				else
 					GFX.OBJVisibleTiles[S] = GFX.OBJWidths[S] >> 3;
@@ -773,10 +755,10 @@ static void DrawOBJS (int D)
 	void (*DrawClippedTile) (uint32, uint32, uint32, uint32, uint32, uint32) = NULL;
 
 	int	PixWidth = IPPU.DoubleWidthPixels ? 2 : 1;
-	BG.InterlaceLine = GFX.InterlaceFrame ? 8 : 0;
+	BG.InterlaceLine = S9xInterlaceField() ? 8 : 0;
 	GFX.Z1 = 2;
 	int sprite_limit = (Settings.MaxSpriteTilesPerLine == 128) ? 128 : 32;
-	
+
 	for (uint32 Y = GFX.StartY, Offset = Y * GFX.PPL; Y <= GFX.EndY; Y++, Offset += GFX.PPL)
 	{
 		int	I = 0;
@@ -908,7 +890,7 @@ static void DrawBackground (int bg, uint8 Zh, uint8 Zl)
 
 		for (uint32 Y = GFX.StartY; Y <= GFX.EndY; Y += Lines)
 		{
-			uint32	Y2 = HiresInterlace ? Y * 2 + GFX.InterlaceFrame : Y;
+			uint32	Y2 = HiresInterlace ? Y * 2 + S9xInterlaceField() : Y;
 			uint32	VOffset = LineData[Y].BG[bg].VOffset + (HiresInterlace ? 1 : 0);
 			uint32	HOffset = LineData[Y].BG[bg].HOffset;
 			int		VirtAlign = ((Y2 + VOffset) & 7) >> (HiresInterlace ? 1 : 0);
@@ -1302,7 +1284,7 @@ static void DrawBackgroundOffset (int bg, uint8 Zh, uint8 Zl, int VOffOff)
 
 		for (uint32 Y = GFX.StartY; Y <= GFX.EndY; Y++)
 		{
-			uint32	Y2 = HiresInterlace ? Y * 2 + GFX.InterlaceFrame : Y;
+			uint32	Y2 = HiresInterlace ? Y * 2 + S9xInterlaceField() : Y;
 			uint32	VOff = LineData[Y].BG[2].VOffset - 1;
 			uint32	HOff = LineData[Y].BG[2].HOffset;
 			uint32	HOffsetRow = VOff >> Offset2Shift;
@@ -1749,82 +1731,163 @@ void S9xSetInfoString (const char *string)
 	}
 }
 
-void S9xDisplayChar (uint16 *s, uint8 c)
+#include "var8x10font.h"
+static const int font_width = 8;
+static const int font_height = 10;
+
+static inline int CharWidth(uint8 c)
 {
-	const uint16	black = BUILD_PIXEL(0, 0, 0);
+	return font_width - var8x10font_kern[c - 32][0] - var8x10font_kern[c - 32][1];
+}
 
-	int	line   = ((c - 32) >> 4) * font_height;
-	int	offset = ((c - 32) & 15) * font_width;
+static int StringWidth(const char* str)
+{
+	int length = strlen(str);
+	int pixcount = 0;
 
-	for (int h = 0; h < font_height; h++, line++, s += GFX.RealPPL - font_width)
+	if (length > 0)
+		pixcount++;
+
+	for (int i = 0; i < length; i++)
 	{
-		for (int w = 0; w < font_width; w++, s++)
-		{
-			char	p = font[line][offset + w];
+		pixcount += (CharWidth(str[i]) - 1);
+	}
 
-			if (p == '#')
+	return pixcount;
+}
+
+static void VariableDisplayChar(int x, int y, uint8 c, bool monospace = false, int overlap = 0)
+{
+	int cindex = c - 32;
+	int crow = cindex >> 4;
+	int ccol = cindex & 15;
+	int cwidth = font_width - (monospace ? 0 : (var8x10font_kern[cindex][0] + var8x10font_kern[cindex][1]));
+
+	int	line = crow * font_height;
+	int	offset = ccol * font_width + (monospace ? 0 : var8x10font_kern[cindex][0]);
+	int scale = IPPU.RenderedScreenWidth / SNES_WIDTH;
+
+	uint16* s = GFX.Screen + y * GFX.RealPPL + x * scale;
+
+	for (int h = 0; h < font_height; h++, line++, s += GFX.RealPPL - cwidth * scale)
+	{
+		for (int w = 0; w < cwidth; w++, s++)
+		{
+			if (var8x10font[line][offset + w] == '#')
 				*s = Settings.DisplayColor;
-			else
-			if (p == '.')
-				*s = black;
+			else if (var8x10font[line][offset + w] == '.')
+				*s = 0x0000;
+			//            else if (!monospace && w >= overlap)
+			//                *s = (*s & 0xf7de) >> 1;
+			//                *s = (*s & 0xe79c) >> 2;
+
+			if (scale > 1)
+			{
+				s[1] = s[0];
+				s++;
+			}
 		}
 	}
 }
 
-static void DisplayStringFromBottom (const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap)
+void S9xVariableDisplayString(const char* string, int linesFromBottom,	int pixelsFromLeft, bool allowWrap, int type)
 {
-	if (S9xCustomDisplayString)
-	{
-		S9xCustomDisplayString (string, linesFromBottom, pixelsFromLeft, allowWrap, S9X_NO_INFO);
+	if (GFX.ScreenBuffer.empty() || IPPU.RenderedScreenWidth == 0)
 		return;
+
+	bool monospace = true;
+	if (type == S9X_NO_INFO)
+	{
+		if (linesFromBottom <= 0)
+			linesFromBottom = 1;
+
+		if (linesFromBottom >= 5 && !Settings.DisplayPressedKeys)
+		{
+			if (!Settings.DisplayPressedKeys)
+				linesFromBottom -= 3;
+			else
+				linesFromBottom -= 1;
+		}
+
+		if (pixelsFromLeft > 128)
+			pixelsFromLeft = SNES_WIDTH - StringWidth(string);
+
+		monospace = false;
 	}
 
-	if (linesFromBottom <= 0)
-		linesFromBottom = 1;
+	int min_lines = 1;
+	std::string msg(string);
+	for (auto& c : msg)
+		if (c == '\n')
+			min_lines++;
+	if (min_lines > linesFromBottom)
+		linesFromBottom = min_lines;
 
-	uint16	*dst = GFX.Screen + (IPPU.RenderedScreenHeight - font_height * linesFromBottom) * GFX.RealPPL + pixelsFromLeft;
+	int dst_x = pixelsFromLeft;
+	int dst_y = IPPU.RenderedScreenHeight - (font_height)*linesFromBottom;
+	int len = strlen(string);
 
-	int	len = strlen(string);
-	int	max_chars = IPPU.RenderedScreenWidth / (font_width - 1);
-	int	char_count = 0;
+	if (IPPU.RenderedScreenHeight % 224 && !Settings.ShowOverscan)
+		dst_y -= 8;
+	else if (Settings.ShowOverscan)
+		dst_y += 8;
 
-	for (int i = 0 ; i < len ; i++, char_count++)
+	int overlap = 0;
+
+	for (int i = 0; i < len; i++)
 	{
-		if (char_count >= max_chars || (uint8) string[i] < 32)
+		int cindex = (uint8)string[i] - 32;
+		int char_width = font_width - (monospace ? 1 : (var8x10font_kern[cindex][0] + var8x10font_kern[cindex][1]));
+
+		if (dst_x + char_width > SNES_WIDTH || string[i] == '\n')
 		{
 			if (!allowWrap)
 				break;
 
-			dst += font_height * GFX.RealPPL - (font_width - 1) * max_chars;
-			if (dst >= GFX.Screen + IPPU.RenderedScreenHeight * GFX.RealPPL)
-				break;
+			linesFromBottom--;
+			dst_y = IPPU.RenderedScreenHeight - font_height * linesFromBottom;
+			dst_x = pixelsFromLeft;
 
-			char_count -= max_chars;
+			if (dst_y >= IPPU.RenderedScreenHeight)
+				break;
 		}
 
-		if ((uint8) string[i] < 32)
+		if (string[i] == '\n')
 			continue;
 
-		S9xDisplayChar(dst, string[i]);
-		dst += font_width - 1;
+		VariableDisplayChar(dst_x, dst_y, string[i], monospace, overlap);
+
+		dst_x += char_width - 1;
+		overlap = 1;
 	}
 }
 
-static void S9xDisplayStringType (const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap, int type)
+static void DisplayStringFromBottom(const char* string, int linesFromBottom, int pixelsFromLeft, bool allowWrap)
 {
-    if (S9xCustomDisplayString)
-    {
-            S9xCustomDisplayString (string, linesFromBottom, pixelsFromLeft, allowWrap, type);
-            return;
-    }
+	if (S9xCustomDisplayString)
+	{
+		S9xCustomDisplayString(string, linesFromBottom, pixelsFromLeft, allowWrap, S9X_NO_INFO);
+		return;
+	}
 
-    S9xDisplayString (string, linesFromBottom, pixelsFromLeft, allowWrap);
+	S9xVariableDisplayString(string, linesFromBottom, pixelsFromLeft, allowWrap, S9X_NO_INFO);
+}
+
+static void S9xDisplayStringType(const char* string, int linesFromBottom, int pixelsFromLeft, bool allowWrap, int type)
+{
+	if (S9xCustomDisplayString)
+	{
+		S9xCustomDisplayString(string, linesFromBottom, pixelsFromLeft, allowWrap, type);
+		return;
+	}
+
+	S9xVariableDisplayString(string, linesFromBottom, pixelsFromLeft, allowWrap, type);
 }
 
 static void DisplayTime (void)
 {
 	char string[10];
-	
+
 	time_t rawtime;
 	struct tm *timeinfo;
 
@@ -1997,7 +2060,7 @@ static void DisplayWatchedAddresses (void)
 			break;
 
 		int32	displayNumber = 0;
-		char	buf[32];
+		char	buf[64];
 
 		for (int r = 0; r < watches[i].size; r++)
 			displayNumber += (Cheat.CWatchRAM[(watches[i].address - 0x7E0000) + r]) << (8 * r);
@@ -2011,11 +2074,9 @@ static void DisplayWatchedAddresses (void)
 		{
 			if (watches[i].size == 1)
 				displayNumber = (int32) ((int8)  displayNumber);
-			else
-			if (watches[i].size == 2)
+			else if (watches[i].size == 2)
 				displayNumber = (int32) ((int16) displayNumber);
-			else
-			if (watches[i].size == 3)
+			else if (watches[i].size == 3)
 				if (displayNumber >= 8388608)
 					displayNumber -= 16777216;
 
@@ -2030,7 +2091,7 @@ void S9xDisplayMessages (uint16 *screen, int ppl, int width, int height, int sca
 {
 	if (Settings.DisplayTime)
 		DisplayTime();
-		
+
 	if (Settings.DisplayFrameRate)
 		DisplayFrameRate();
 
@@ -2043,8 +2104,8 @@ void S9xDisplayMessages (uint16 *screen, int ppl, int width, int height, int sca
 	if (Settings.DisplayMovieFrame && S9xMovieActive())
 		S9xDisplayString(GFX.FrameDisplayString, 1, 1, false);
 
-	if (GFX.InfoString && *GFX.InfoString)
-		S9xDisplayString(GFX.InfoString, 5, 1, true);
+	if (!GFX.InfoString.empty())
+		S9xDisplayString(GFX.InfoString.c_str(), 5, 1, true);
 }
 
 static uint16 get_crosshair_color (uint8 color)

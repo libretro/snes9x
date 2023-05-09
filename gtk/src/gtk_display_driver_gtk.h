@@ -14,7 +14,7 @@ class S9xGTKDisplayDriver : public S9xDisplayDriver
 {
   public:
     S9xGTKDisplayDriver(Snes9xWindow *window, Snes9xConfig *config);
-    void refresh(int width, int height);
+    void refresh();
     int init();
     void deinit();
     void update(uint16_t *buffer, int width, int height, int stride_in_pixels);
@@ -29,6 +29,8 @@ class S9xGTKDisplayDriver : public S9xDisplayDriver
     {
         return true;
     }
+    int get_width() { return last_known_width; }
+    int get_height() { return last_known_height; }
 
   private:
     void clear();

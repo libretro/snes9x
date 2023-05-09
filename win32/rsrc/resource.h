@@ -98,6 +98,7 @@
 #define IDC_SFXSPEED                    1072
 #define IDC_SFXSPEED_SPIN               1073
 #define IDC_CONFIRMSAVELOAD             1074
+#define IDC_ADD_REGISTRY                1075
 #define IDC_HOSTNAME                    1086
 #define IDC_PORTNUMBER                  1087
 #define IDC_CLEARHISTORY                1088
@@ -143,6 +144,7 @@
 #define IDC_STRETCH                     1109
 #define IDC_FULLSCREEN                  1110
 #define IDC_EMUFULLSCREEN               1111
+#define IDC_FULLSCREEN_ON_OPEN          1112
 #define IDC_TRANS                       1113
 #define IDC_HIRES                       1114
 #define IDC_CHEAT_CODE                  1115
@@ -416,6 +418,8 @@
 #define IDC_NO_SPRITE_LIMIT             3037
 #define IDC_SET_DEFAULTS                3038
 #define IDC_BUTTON_SLOT_1               3039
+#define IDC_OSD_SCALE                   3041
+#define IDC_SPIN_OSD_SIZE               3042
 #define IDC_STATIC_SLOT_1               3059
 #define ID_FILE_EXIT                    40001
 #define ID_WINDOW_HIDEMENUBAR           40004
@@ -527,16 +531,22 @@
 #define ID_WINDOW_SIZE_2X               40170
 #define ID_WINDOW_SIZE_3X               40171
 #define ID_WINDOW_SIZE_4X               40172
-#define ID_DEBUG_APU_TRACE              40173
-#define ID_EMULATION_BACKGROUNDINPUT    40174
-#define ID_SAVEMEMPACK                  40175
-#define ID_INPUT_BACKGROUNDKEYBOARDHOTKEYS 40176
-#define ID_INPUT_DETECTGAMEPADCHANGES   40177
-#define ID_EMULATION_HACKS              40178
-#define ID_FILE_LOAD_PREVIEW            40179
-#define ID_FILE_SAVE_PREVIEW            40180
-#define ID_FILE_SAVE_POPUP              40181
-#define ID_FILE_LOAD_POPUP              40182
+#define ID_WINDOW_SIZE_5X               40173
+#define ID_WINDOW_SIZE_6X               40174
+#define ID_WINDOW_SIZE_7X               40175
+#define ID_WINDOW_SIZE_8X               40176
+#define ID_WINDOW_SIZE_9X               40177
+#define ID_WINDOW_SIZE_10X              40178
+#define ID_DEBUG_APU_TRACE              40179
+#define ID_EMULATION_BACKGROUNDINPUT    40180
+#define ID_SAVEMEMPACK                  40181
+#define ID_INPUT_BACKGROUNDKEYBOARDHOTKEYS 40182
+#define ID_INPUT_DETECTGAMEPADCHANGES   40183
+#define ID_EMULATION_HACKS              40184
+#define ID_FILE_LOAD_PREVIEW            40185
+#define ID_FILE_SAVE_PREVIEW            40186
+#define ID_FILE_SAVE_POPUP              40187
+#define ID_FILE_LOAD_POPUP              40188
 #define ID_FILE_SAVE0                   44000
 #define ID_FILE_SAVE_LAST               44100
 #define ID_FILE_LOAD0                   44200
@@ -552,8 +562,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        169
-#define _APS_NEXT_COMMAND_VALUE         40181
-#define _APS_NEXT_CONTROL_VALUE         3040
+#define _APS_NEXT_COMMAND_VALUE         40189
+#define _APS_NEXT_CONTROL_VALUE         3044
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

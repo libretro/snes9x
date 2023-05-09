@@ -93,19 +93,6 @@ void S9xExit( void)
     SendMessage (GUI.hWnd, WM_COMMAND, ID_FILE_EXIT, 0);
 }
 
-const char *S9xGetFilename (const char *ex, enum s9x_getdirtype dirtype)
-{
-    static char filename [PATH_MAX + 1];
-    char dir [_MAX_DIR + 1];
-    char drive [_MAX_DRIVE + 1];
-    char fname [_MAX_FNAME + 1];
-    char ext [_MAX_EXT + 1];
-   _splitpath (Memory.ROMFilename, drive, dir, fname, ext);
-   _snprintf(filename, sizeof(filename), "%s" SLASH_STR "%s%s",
-             S9xGetDirectory(dirtype), fname, ex);
-    return (filename);
-}
-
 #define IS_SLASH(x) ((x) == TEXT('\\') || (x) == TEXT('/'))
 static TCHAR startDirectory [PATH_MAX];
 static bool startDirectoryValid = false;
@@ -172,7 +159,7 @@ const TCHAR *S9xGetDirectoryT (enum s9x_getdirtype dirtype)
 		  break;
 
 	  case ROMFILENAME_DIR: {
-			lstrcpy(filename, _tFromChar(Memory.ROMFilename));
+			lstrcpy(filename, _tFromChar(Memory.ROMFilename.c_str()));
 			if(!filename[0])
 				rv = GUI.RomDir;
 			for(int i=lstrlen(filename); i>=0; i--){
@@ -198,30 +185,28 @@ const TCHAR *S9xGetDirectoryT (enum s9x_getdirtype dirtype)
 	return rv;
 }
 
-const char *S9xGetDirectory (enum s9x_getdirtype dirtype)
+std::string S9xGetDirectory (enum s9x_getdirtype dirtype)
 {
-	static char path[PATH_MAX]={0};
-	strncpy(path,_tToChar(S9xGetDirectoryT(dirtype)),PATH_MAX-1);
-
-	return path;
+	return std::string(_tToChar(S9xGetDirectoryT(dirtype)));
 }
 
-const char *S9xGetFilenameInc (const char *e, enum s9x_getdirtype dirtype)
+std::string S9xGetFilenameInc (std::string e, enum s9x_getdirtype dirtype)
 {
-    static char filename [PATH_MAX + 1];
-    char dir [_MAX_DIR + 1];
-    char drive [_MAX_DRIVE + 1];
-    char fname [_MAX_FNAME + 1];
-    char ext [_MAX_EXT + 1];
-    unsigned int i=0;
-    const char *d;
+    std::string filename;
 
-    _splitpath (Memory.ROMFilename, drive, dir, fname, ext);
-    d=S9xGetDirectory(dirtype);
+    auto split = splitpath(Memory.ROMFilename);
+    std::string directory_string = S9xGetDirectory(dirtype);
+
+    unsigned int i = 0;
     do {
-        _snprintf(filename, sizeof(filename), "%s\\%s%03d%s", d, fname, i, e);
+        std::string new_extension = std::to_string(i);
+        while (new_extension.length() < 3)
+            new_extension = "0" + new_extension;
+        new_extension += e;
+
+        filename = makepath("", directory_string, split.stem, new_extension);
         i++;
-    } while(_taccess (_tFromChar(filename), 0) == 0 && i!=0);
+    } while(_taccess(_tFromChar(filename.c_str()), 0) == 0 && i < 1000);
 
     return (filename);
 }
@@ -841,7 +826,7 @@ void InitSnes9x( void)
 //    generate_offsets_h (0, NULL);
 //    fclose (offsets_h);
 //#endif
-
+	S9xCustomDisplayString = S9xWinDisplayString;
     Memory.Init();
 
 	extern void S9xPostRomInit();
@@ -925,7 +910,7 @@ void DeinitS9x()
 
 void S9xAutoSaveSRAM ()
 {
-    Memory.SaveSRAM (S9xGetFilename (".srm", SRAM_DIR));
+    Memory.SaveSRAM (S9xGetFilename (".srm", SRAM_DIR).c_str());
 }
 
 void S9xSetPause (uint32 mask)
@@ -1184,7 +1169,7 @@ void DoAVIOpen(const TCHAR* filename)
 	AVISetFramerate(framerate, frameskip, GUI.AVIOut);
 
 	avi_width = SNES_WIDTH;
-	avi_height = GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
+	avi_height = Settings.ShowOverscan ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
 	avi_skip_frames = Settings.SkipFrames;
 
 	if(GUI.AVIHiRes) {

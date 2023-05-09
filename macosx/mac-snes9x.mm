@@ -32,10 +32,8 @@
 #include "mac-prefix.h"
 #include "mac-audio.h"
 #include "mac-cart.h"
-#include "mac-cheatfinder.h"
 #include "mac-dialog.h"
 #include "mac-file.h"
-#include "mac-multicart.h"
 #include "mac-os.h"
 #include "mac-screenshot.h"
 #include "mac-stringtools.h"
@@ -61,8 +59,6 @@ bool8 SNES9X_OpenCart (NSURL *inRef)
 		S9xResetSaveTimer(false);
 		S9xSaveCheatFile(S9xGetFilename(".cht", CHEAT_DIR));
 	}
-
-	ResetCheatFinder();
 
 	if (!inRef)
 	{
@@ -91,7 +87,7 @@ bool8 SNES9X_OpenCart (NSURL *inRef)
 	Settings.ForcePAL            = (videoDetect      == kPALForce         );
 	Settings.ForceNTSC           = (videoDetect      == kNTSCForce        );
 
-	GFX.InfoString = NULL;
+	GFX.InfoString = "";
 	GFX.InfoStringTimeout = 0;
 
 	S9xResetSaveTimer(true);
@@ -121,24 +117,15 @@ bool8 SNES9X_OpenCart (NSURL *inRef)
 	}
 }
 
-bool8 SNES9X_OpenMultiCart (void)
+bool8 SNES9X_OpenMultiCart (NSURL *cart1FileURL, NSURL *cart2FileURL)
 {
 	Boolean	r;
-	char	cart[2][PATH_MAX + 1];
 
 	if (cartOpen)
 	{
 		SNES9X_SaveSRAM();
 		S9xResetSaveTimer(false);
 		S9xSaveCheatFile(S9xGetFilename(".cht", CHEAT_DIR));
-	}
-
-	ResetCheatFinder();
-
-	if (!MultiCartDialog())
-	{
-		cartOpen = false;
-		return (false);
 	}
 
 	spcFileCount = pngFileCount = 0;
@@ -148,30 +135,24 @@ bool8 SNES9X_OpenMultiCart (void)
 	Settings.ForcePAL      = (videoDetect      == kPALForce     );
 	Settings.ForceNTSC     = (videoDetect      == kNTSCForce    );
 
-	GFX.InfoString = NULL;
+	GFX.InfoString = "";
 	GFX.InfoStringTimeout = 0;
 
 	S9xResetSaveTimer(true);
 
-	for (int i = 0; i < 2; i++)
-	{
-		cart[i][0] = 0;
-		if (multiCartPath[i])
-			r = CFStringGetCString(multiCartPath[i], cart[i], PATH_MAX, kCFStringEncodingUTF8);
-	}
-
 	SNES9X_InitSound();
 
-	if (Memory.LoadMultiCart(cart[0], cart[1]))
+	if (Memory.LoadMultiCart(cart1FileURL.path.UTF8String, cart2FileURL.path.UTF8String))
 	{
 		cartOpen = true;
 
 		SNES9X_LoadSRAM();
 
-		for (int i = 0; i < 2; i++)
+		ChangeTypeAndCreator(cart1FileURL.path.UTF8String, 'CART', '~9X~');
+
+		if (cart2FileURL != nil)
 		{
-			if (cart[i][0])
-				ChangeTypeAndCreator(cart[i], 'CART', '~9X~');
+			ChangeTypeAndCreator(cart2FileURL.path.UTF8String, 'CART', '~9X~');
 		}
 
 		ApplyNSRTHeaderControllers();
@@ -192,18 +173,18 @@ bool8 SNES9X_OpenMultiCart (void)
 void SNES9X_LoadSRAM (void)
 {
 	if (cartOpen)
-		Memory.LoadSRAM(S9xGetFilename(".srm", SRAM_DIR));
+		Memory.LoadSRAM(S9xGetFilename(".srm", SRAM_DIR).c_str());
 }
 
 void SNES9X_SaveSRAM (void)
 {
-	const char	*sramFilename;
+	std::string	sramFilename;
 
 	if (cartOpen)
 	{
 		sramFilename = S9xGetFilename(".srm", SRAM_DIR);
-		Memory.SaveSRAM(sramFilename);
-		ChangeTypeAndCreator(sramFilename, 'SRAM', '~9X~');
+		Memory.SaveSRAM(sramFilename.c_str());
+		ChangeTypeAndCreator(sramFilename.c_str(), 'SRAM', '~9X~');
 	}
 }
 

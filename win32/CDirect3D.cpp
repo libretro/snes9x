@@ -18,6 +18,9 @@
 #include "../filter/hq2x.h"
 #include "../filter/2xsai.h"
 
+#include "imgui_impl_dx9.h"
+#include "snes9x_imgui.h"
+
 #ifndef max
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #endif
@@ -138,6 +141,16 @@ bool CDirect3D::Initialize(HWND hWnd)
 
 	init_done = true;
 
+	if (!Settings.AutoDisplayMessages)
+	{
+		auto defaults = S9xImGuiGetDefaults();
+		defaults.font_size = GUI.OSDSize;
+		defaults.spacing = (int)(defaults.font_size / 2.4);
+		S9xImGuiInit(&defaults);
+		ImGui_ImplDX9_Init(pDevice);
+		Settings.DisplayIndicators = true;
+	}
+
 	ApplyDisplayChanges();
 
 	return true;
@@ -146,6 +159,12 @@ bool CDirect3D::Initialize(HWND hWnd)
 
 void CDirect3D::DeInitialize()
 {
+	if (S9xImGuiRunning())
+	{
+		ImGui_ImplDX9_Shutdown();
+		S9xImGuiDeinit();
+	}
+
 	DestroyDrawSurface();
 	SetShader(NULL);
 
@@ -290,10 +309,6 @@ void CDirect3D::Render(SSurface Src)
 		Dst.Pitch = lr.Pitch;
 
 		RenderMethod (Src, Dst, &dstRect);
-		if(!Settings.AutoDisplayMessages) {
-			WinSetCustomDisplaySurface((void *)Dst.Surface, Dst.Pitch/2, dstRect.right-dstRect.left, dstRect.bottom-dstRect.top, GetFilterScale(CurrentScale));
-			S9xDisplayMessages ((uint16*)Dst.Surface, Dst.Pitch/2, dstRect.right-dstRect.left, dstRect.bottom-dstRect.top, GetFilterScale(CurrentScale));
-		}
 
 		drawSurface->UnlockRect(0);
 	}
@@ -319,11 +334,10 @@ void CDirect3D::Render(SSurface Src)
 		displayRect=CalculateDisplayRect(dPresentParams.BackBufferWidth,dPresentParams.BackBufferHeight,
 										dPresentParams.BackBufferWidth,dPresentParams.BackBufferHeight);
 		cgShader->Render(drawSurface,
-			XMFLOAT2((float)quadTextureSize, (float)quadTextureSize),
-			XMFLOAT2((float)afterRenderWidth, (float)afterRenderHeight),
-			XMFLOAT2((float)(displayRect.right - displayRect.left),
-								(float)(displayRect.bottom - displayRect.top)),
-			XMFLOAT2((float)dPresentParams.BackBufferWidth, (float)dPresentParams.BackBufferHeight));
+			float2{ (float)quadTextureSize, (float)quadTextureSize },
+			float2{ (float)afterRenderWidth, (float)afterRenderHeight },
+			float2{ (float)(displayRect.right - displayRect.left), (float)(displayRect.bottom - displayRect.top) },
+			float2{ (float)dPresentParams.BackBufferWidth, (float)dPresentParams.BackBufferHeight });
 	}
 
 	SetFiltering();
@@ -332,8 +346,16 @@ void CDirect3D::Render(SSurface Src)
 
 	pDevice->BeginScene();
 	pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP,0,2);
+	if (S9xImGuiRunning())
+	{
+		ImGui_ImplDX9_NewFrame();
+		if (S9xImGuiDraw(dPresentParams.BackBufferWidth, dPresentParams.BackBufferHeight))
+			ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+	}
+
 	pDevice->EndScene();
 
+	WinThrottleFramerate();
 	pDevice->Present(NULL, NULL, NULL, NULL);
 
 	if (GUI.ReduceInputLag)
@@ -468,11 +490,19 @@ void CDirect3D::SetupVertices()
 
 void CDirect3D::SetViewport()
 {
-	XMMATRIX matIdentity;
-	XMMATRIX matProjection;
+	D3DMATRIX matIdentity;
+	D3DMATRIX matProjection;
 
-	matProjection = XMMatrixOrthographicOffCenterLH(0.0f,1.0f,0.0f,1.0f,0.0f,1.0f);
-	matIdentity = XMMatrixIdentity();
+    matIdentity = { 1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f };
+
+    matProjection = {  2.0f,  0.0f,  0.0f, 0.0f,
+                       0.0f,  2.0f,  0.0f, 0.0f,
+                       0.0f,  0.0f, -1.0f, 0.0f,
+                      -1.0f, -1.0f,  0.0f, 1.0f };
+
 	pDevice->SetTransform(D3DTS_WORLD,(D3DMATRIX*)&matIdentity);
 	pDevice->SetTransform(D3DTS_VIEW, (D3DMATRIX*)&matIdentity);
 	pDevice->SetTransform(D3DTS_PROJECTION, (D3DMATRIX*)&matProjection);
@@ -526,6 +556,11 @@ bool CDirect3D::ResetDevice()
 
 	HRESULT hr;
 
+	if (S9xImGuiRunning())
+	{
+		ImGui_ImplDX9_Shutdown();
+	}
+
 	//release prior to reset
 	DestroyDrawSurface();
 
@@ -569,11 +604,16 @@ bool CDirect3D::ResetDevice()
 	pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
 
 	pDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-	
+
 	//recreate the surface
 	CreateDrawSurface();
 
 	SetViewport();
+
+	if (S9xImGuiRunning())
+	{
+		ImGui_ImplDX9_Init(pDevice);
+	}
 
 	return true;
 }

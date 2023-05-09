@@ -1,6 +1,6 @@
 /*****************************************************************************\
-     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
-                This file is licensed under the Snes9x License.
+	 Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+				This file is licensed under the Snes9x License.
    For further information, consult the LICENSE file in the root directory.
 \*****************************************************************************/
 
@@ -15,19 +15,24 @@
   (c) Copyright 2004         Alexander and Sander
   (c) Copyright 2004 - 2005  Steven Seeger
   (c) Copyright 2005         Ryan Vogt
-  (c) Copyright 2019         Michael Donald Buckley
+  (c) Copyright 2019 - 2023  Michael Donald Buckley
  ***********************************************************************************/
 
+#import <Cocoa/Cocoa.h>
 
-#ifndef _mac_cheatfinder_h_
-#define _mac_cheatfinder_h_
+#import <snes9x_framework/snes9x_framework.h>
 
-extern Boolean	cfIsWatching;
+NS_ASSUME_NONNULL_BEGIN
 
-void CheatFinder (void);
-void InitCheatFinder (void);
-void ResetCheatFinder (void);
-void DeinitCheatFinder (void);
-void CheatFinderDrawWatchAddr (void);
+@protocol S9xCheatFinderDelegate <NSObject>
+- (void)addedCheat;
+@end
 
-#endif
+@interface S9xCheatFinderViewController : NSViewController
+
+@property (nonatomic, strong) S9xEngine *engine;
+@property (nonatomic, weak) id<S9xCheatFinderDelegate> delegate;
+
+@end
+
+NS_ASSUME_NONNULL_END

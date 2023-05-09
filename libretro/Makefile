@@ -97,7 +97,7 @@ else ifneq (,$(findstring CortexA73_G12B,$(platform)))
 # OS X
 else ifeq ($(platform), osx)
    CFLAGS += $(LTO)
-   CXXFLAGS += $(LTO)
+   CXXFLAGS += -std=c++14 $(LTO)
    LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro.dylib
    fpic := -fPIC
@@ -656,7 +656,8 @@ endif
 
 CXXFLAGS	+= $(CODE_DEFINES) $(WARNINGS_DEFINES) $(fpic)
 CXXFLAGS	+= -DRIGHTSHIFT_IS_SAR -D__LIBRETRO__ -DALLOW_CPU_OVERCLOCK
-CFLAGS		:= $(CXXFLAGS)
+CFLAGS		+= $(CODE_DEFINES) $(WARNINGS_DEFINES) $(fpic)
+CFLAGS		+= -DRIGHTSHIFT_IS_SAR -D__LIBRETRO__ -DALLOW_CPU_OVERCLOCK
 CFLAGS          += -DHAVE_STDINT_H
 CXXFLAGS        += -DHAVE_STDINT_H
 ifeq (,$(findstring msvc,$(platform)))

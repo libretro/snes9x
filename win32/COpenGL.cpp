@@ -15,6 +15,8 @@
 #include "../filter/hq2x.h"
 #include "../filter/2xsai.h"
 
+#include "snes9x_imgui.h"
+#include "imgui_impl_opengl3.h"
 
 COpenGL::COpenGL(void)
 {
@@ -64,7 +66,7 @@ bool COpenGL::Initialize(HWND hWnd)
 		PFD_SUPPORT_OPENGL |							// Format Must Support OpenGL
 		PFD_DOUBLEBUFFER,								// Must Support Double Buffering
 		PFD_TYPE_RGBA,									// Request An RGBA Format
-		16,												// Select Our Color Depth
+		32,												// Select Our Color Depth
 		0, 0, 0, 0, 0, 0,								// Color Bits Ignored
 		0,												// No Alpha Buffer
 		0,												// Shift Bit Ignored
@@ -84,8 +86,11 @@ bool COpenGL::Initialize(HWND hWnd)
 		return false;
 	}
 	if(!SetPixelFormat(hDC,pfdIndex,&pfd)) {
-		DeInitialize();
-		return false;
+		// SetPixelFormat can only be called once per window. Vulkan WSI will do
+		// this automatically and fall back if it's already been set. Since Vulkan
+		// has similar requirements, we don't need to set it any more anyway.
+		// DeInitialize();
+		// return false;
 	}
 	if(!(hRC=wglCreateContext(hDC))) {
 		DeInitialize();
@@ -101,7 +106,7 @@ bool COpenGL::Initialize(HWND hWnd)
 	LoadPBOFunctions();
 
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress( "wglSwapIntervalEXT" );
-	
+
 	glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnable(GL_BLEND);
@@ -110,7 +115,7 @@ bool COpenGL::Initialize(HWND hWnd)
 	glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
     glOrtho (0.0, 1.0, 0.0, 1.0, -1, 1);
-	
+
 	glVertexPointer(2, GL_FLOAT, 0, vertices);
 	glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
 
@@ -130,13 +135,28 @@ bool COpenGL::Initialize(HWND hWnd)
 	glClear(GL_COLOR_BUFFER_BIT);
 	SwapBuffers(hDC);
 
+	if (ogl_GetMajorVersion() >= 3 && !Settings.AutoDisplayMessages)
+	{
+		auto defaults = S9xImGuiGetDefaults();
+		defaults.font_size = GUI.OSDSize;
+		defaults.spacing = defaults.font_size / 2.4;
+		S9xImGuiInit(&defaults);
+		ImGui_ImplOpenGL3_Init();
+		Settings.DisplayIndicators = true;
+	}
+
 	initDone = true;
 	return true;
 }
 
 void COpenGL::DeInitialize()
 {
-	initDone = false;
+	if (initDone && S9xImGuiRunning())
+	{
+		ImGui_ImplOpenGL3_Shutdown();
+		S9xImGuiDeinit();
+	}
+    initDone = false;
 	SetShaders(NULL);
 	DestroyDrawSurface();
 	wglMakeCurrent(NULL,NULL);
@@ -144,8 +164,9 @@ void COpenGL::DeInitialize()
 		wglDeleteContext(hRC);
 		hRC = NULL;
 	}
-	if(hDC) {
-		ReleaseDC(hWnd,hDC);
+	if (hDC)
+	{
+		ReleaseDC(hWnd, hDC);
 		hDC = NULL;
 	}
 	hWnd = NULL;
@@ -293,10 +314,6 @@ void COpenGL::Render(SSurface Src)
 	Dst.Pitch = outTextureWidth * 2;
 
 	RenderMethod (Src, Dst, &dstRect);
-	if(!Settings.AutoDisplayMessages) {
-		WinSetCustomDisplaySurface((void *)Dst.Surface, Dst.Pitch/2, dstRect.right-dstRect.left, dstRect.bottom-dstRect.top, GetFilterScale(CurrentScale));
-		S9xDisplayMessages ((uint16*)Dst.Surface, Dst.Pitch/2, dstRect.right-dstRect.left, dstRect.bottom-dstRect.top, GetFilterScale(CurrentScale));
-	}
 
 	if(pboFunctionsLoaded)
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
@@ -365,6 +382,19 @@ void COpenGL::Render(SSurface Src)
     }
 
 	glFlush();
+
+	if (S9xImGuiRunning())
+	{
+		ImGui_ImplOpenGL3_NewFrame();
+		if (S9xImGuiDraw(windowSize.right, windowSize.bottom))
+		{
+			auto* draw_data = ImGui::GetDrawData();
+			ImGui_ImplOpenGL3_RenderDrawData(draw_data);
+		}
+	}
+
+	WinThrottleFramerate();
+
 	SwapBuffers(hDC);
 	if (GUI.ReduceInputLag)
 		glFinish();
@@ -388,6 +418,24 @@ void COpenGL::SetSwapInterval(int frames)
 {
     if (wglSwapIntervalEXT)
         wglSwapIntervalEXT(frames);
+}
+
+std::vector<ShaderParam>* COpenGL::GetShaderParameters(void)
+{
+	if (shader_type == OGL_SHADER_GLSL && initDone)
+	{
+		// GLSLParam currently equal ShaderParam, so no conversion is neccessary
+		return (std::vector<ShaderParam>*)&glslShader->param;
+	}
+
+	return nullptr;
+}
+
+std::function<void(const char *)> COpenGL::GetShaderParametersSaveFunction()
+{
+	return [&](const char *filename) {
+		this->glslShader->save(filename);
+	};
 }
 
 bool COpenGL::ApplyDisplayChanges(void)
@@ -431,7 +479,7 @@ bool COpenGL::SetFullscreen(bool fullscreen)
 		ChangeDisplaySettings(NULL,0);
 	}
 
-	
+
 
 	return true;
 }
@@ -495,7 +543,7 @@ bool COpenGL::LoadPBOFunctions()
 		if(glGenBuffers && glBindBuffer && glBufferData && glDeleteBuffers && glMapBuffer) {
 			pboFunctionsLoaded = true;
 		}
-		 
+
 	}
 	return pboFunctionsLoaded;
 }

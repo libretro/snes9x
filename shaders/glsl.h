@@ -7,7 +7,8 @@
 #ifndef __GLSL_H
 #define __GLSL_H
 
-#include "../../conffile.h"
+#include "snes9x.h"
+#include "../vulkan/slang_preset_ini.hpp"
 #include "shader_platform.h"
 #include <deque>
 #include <limits.h>
@@ -145,14 +146,13 @@ struct GLSLLut
 
 struct GLSLParam
 {
-    char name[PATH_MAX];
-    char id[256];
+    std::string name;
+    std::string id;
     float min;
     float max;
     float val;
     float step;
     int digits;
-    GLint unif[glsl_max_passes];
 };
 
 struct GLSLShader
@@ -173,11 +173,13 @@ struct GLSLShader
     void destroy();
     void register_uniforms();
 
-    ConfigFile conf;
+    IniFile ini;
 
     std::vector<GLSLPass> pass;
     std::vector<GLSLLut> lut;
     std::vector<GLSLParam> param;
+    std::vector<std::vector<GLint>> unif;
+
     int max_prev_frame;
     std::deque<GLSLPass> prev_frame;
     std::vector<GLuint> vaos;

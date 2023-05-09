@@ -10,8 +10,8 @@
 #include "wsnes9x.h"
 #include "port.h"
 #include "render.h"
-#include "../shaders/glsl.h"
 #include <vector>
+#include <functional>
 
 #define IsHiRes(x) ((x.Height > SNES_HEIGHT_EXTENDED || x.Width == 512))
 #define CurrentScale (IsHiRes(Src) ? GUI.ScaleHiRes : GUI.Scale)
@@ -33,14 +33,13 @@ RECT CalculateDisplayRect(unsigned int sourceWidth,unsigned int sourceHeight,
 						  unsigned int displayWidth,unsigned int displayHeight);
 void WinEnumDisplayModes(std::vector<dMode> *modeVector);
 void ConvertDepth (SSurface *src, SSurface *dst, RECT *srect);
-void WinDisplayStringFromBottom (const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap);
-void WinSetCustomDisplaySurface(void *screen, int ppl, int width, int height, int scale);
-template<typename screenPtrType>
-void WinDisplayStringInBuffer (const char *string, int linesFromBottom, int pixelsFromLeft, bool allowWrap);
 char *ReadShaderFileContents(const TCHAR *filename);
 void ReduceToPath(TCHAR *filename);
 double WinGetRefreshRate();
+void S9xWinDisplayString(const char*, int, int, bool, int);
 int WinGetAutomaticInputRate();
-GLSLShader *WinGetActiveGLSLShader();
+void WinThrottleFramerate();
+std::vector<ShaderParam> *WinGetShaderParameters();
+std::function<void(const char*)> WinGetShaderSaveFunction();
 
 #endif

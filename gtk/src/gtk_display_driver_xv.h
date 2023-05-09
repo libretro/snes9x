@@ -21,22 +21,16 @@ class S9xXVDisplayDriver : public S9xDisplayDriver
 {
   public:
     S9xXVDisplayDriver(Snes9xWindow *window, Snes9xConfig *config);
-    void refresh(int width, int height);
+    void refresh();
     int init();
     void deinit();
     void update(uint16_t *buffer, int width, int height, int stride_in_pixels);
-    void *get_parameters()
-    {
-        return NULL;
-    }
-    void save(const char *filename)
-    {
-    }
+    void *get_parameters() { return nullptr; }
+    void save(const char *filename) {}
     static int query_availability();
-    bool is_ready()
-    {
-        return true;
-    }
+    bool is_ready() { return true; }
+    int get_width() { return output_window_width; }
+    int get_height() { return output_window_height; }
 
   private:
     void clear();
