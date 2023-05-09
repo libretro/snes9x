@@ -223,7 +223,7 @@ else ifeq ($(platform), classic_armv8_a35)
 # iOS
 else ifneq (,$(findstring ios,$(platform)))
    CFLAGS += $(LTO)
-   CXXFLAGS += $(LTO)
+   CXXFLAGS += -std=c++11 $(LTO)
    LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro_ios.dylib
    fpic := -fPIC
@@ -252,7 +252,7 @@ else ifneq (,$(findstring ios,$(platform)))
 #tvOS
 else ifeq ($(platform), tvos-arm64)
    CFLAGS += $(LTO)
-   CXXFLAGS += $(LTO)
+   CXXFLAGS += -std=c++11 $(LTO)
    LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro_tvos.dylib
    fpic := -fPIC
@@ -356,6 +356,7 @@ else ifneq (,$(filter $(platform), ngc wii wiiu))
 
 # Emscripten
 else ifeq ($(platform), emscripten)
+   CXXFLAGS += -std=c++11
    TARGET := $(TARGET_NAME)_libretro_$(platform).bc
    STATIC_LINKING=1
    STATIC_LINKING_LINK=1
