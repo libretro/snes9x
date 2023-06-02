@@ -7,8 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "gtk_s9x.h"
-#include "gtk_wayland_egl_context.h"
+#include "wayland_egl_context.hpp"
 
 WaylandEGLContext::WaylandEGLContext()
 {
@@ -33,15 +32,10 @@ WaylandEGLContext::~WaylandEGLContext()
         wl_egl_window_destroy(egl_window);
 }
 
-bool WaylandEGLContext::attach(GtkWidget *widget)
+bool WaylandEGLContext::attach(wl_display *display, wl_surface *surface, WaylandSurface::Metrics m)
 {
-    GdkWindow *window = gtk_widget_get_window(widget);
-
-    if (!GDK_IS_WAYLAND_WINDOW(window))
-        return false;
-
     wayland_surface = std::make_unique<WaylandSurface>();
-    wayland_surface->attach(widget);
+    wayland_surface->attach(display, surface, m);
 
     return true;
 }
@@ -70,15 +64,27 @@ bool WaylandEGLContext::create_context()
 
     EGLint num_configs = 0;
 
+    if (!gladLoaderLoadEGL(nullptr))
+    {
+        printf("Couldn't load EGL.\n");
+        return false;
+    }
+
     egl_display = eglGetDisplay((EGLNativeDisplayType)wayland_surface->display);
-    eglInitialize(egl_display, NULL, NULL);
+    int major, minor;
+    eglInitialize(egl_display, &major, &minor);
+
+    // Load the rest of the functions only after calling eglInitialize.
+    if (!gladLoaderLoadEGL(egl_display))
+    {
+        printf("Couldn't load EGL functions.\n");
+    }
 
     if (!eglChooseConfig(egl_display, surface_attribs, &egl_config, 1, &num_configs))
     {
         printf("Couldn't find matching config.\n");
         return false;
     }
-    eglBindAPI(EGL_OPENGL_API);
 
     std::tie(width, height) = wayland_surface->get_size();
     egl_window = wl_egl_window_create(wayland_surface->child, width, height);
@@ -95,6 +101,7 @@ bool WaylandEGLContext::create_context()
         return false;
     }
 
+    eglBindAPI(EGL_OPENGL_API);
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, core_context_attribs);
     if (!egl_context)
     {
@@ -109,10 +116,10 @@ bool WaylandEGLContext::create_context()
     return true;
 }
 
-void WaylandEGLContext::resize()
+void WaylandEGLContext::resize(WaylandSurface::Metrics m)
 {
-    wayland_surface->resize();
-    
+    wayland_surface->resize(m);
+
     std::tie(width, height) = wayland_surface->get_size();
     wl_egl_window_resize(egl_window, width, height, 0, 0);
 
