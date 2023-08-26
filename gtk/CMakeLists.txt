@@ -17,15 +17,15 @@ option(DANGEROUS_HACKS "Allow dangerous hacks to be used" ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_INSTALL_DATADIR "snes9x" CACHE STRING "cheats.bml directory")
-set(CMAKE_INSTALL_LOCALEDIR locale CACHE STRING "Locale directory")
+
+include(GNUInstallDirs)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "One of: Debug Release RelWithDebInfo MinSizeRel" FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
-string(APPEND DATADIR ${CMAKE_INSTALL_PREFIX} "/" ${CMAKE_INSTALL_DATAROOTDIR} "/" ${CMAKE_INSTALL_DATADIR})
-string(APPEND LOCALEDIR ${CMAKE_INSTALL_PREFIX} "/" ${CMAKE_INSTALL_DATAROOTDIR} "/" ${CMAKE_INSTALL_LOCALEDIR})
+string(APPEND DATADIR ${CMAKE_INSTALL_PREFIX} "/" ${CMAKE_INSTALL_DATAROOTDIR} "/snes9x")
+string(APPEND LOCALEDIR ${CMAKE_INSTALL_PREFIX} "/" ${CMAKE_INSTALL_DATAROOTDIR} "/locale" )
 add_compile_definitions(HAVE_LIBPNG
                         ZLIB SNES9X_GTK
                         NETPLAY_SUPPORT
@@ -40,7 +40,7 @@ add_compile_definitions(HAVE_LIBPNG
                         SNES9XLOCALEDIR=\"${LOCALEDIR}\")
 set(INCLUDES ../apu/bapu ../ src)
 set(SOURCES)
-set(ARGS -Wall -Wno-unused-parameter)
+set(ARGS -Wall -Wno-unused-parameter -Wno-unused-variable -Wno-nullability-completeness)
 set(LIBS)
 set(DEFINES)
 
@@ -49,7 +49,7 @@ include(CheckIncludeFile)
 include(FindGettext)
 
 foreach(lang es fr_FR ja pt_BR ru sr@latin uk zh_CN)
-    GETTEXT_PROCESS_PO_FILES(${lang} ALL "share/locale/" PO_FILES po/${lang}.po)
+    GETTEXT_PROCESS_PO_FILES(${lang} ALL PO_FILES po/${lang}.po)
     install(FILES ${CMAKE_BINARY_DIR}/${lang}.gmo
             DESTINATION ${LOCALEDIR}/${lang}/LC_MESSAGES
             RENAME snes9x-gtk.mo
@@ -68,7 +68,7 @@ list(APPEND ARGS ${SDL2_CFLAGS} ${GTK_CFLAGS} ${XRANDR_CFLAGS})
 list(APPEND LIBS ${X11} ${XEXT} ${DL} ${SDL2_LIBRARIES} ${GTK_LIBRARIES} ${XRANDR_LIBRARIES})
 
 list(APPEND SOURCES src/gtk_display_driver_opengl.cpp
-                    ../frontend-common/glx_context.cpp
+                    ../common/video/glx_context.cpp
                     ../shaders/glsl.cpp
                     ../shaders/shader_helpers.cpp
                     ../vulkan/slang_helpers.cpp
@@ -152,13 +152,13 @@ list(APPEND INCLUDES ../external/imgui)
 if(USE_WAYLAND)
     pkg_check_modules(WAYLAND REQUIRED wayland-client wayland-egl)
     list(APPEND DEFINES "USE_WAYLAND")
-    list(APPEND SOURCES ../frontend-common/wayland_egl_context.cpp
-                        ../frontend-common/wayland_egl_context.hpp
-                        ../frontend-common/wayland_surface.cpp
-                        ../frontend-common/wayland_surface.hpp
-                        ../frontend-common/wayland-idle-inhibit-unstable-v1.c
-                        ../frontend-common/viewporter-client-protocol.c
-                        ../frontend-common/fractional-scale-v1.c)
+    list(APPEND SOURCES ../common/video/wayland_egl_context.cpp
+                        ../common/video/wayland_egl_context.hpp
+                        ../common/video/wayland_surface.cpp
+                        ../common/video/wayland_surface.hpp
+                        ../common/video/wayland-idle-inhibit-unstable-v1.c
+                        ../common/video/viewporter-client-protocol.c
+                        ../common/video/fractional-scale-v1.c)
     list(APPEND ARGS ${WAYLAND_CFLAGS})
     list(APPEND LIBS ${WAYLAND_LIBRARIES})
 endif()
@@ -175,7 +175,7 @@ endif()
 if(USE_PULSEAUDIO)
     pkg_check_modules(PULSEAUDIO REQUIRED libpulse)
     list(APPEND DEFINES "USE_PULSEAUDIO")
-    list(APPEND SOURCES src/gtk_sound_driver_pulse.cpp)
+    list(APPEND SOURCES ../common/audio/s9x_sound_driver_pulse.cpp)
     list(APPEND ARGS ${PULSEAUDIO_CFLAGS})
     list(APPEND LIBS ${PULSEAUDIO_LIBRARIES})
 endif()
@@ -183,7 +183,7 @@ endif()
 if(USE_PORTAUDIO)
     pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
     list(APPEND DEFINES "USE_PORTAUDIO")
-    list(APPEND SOURCES src/gtk_sound_driver_portaudio.cpp)
+    list(APPEND SOURCES ../common/audio/s9x_sound_driver_portaudio.cpp)
     list(APPEND ARGS ${PORTAUDIO_CFLAGS})
     list(APPEND LIBS ${PORTAUDIO_LIBRARIES})
 endif()
@@ -191,7 +191,7 @@ endif()
 if(USE_ALSA)
     pkg_check_modules(ALSA REQUIRED alsa)
     list(APPEND DEFINES "USE_ALSA")
-    list(APPEND SOURCES src/gtk_sound_driver_alsa.cpp)
+    list(APPEND SOURCES ../common/audio/s9x_sound_driver_alsa.cpp)
     list(APPEND ARGS ${ALSA_CFLAGS})
     list(APPEND LIBS ${ALSA_LIBRARIES})
 endif()
@@ -199,7 +199,7 @@ endif()
 if(USE_OSS)
     CHECK_INCLUDE_FILE("sys/soundcard.h" OSS)
     if(OSS)
-        list(APPEND SOURCES src/gtk_sound_driver_oss.cpp)
+        list(APPEND SOURCES ../common/audio/s9x_sound_driver_oss.cpp)
         list(APPEND DEFINES "USE_OSS")
     endif()
 endif()
@@ -238,7 +238,7 @@ if(DANGEROUS_HACKS)
 endif()
 
 list(APPEND SOURCES
-    src/gtk_sound_driver.h
+    ../common/audio/s9x_sound_driver.hpp
     ../filter/2xsai.cpp
     ../filter/2xsai.h
     ../filter/epx.cpp
@@ -279,8 +279,8 @@ list(APPEND SOURCES
     ../filter/snes_ntsc_impl.h
     ../filter/snes_ntsc.c
     src/gtk_compat.h
-    src/gtk_sound_driver_sdl.h
-    src/gtk_sound_driver_sdl.cpp
+    ../common/audio/s9x_sound_driver_sdl.hpp
+    ../common/audio/s9x_sound_driver_sdl.cpp
     ../fxinst.cpp
     ../fxemu.cpp
     ../fxdbg.cpp
@@ -406,7 +406,7 @@ if(USE_SLANG)
 endif()
 
 install(TARGETS snes9x-gtk)
-install(FILES ../data/cheats.bml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${CMAKE_INSTALL_DATADIR})
+install(FILES ../data/cheats.bml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/snes9x)
 install(FILES data/snes9x-gtk.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
 install(FILES data/snes9x_16x16.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/16x16/apps RENAME snes9x.png)
 install(FILES data/snes9x_24x24.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/24x24/apps RENAME snes9x.png)

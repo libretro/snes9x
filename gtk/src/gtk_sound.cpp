@@ -9,22 +9,22 @@
 
 #include "gtk_s9x.h"
 #include "gtk_sound.h"
-#include "gtk_sound_driver.h"
+#include "common/audio/s9x_sound_driver.hpp"
 #include "snes9x.h"
 #include "apu/apu.h"
 
 #ifdef USE_PORTAUDIO
-#include "gtk_sound_driver_portaudio.h"
+#include "common/audio/s9x_sound_driver_portaudio.hpp"
 #endif
 #ifdef USE_OSS
-#include "gtk_sound_driver_oss.h"
+#include "common/audio/s9x_sound_driver_oss.hpp"
 #endif
-#include "gtk_sound_driver_sdl.h"
+#include "common/audio/s9x_sound_driver_sdl.hpp"
 #ifdef USE_ALSA
-#include "gtk_sound_driver_alsa.h"
+#include "common/audio/s9x_sound_driver_alsa.hpp"
 #endif
 #ifdef USE_PULSEAUDIO
-#include "gtk_sound_driver_pulse.h"
+#include "common/audio/s9x_sound_driver_pulse.hpp"
 #endif
 
 static int playback_rates[8] =
@@ -150,7 +150,7 @@ void S9xPortSoundDeinit()
     S9xSoundStop();
 
     if (driver)
-        driver->terminate();
+        driver->deinit();
 
     delete driver;
 }
@@ -167,6 +167,55 @@ void S9xSoundStop()
         driver->stop();
 }
 
+static std::vector<int16_t> temp_buffer;
+void S9xSamplesAvailable(void *userdata)
+{
+    bool clear_leftover_samples = false;
+    int samples = S9xGetSampleCount();
+    int space_free = driver->space_free();
+
+    if (space_free < samples)
+    {
+        if (!Settings.SoundSync)
+            clear_leftover_samples = true;
+
+        if (Settings.SoundSync && !Settings.TurboMode && !Settings.Mute)
+        {
+            for (int i = 0; i < 200; i++) // Wait for a max of 5ms
+            {
+                space_free = driver->space_free();
+                if (space_free < samples)
+                    usleep(50);
+                else
+                    break;
+            }
+        }
+    }
+
+    if (space_free < samples)
+        samples = space_free & ~1;
+
+    if (samples == 0)
+    {
+        S9xClearSamples();
+        return;
+    }
+
+    if ((int)temp_buffer.size() < samples)
+        temp_buffer.resize(samples);
+    S9xMixSamples((uint8_t *)temp_buffer.data(), samples);
+    driver->write_samples(temp_buffer.data(), samples);
+
+    if (clear_leftover_samples)
+        S9xClearSamples();
+
+    if (Settings.DynamicRateControl)
+    {
+        auto level = driver->buffer_level();
+        S9xUpdateDynamicRate(level.first, level.second);
+    }
+}
+
 bool8 S9xOpenSoundDevice()
 {
     if (gui_config->mute_sound)
@@ -174,7 +223,8 @@ bool8 S9xOpenSoundDevice()
 
     gui_config->sound_buffer_size = CLAMP(gui_config->sound_buffer_size, 2, 256);
 
-    return driver->open_device();
+    S9xSetSamplesAvailableCallback(S9xSamplesAvailable, nullptr);
+    return driver->open_device(Settings.SoundPlaybackRate, gui_config->sound_buffer_size);
 }
 
 /* This really shouldn't be in the port layer */

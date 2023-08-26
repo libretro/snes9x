@@ -434,6 +434,9 @@ SCheat S9xTextToCheat(const std::string &text)
     {
         c.conditional = true;
     }
+    else if (sscanf(text.c_str(), "%x : %x", &c.address, &byte) == 2)
+    {
+    }
     else if (sscanf(text.c_str(), "%x / %x", &c.address, &byte) == 2)
     {
     }
@@ -531,7 +534,7 @@ std::string S9xCheatToText(const SCheat &c)
     return std::string(output);
 }
 
-std::string S9xCheatGroupToText(SCheatGroup &g)
+std::string S9xCheatGroupToText(const SCheatGroup &g)
 {
     std::string text = "";
 
