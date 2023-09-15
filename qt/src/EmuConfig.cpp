@@ -225,9 +225,7 @@ bool EmuConfig::setDefaults(int section)
         restart_set(display_driver, "vulkan");
         restart_set(display_device_index, 0);
         enable_vsync = true;
-        ;
         bilinear_filter = true;
-        ;
         reduce_input_lag = true;
         adjust_for_vrr = false;
         restart_set(use_shader, false);
@@ -278,7 +276,7 @@ bool EmuConfig::setDefaults(int section)
 
         allow_invalid_vram_access = false;
         allow_opposing_dpad_directions = false;
-        overclock = false;
+        overclock = eNoOverclock;
         remove_sprite_limit = false;
         enable_shadow_buffer = false;
         superfx_clock_multiplier = 100;
@@ -489,7 +487,7 @@ void EmuConfig::config(std::string filename, bool write)
     Int("RewindFrameInterval", rewind_frame_interval);
     Bool("AllowInvalidVRAMAccess", allow_invalid_vram_access);
     Bool("AllowOpposingDpadDirections", allow_opposing_dpad_directions);
-    Bool("Overclock", overclock);
+    Int("Overclock", overclock);
     Bool("RemoveSpriteLimit", remove_sprite_limit);
     Bool("EnableShadowBuffer", enable_shadow_buffer);
     Int("SuperFXClockMultiplier", superfx_clock_multiplier);
