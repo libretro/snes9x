@@ -7,8 +7,8 @@
 #include <QtEvents>
 #include <QTimer>
 
-ControllerPanel::ControllerPanel(EmuApplication *app)
-    : BindingPanel(app)
+ControllerPanel::ControllerPanel(EmuApplication *app_)
+    : BindingPanel(app_)
 {
     setupUi(this);
     QObject::connect(controllerComboBox, &QComboBox::currentIndexChanged, [&](int index) {
@@ -57,6 +57,11 @@ ControllerPanel::ControllerPanel(EmuApplication *app)
 
     recreateAutoAssignMenu();
     onJoypadsChanged([&]{ recreateAutoAssignMenu(); });
+
+    connect(portComboBox, &QComboBox::currentIndexChanged, [&](int index) {
+        this->app->config->port_configuration = index;
+        app->updateBindings();
+    });
 }
 
 void ControllerPanel::recreateAutoAssignMenu()
@@ -93,6 +98,7 @@ void ControllerPanel::autoPopulateWithKeyboard(int slot)
         buttons[app->config->allowed_bindings * i + slot] = EmuBinding::keyboard(QKeySequence::fromString(button_list[i])[0].key());
 
     fillTable();
+    app->updateBindings();
 }
 
 void ControllerPanel::autoPopulateWithJoystick(int joystick_id, int slot)
@@ -124,6 +130,7 @@ void ControllerPanel::autoPopulateWithJoystick(int joystick_id, int slot)
             buttons[4 * i + slot] = EmuBinding::joystick_axis(device.index, sdl_binding.value.axis, sdl_binding.value.axis);
     }
     fillTable();
+    app->updateBindings();
 }
 
 void ControllerPanel::swapControllers(int first, int second)
@@ -138,6 +145,8 @@ void ControllerPanel::swapControllers(int first, int second)
         b[i] = a[i];
         a[i] = swap;
     }
+
+    app->updateBindings();
 }
 
 void ControllerPanel::clearCurrentController()
@@ -146,6 +155,7 @@ void ControllerPanel::clearCurrentController()
     for (auto &b : c.buttons)
         b = {};
     fillTable();
+    app->updateBindings();
 }
 
 void ControllerPanel::clearAllControllers()
@@ -154,12 +164,14 @@ void ControllerPanel::clearAllControllers()
         for (auto &b : c.buttons)
             b = {};
     fillTable();
+    app->updateBindings();
 }
 
 void ControllerPanel::showEvent(QShowEvent *event)
 {
     BindingPanel::showEvent(event);
     recreateAutoAssignMenu();
+    portComboBox->setCurrentIndex(app->config->port_configuration);
 }
 
 ControllerPanel::~ControllerPanel()

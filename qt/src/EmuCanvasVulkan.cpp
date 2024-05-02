@@ -52,7 +52,7 @@ bool EmuCanvasVulkan::initImGui()
         .setPoolSizes(pool_sizes)
         .setMaxSets(1000)
         .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet);
-    imgui_descriptor_pool = context->device.createDescriptorPoolUnique(descriptor_pool_create_info);
+    imgui_descriptor_pool = context->device.createDescriptorPoolUnique(descriptor_pool_create_info).value;
 
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.Instance = context->instance.get();
@@ -220,19 +220,23 @@ void EmuCanvasVulkan::resizeEvent(QResizeEvent *event)
     if (!context)
         return;
 
-    int width = event->size().width();
-    int height = event->size().height();
-
     context->swapchain->set_vsync(config->enable_vsync);
 
 #ifndef _WIN32
     if (platform == "wayland")
     {
-        wayland_surface->resize({ parent->x() - main_window->x(), parent->y() - main_window->y(), width, height, (int)devicePixelRatio() });
-        std::tie(width, height) = wayland_surface->get_size();
-        // On Wayland, Vulkan WSI provides the buffer for the subsurface,
-        // so we have to specify a width and height instead of polling the parent.
+        WaylandSurface::Metrics m = {
+            parent->x() - main_window->x(),
+            parent->y() - main_window->y(),
+            event->size().width(),
+            event->size().height(),
+            (int)devicePixelRatio()
+        };
+
+        auto [width, height] = wayland_surface->get_size_for_metrics(m);
         context->swapchain->check_and_resize(width, height);
+
+        wayland_surface->resize(m);
         return;
     }
 #endif
@@ -273,7 +277,6 @@ void EmuCanvasVulkan::deinit()
         if (context)
             context->wait_idle();
         imgui_descriptor_pool.reset();
-        imgui_render_pass.reset();
         ImGui_ImplVulkan_Shutdown();
         ImGui::DestroyContext();
     }
@@ -335,7 +338,6 @@ void EmuCanvasVulkan::recreateUIAssets()
     {
         context->wait_idle();
         imgui_descriptor_pool.reset();
-        imgui_render_pass.reset();
         ImGui_ImplVulkan_Shutdown();
         ImGui::DestroyContext();
     }

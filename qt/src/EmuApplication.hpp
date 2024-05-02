@@ -62,6 +62,8 @@ struct EmuApplication
     void reportBinding(EmuBinding b, bool active);
     void startInputTimer();
     void pollJoysticks();
+    void reportPointer(int x, int y);
+    void reportMouseButton(int button, bool pressed);
     void restartAudio();
     void writeSamples(int16_t *data, int samples);
     void mainLoop();
@@ -83,6 +85,17 @@ struct EmuApplication
     void stopThread();
     bool isCoreActive();
     QString iconPrefix();
+
+    std::vector<std::tuple<bool, std::string, std::string>> getCheatList();
+    void disableAllCheats();
+    void enableCheat(int index);
+    void disableCheat(int index);
+    bool addCheat(std::string description, std::string code);
+    void deleteCheat(int index);
+    void deleteAllCheats();
+    int tryImportCheats(std::string filename);
+    std::string validateCheat(std::string code);
+    int modifyCheat(int index, std::string name, std::string code);
 
     enum Handler
     {

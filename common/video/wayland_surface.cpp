@@ -148,12 +148,17 @@ bool WaylandSurface::attach(wl_display *display, wl_surface *surface, Metrics m)
 
 std::tuple<int, int> WaylandSurface::get_size()
 {
+    return get_size_for_metrics(metrics);
+}
+
+std::tuple<int, int> WaylandSurface::get_size_for_metrics(Metrics m)
+{
     if (actual_scale == 0.0)
     {
-        return { metrics.width * metrics.scale, metrics.height * metrics.scale };
+        return { m.width * m.scale, m.height * m.scale };
     }
 
-    return { round(metrics.width * actual_scale), round(metrics.height * actual_scale) };
+    return { round(m.width * actual_scale), round(m.height * actual_scale) };
 }
 
 void WaylandSurface::resize(Metrics m)
@@ -167,8 +172,8 @@ void WaylandSurface::resize(Metrics m)
         viewport = wp_viewporter_get_viewport(viewporter, child);
 
     wp_viewport_set_source(viewport,
-        wl_fixed_from_int(0), wl_fixed_from_int(0),
-        wl_fixed_from_int(w), wl_fixed_from_int(h));
+        wl_fixed_from_int(-1), wl_fixed_from_int(-1),
+        wl_fixed_from_int(-1), wl_fixed_from_int(-1));
     wp_viewport_set_destination(viewport, m.width, m.height);
 
     wl_surface_commit(child);

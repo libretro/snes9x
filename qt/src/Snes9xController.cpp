@@ -1,14 +1,12 @@
 #include "Snes9xController.hpp"
+#include "EmuConfig.hpp"
 #include "SoftwareScalers.hpp"
-#include <memory>
 #include <filesystem>
 namespace fs = std::filesystem;
 
 #include "snes9x.h"
 #include "memmap.h"
-#include "srtc.h"
 #include "apu/apu.h"
-#include "apu/bapu/snes/snes.hpp"
 #include "gfx.h"
 #include "snapshot.h"
 #include "controls.h"
@@ -610,8 +608,28 @@ void Snes9xController::updateBindings(const EmuConfig *const config)
 
     S9xUnmapAllControls();
 
-    S9xSetController(0, CTL_JOYPAD, 0, 0, 0, 0);
-
+    switch (config->port_configuration)
+    {
+    case EmuConfig::eTwoControllers:
+        S9xSetController(0, CTL_JOYPAD, 0, 0, 0, 0);
+        S9xSetController(1, CTL_JOYPAD, 1, 1, 1, 1);
+        break;
+    case EmuConfig::eMousePlusController:
+        S9xSetController(0, CTL_MOUSE, 0, 0, 0, 0);
+        S9xSetController(1, CTL_JOYPAD, 0, 0, 0, 0);
+        break;
+    case EmuConfig::eSuperScopePlusController:
+        S9xSetController(0, CTL_SUPERSCOPE, 0, 0, 0, 0);
+        S9xSetController(1, CTL_JOYPAD, 0, 0, 0, 0);
+        break;
+    case EmuConfig::eControllerPlusMultitap:
+        S9xSetController(0, CTL_JOYPAD, 0, 0, 0, 0);
+        S9xSetController(1, CTL_MP5, 1, 2, 3, 4);
+        break;
+    default:
+        S9xSetController(0, CTL_JOYPAD, 0, 0, 0, 0);
+        S9xSetController(1, CTL_NONE, 0, 0, 0, 0);
+    }
 
     for (int controller_number = 0; controller_number < 5; controller_number++)
     {
@@ -645,11 +663,38 @@ void Snes9xController::updateBindings(const EmuConfig *const config)
                 S9xMapButton(binding.hash(), command, false);
         }
     }
+
+    auto cmd = S9xGetCommandT("Pointer Mouse1+Superscope+Justifier1");
+    S9xMapPointer(EmuBinding::MOUSE_POINTER, cmd, false);
+    mouse_x = mouse_y = 0;
+    S9xReportPointer(EmuBinding::MOUSE_POINTER, mouse_x, mouse_y);
+
+    cmd = S9xGetCommandT("{Mouse1 L,Superscope Fire,Justifier1 Trigger}");
+    S9xMapButton(EmuBinding::MOUSE_BUTTON1, cmd, false);
+
+    cmd = S9xGetCommandT("{Justifier1 AimOffscreen Trigger,Superscope AimOffscreen}");
+    S9xMapButton(EmuBinding::MOUSE_BUTTON3, cmd, false);
+
+    cmd = S9xGetCommandT("{Mouse1 R,Superscope Cursor,Justifier1 Start}");
+    S9xMapButton(EmuBinding::MOUSE_BUTTON2, cmd, false);
+
 }
 
 void Snes9xController::reportBinding(EmuBinding b, bool active)
 {
     S9xReportButton(b.hash(), active);
+}
+
+void Snes9xController::reportMouseButton(int button, bool pressed)
+{
+    S9xReportButton(EmuBinding::MOUSE_POINTER + button, pressed);
+}
+
+void Snes9xController::reportPointer(int x, int y)
+{
+    mouse_x += x;
+    mouse_y += y;
+    S9xReportPointer(EmuBinding::MOUSE_POINTER, mouse_x, mouse_y);
 }
 
 static fs::path save_slot_path(int slot)
@@ -744,4 +789,64 @@ bool Snes9xController::saveState(int slot)
 void Snes9xController::setMessage(std::string message)
 {
     S9xSetInfoString(message.c_str());
+}
+
+std::vector<std::tuple<bool, std::string, std::string>> Snes9xController::getCheatList()
+{
+    std::vector<std::tuple<bool, std::string, std::string>> cheat_list;
+
+    cheat_list.reserve(Cheat.group.size());
+
+    for (auto &c : Cheat.group)
+        cheat_list.push_back({ c.enabled, c.name, S9xCheatGroupToText(c) });
+
+    return std::move(cheat_list);
+}
+
+void Snes9xController::disableAllCheats()
+{
+    for (size_t i = 0; i < Cheat.group.size(); i++)
+    {
+        S9xDisableCheatGroup(i);
+    }
+}
+
+void Snes9xController::enableCheat(int index)
+{
+    S9xEnableCheatGroup(index);
+}
+
+void Snes9xController::disableCheat(int index)
+{
+    S9xDisableCheatGroup(index);
+}
+
+bool Snes9xController::addCheat(std::string description, std::string code)
+{
+    return S9xAddCheatGroup(description, code) >= 0;
+}
+
+void Snes9xController::deleteCheat(int index)
+{
+    S9xDeleteCheatGroup(index);
+}
+
+void Snes9xController::deleteAllCheats()
+{
+    S9xDeleteCheats();
+}
+
+int Snes9xController::tryImportCheats(std::string filename)
+{
+    return S9xImportCheatsFromDatabase(filename);
+}
+
+std::string Snes9xController::validateCheat(std::string code)
+{
+    return S9xCheatValidate(code);
+}
+
+int Snes9xController::modifyCheat(int index, std::string name, std::string code)
+{
+    return S9xModifyCheatGroup(index, name, code);
 }

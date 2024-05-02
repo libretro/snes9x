@@ -40,7 +40,7 @@ add_compile_definitions(HAVE_LIBPNG
                         SNES9XLOCALEDIR=\"${LOCALEDIR}\")
 set(INCLUDES ../apu/bapu ../ src)
 set(SOURCES)
-set(ARGS -Wall -Wno-unused-parameter -Wno-unused-variable -Wno-nullability-completeness)
+set(ARGS -Wall -Wno-unused-parameter -Wno-unused-variable)
 set(LIBS)
 set(DEFINES)
 
@@ -49,7 +49,7 @@ include(CheckIncludeFile)
 include(FindGettext)
 
 # Add any new language to this foreach loop
-foreach(lang es fr_FR ja pl pt_BR ru sr@latin uk zh_CN)
+foreach(lang de es fr_FR ja pl pt_BR ru sr@latin uk zh_CN)
     GETTEXT_PROCESS_PO_FILES(${lang} ALL PO_FILES po/${lang}.po)
     install(FILES ${CMAKE_BINARY_DIR}/${lang}.gmo
             DESTINATION ${LOCALEDIR}/${lang}/LC_MESSAGES
@@ -64,9 +64,8 @@ pkg_check_modules(XRANDR REQUIRED xrandr)
 
 find_library(X11 X11 REQUIRED)
 find_library(XEXT Xext REQUIRED)
-find_library(DL dl REQUIRED)
 list(APPEND ARGS ${SDL2_CFLAGS} ${GTK_CFLAGS} ${XRANDR_CFLAGS})
-list(APPEND LIBS ${X11} ${XEXT} ${DL} ${SDL2_LIBRARIES} ${GTK_LIBRARIES} ${XRANDR_LIBRARIES})
+list(APPEND LIBS ${X11} ${XEXT} ${CMAKE_DL_LIBS} ${SDL2_LIBRARIES} ${GTK_LIBRARIES} ${XRANDR_LIBRARIES})
 
 list(APPEND SOURCES src/gtk_display_driver_opengl.cpp
                     ../common/video/glx_context.cpp
@@ -108,6 +107,8 @@ if(USE_SLANG)
     list(APPEND DEFINES "VK_USE_PLATFORM_XLIB_KHR"
                         "VK_USE_PLATFORM_WAYLAND_KHR"
                         "VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1"
+                        "VULKAN_HPP_NO_NODISCARD_WARNINGS=1"
+                        "VULKAN_HPP_NO_EXCEPTIONS=1"
                         "VMA_DYNAMIC_VULKAN_FUNCTIONS=1"
                         "VMA_STATIC_VULKAN_FUNCTIONS=0"
                         "IMGUI_IMPL_VULKAN_NO_PROTOTYPES")

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-project(snes9x-qt VERSION 1.61)
+project(snes9x-qt VERSION 1.62)
+
+include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -74,10 +76,22 @@ set(SNES9X_CORE_SOURCES
     ../fscompat.cpp)
 add_library(snes9x-core ${SNES9X_CORE_SOURCES})
 target_include_directories(snes9x-core PRIVATE ../)
-target_compile_definitions(snes9x-core PRIVATE ZLIB HAVE_STDINT_H ALLOW_CPU_OVERCLOCK)
+target_compile_definitions(snes9x-core PRIVATE ${DEFINES} ZLIB HAVE_STDINT_H ALLOW_CPU_OVERCLOCK)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    set(CMAKE_PREFIX_PATH "../external/qt6-mingw-clang-bin")
+    set(PREBUILT_QT "${PROJECT_SOURCE_DIR}/../external/qt6-mingw-clang-bin")
+    if (EXISTS ${PREBUILT_QT})
+        message("Using existing Qt6 build at ${PREBUILT_QT}")
+        set(CMAKE_PREFIX_PATH ${PREBUILT_QT})
+    else()
+	    message("Getting Qt6 binaries...")
+        include(FetchContent)
+        FetchContent_Declare(qt6-mingw-clang-bin
+	        GIT_REPOSITORY https://github.com/bearoso/qt6-mingw-clang-bin.git
+	        GIT_TAG main)
+        FetchContent_MakeAvailable(qt6-mingw-clang-bin)
+        set(CMAKE_PREFIX_PATH ${qt6-mingw-clang-bin_SOURCE_DIR})
+    endif()
 endif()
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui)
 list(APPEND LIBS Qt6::Widgets Qt6::Gui)
@@ -90,7 +104,15 @@ list(APPEND INCLUDES ${SDL_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
 list(APPEND FLAGS ${SDL_COMPILE_FLAGS} ${ZLIB_COMPILE_FLAGS})
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    list(APPEND LIBS opengl32 libSDL2.a libz.a libc++.a)
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        message("Clang compiler, using libc++.")
+        list(APPEND LIBS libc++.a)
+    elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+        message("GNU compiler, using libstdc++.")
+        list(APPEND LIBS libstdc++.a)
+    endif()
+
+    list(APPEND LIBS libSDL2.a libz.a opengl32 gdi32 winmm imm32 ole32 oleaut32 version uuid advapi32 setupapi shell32 dinput8)
     list(APPEND DEFINES SDL_MAIN_HANDLED)
     list(APPEND PLATFORM_SOURCES
         ../common/video/wgl_context.cpp
@@ -126,6 +148,9 @@ else()
     ../external/glad/src/glx.c
     ../external/glad/src/egl.c)
 endif()
+
+list(APPEND PLATFORM_SOURCES ../external/fmt/src/format.cc)
+list(APPEND INCLUDES ../external/fmt/include)
 
 list(APPEND QT_GUI_SOURCES
     src/main.cpp
@@ -212,6 +237,8 @@ endif()
 
 list(APPEND DEFINES
     "VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1"
+    "VULKAN_HPP_NO_NODISCARD_WARNINGS=1"
+    "VULKAN_HPP_NO_EXCEPTIONS=1"
     "VMA_DYNAMIC_VULKAN_FUNCTIONS=1"
     "VMA_STATIC_VULKAN_FUNCTIONS=0"
     "USE_SLANG")
@@ -273,3 +300,5 @@ target_compile_definitions(snes9x-qt PRIVATE ${DEFINES})
 target_compile_options(snes9x-qt PRIVATE ${FLAGS})
 target_include_directories(snes9x-qt PRIVATE "../" ${INCLUDES})
 
+install(TARGETS snes9x-qt)
+install(FILES ../data/cheats.bml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/snes9x)

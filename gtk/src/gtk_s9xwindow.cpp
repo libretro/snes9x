@@ -30,6 +30,8 @@
 #include "gtk_netplay.h"
 #include "gtk_s9xwindow.h"
 
+#include "fmt/format.h"
+
 #include "snes9x.h"
 #include "controls.h"
 #include "movie.h"
@@ -784,8 +786,6 @@ void Snes9xWindow::load_state_dialog()
 
 void Snes9xWindow::movie_seek_dialog()
 {
-    char str[1024];
-
     if (!S9xMovieActive())
         return;
 
@@ -793,11 +793,14 @@ void Snes9xWindow::movie_seek_dialog()
 
     GtkBuilderWindow seek_dialog("frame_advance_dialog");
 
-    snprintf(str, 1024, _("The current frame in the movie is <b>%d</b>."), S9xMovieGetFrameCounter());
-    seek_dialog.get_object<Gtk::Label>("current_frame_label")->set_label(str);
+    {
+        std::string str;
+        str = fmt::format(_("The current frame in the movie is <b>{0:Ld}</b>."), S9xMovieGetFrameCounter());
+        seek_dialog.get_object<Gtk::Label>("current_frame_label")->set_label(str);
 
-    snprintf(str, 1024, "%d", S9xMovieGetFrameCounter());
-    seek_dialog.set_entry_text("frame_entry", str);
+        str = fmt::format("{0:d}", S9xMovieGetFrameCounter());
+        seek_dialog.set_entry_text("frame_entry", str);
+    }
 
     auto dialog = Glib::RefPtr<Gtk::Dialog>::cast_static(seek_dialog.window);
 
@@ -1290,7 +1293,16 @@ void Snes9xWindow::leave_fullscreen_mode()
     }
 #endif
 
+#ifdef GDK_WINDOWING_WAYLAND
+    if (GDK_IS_WAYLAND_WINDOW(gdk_window))
+    {
+        S9xDeinitDisplay();
+    }
+#endif
+
     window->unfullscreen();
+
+    window->show();
 
 #ifdef GDK_WINDOWING_X11
     if (GDK_IS_X11_WINDOW(gdk_window))
@@ -1307,6 +1319,15 @@ void Snes9xWindow::leave_fullscreen_mode()
     config->rom_loaded = rom_loaded;
     config->fullscreen = 0;
     configure_widgets();
+    window->show();
+
+#ifdef GDK_WINDOWING_WAYLAND
+    if (GDK_IS_WAYLAND_WINDOW(gdk_window))
+    {
+        S9xReinitDisplay();
+    }
+#endif
+
 }
 
 void Snes9xWindow::resize_viewport(int width, int height)
