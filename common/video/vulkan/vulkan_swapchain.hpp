@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan/vulkan_hpp_wrapper.hpp"
+#include "vulkan_hpp_wrapper.hpp"
 #include <functional>
 
 namespace Vulkan
@@ -17,6 +17,7 @@ class Swapchain
     ~Swapchain();
     bool create(unsigned int num_frames, int width = -1, int height = -1);
     bool recreate(int width = -1, int height = -1);
+    bool create_resources();
     bool check_and_resize(int width = -1, int height = -1);
     bool begin_frame();
     void begin_render_pass();
@@ -25,10 +26,11 @@ class Swapchain
     bool end_frame();
     void end_frame_without_swap();
     bool swap();
-    // Returns true if vsync setting was changed, false if it was the same
-    bool set_vsync(bool on);
+    void wait_on_frames();
+    void set_vsync(bool on);
     void on_render_pass_end(std::function<void()> function);
     int get_num_frames() { return num_swapchain_images; }
+    vk::PresentModeKHR get_present_mode();
 
     vk::Image get_image();
     vk::Framebuffer get_framebuffer();
@@ -48,9 +50,10 @@ class Swapchain
         vk::UniqueCommandBuffer command_buffer;
     };
 
-    struct ImageViewFB
+    struct ImageData
     {
         vk::Image image;
+        vk::UniqueFence fence;
         vk::UniqueImageView image_view;
         vk::UniqueFramebuffer framebuffer;
     };
@@ -64,8 +67,11 @@ class Swapchain
     unsigned int current_swapchain_image = 0;
     unsigned int num_swapchain_images = 0;
     bool vsync = true;
+    bool supports_immediate = false;
+    bool supports_mailbox = false;
+    bool supports_relaxed = false;
     std::vector<Frame> frames;
-    std::vector<ImageViewFB> imageviewfbs;
+    std::vector<ImageData> image_data;
 
     vk::Device device;
     vk::SurfaceKHR surface;

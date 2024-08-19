@@ -136,6 +136,10 @@ Nintendo is a trademark.")
 #define HOTKEYS_LABEL_4_11 TEXT("Save to file:")
 #define HOTKEYS_LABEL_4_12 TEXT("Load from file:")
 
+#define HOTKEYS_SWITCH_ASPECT_RATIO TEXT("Switch aspect Ratio:")
+#define HOTKEYS_CHEAT_EDITOR_DIALOG TEXT("Cheats Editor Dialog:")
+#define HOTKEYS_CHEAT_SEARCH_DIALOG TEXT("Cheats Search Dialog:")
+
 // gaming buttons and axes
 #define GAMEDEVICE_JOYNUMPREFIX "(J%x)" // don't change this
 #define GAMEDEVICE_JOYBUTPREFIX "#[%d]" // don't change this
@@ -360,7 +364,7 @@ Nintendo is a trademark.")
 
 // Save Messages
 
-#define FREEZE_INFO_SET_SLOT_N "Set save slot %03d"
+#define FREEZE_INFO_SET_SLOT_N "Set save slot %03d [%s]"
 #define FREEZE_INFO_SET_BANK_N "Set save bank %03d"
 
 // AVI Messages

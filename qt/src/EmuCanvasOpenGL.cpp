@@ -3,17 +3,17 @@
 #include <qpa/qplatformnativeinterface.h>
 #include <QTimer>
 #include <QMessageBox>
-#include "common/video/opengl_context.hpp"
+#include "common/video/opengl/opengl_context.hpp"
 
 #ifndef _WIN32
-#include "common/video/glx_context.hpp"
-#include "common/video/wayland_egl_context.hpp"
+#include "common/video/opengl/glx_context.hpp"
+#include "common/video/opengl/wayland_egl_context.hpp"
 using namespace QNativeInterface;
 #include <X11/Xlib.h>
 #else
-#include "common/video/wgl_context.hpp"
+#include "common/video/opengl/wgl_context.hpp"
 #endif
-#include "shaders/glsl.h"
+#include "common/video/opengl/shaders/glsl.h"
 #include "EmuMainWindow.hpp"
 #include "snes9x_imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -303,7 +303,7 @@ void EmuCanvasOpenGL::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
 
-    if (!context) 
+    if (!context)
         return;
 
     auto g = parent->geometry();

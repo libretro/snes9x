@@ -1,10 +1,9 @@
-#include <QtGui/QGuiApplication>
+#include <QGuiApplication>
 #include <qpa/qplatformnativeinterface.h>
 #include <QTimer>
 #include <QtEvents>
 #include <QMessageBox>
 #include "EmuCanvasVulkan.hpp"
-#include "src/ShaderParametersDialog.hpp"
 #include "EmuMainWindow.hpp"
 
 #include "snes9x_imgui.h"
@@ -178,9 +177,6 @@ void EmuCanvasVulkan::draw()
     if (!window->isVisible())
         return;
 
-    if (context->swapchain->set_vsync(config->enable_vsync))
-        context->recreate_swapchain();
-
     if (S9xImGuiDraw(width() * devicePixelRatioF(), height() * devicePixelRatioF()))
     {
         auto draw_data = ImGui::GetDrawData();
@@ -205,10 +201,11 @@ void EmuCanvasVulkan::draw()
     if (retval)
     {
         throttle();
+        context->swapchain->set_vsync(config->enable_vsync);
         context->swapchain->swap();
         if (config->reduce_input_lag)
         {
-            context->wait_idle();
+            context->swapchain->wait_on_frames();
         }
     }
 }

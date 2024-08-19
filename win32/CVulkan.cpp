@@ -70,6 +70,8 @@ bool CVulkan::Initialize(HWND hWnd)
         return false;
     }
 
+    context->swapchain->set_vsync(GUI.Vsync);
+
     if (!Settings.AutoDisplayMessages)
     {
         Settings.DisplayIndicators = true;
@@ -176,9 +178,7 @@ bool CVulkan::ChangeRenderSize(unsigned int newWidth, unsigned int newHeight)
     if (!context)
         return false;
 
-    bool vsync_changed = context->swapchain->set_vsync(GUI.Vsync);
-
-    if (newWidth != current_width || newHeight != current_height || vsync_changed)
+    if (newWidth != current_width || newHeight != current_height)
     {
         context->recreate_swapchain(newWidth, newHeight);
         context->wait_idle();
@@ -213,10 +213,7 @@ bool CVulkan::ApplyDisplayChanges(void)
         current_shadername = shadername;
     }
 
-    if (context->swapchain->set_vsync(GUI.Vsync))
-    {
-        context->recreate_swapchain();
-    }
+    context->swapchain->set_vsync(GUI.Vsync);
 
     return true;
 }

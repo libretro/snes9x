@@ -1,6 +1,7 @@
 #include "Snes9xController.hpp"
 #include "EmuConfig.hpp"
 #include "SoftwareScalers.hpp"
+#include "fscompat.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -531,7 +532,10 @@ void Snes9xController::clearSoundBuffer()
 
 void S9xMessage(int message_class, int type, const char *message)
 {
-    S9xSetInfoString(message);
+    if (type == S9X_ROM_INFO)
+        S9xSetInfoString(Memory.GetMultilineROMInfo().c_str());
+
+    printf("%s\n", message);
 }
 
 const char *S9xStringInput(const char *prompt)
@@ -718,6 +722,11 @@ std::string Snes9xController::getStateFolder()
     return S9xGetDirectory(SNAPSHOT_DIR);
 }
 
+bool Snes9xController::slotUsed(int slot)
+{
+    return fs::exists(save_slot_path(slot));
+}
+
 bool Snes9xController::loadState(int slot)
 {
     return loadState(save_slot_path(slot).u8string());
@@ -849,4 +858,9 @@ std::string Snes9xController::validateCheat(std::string code)
 int Snes9xController::modifyCheat(int index, std::string name, std::string code)
 {
     return S9xModifyCheatGroup(index, name, code);
+}
+
+std::string Snes9xController::getContentFolder()
+{
+    return S9xGetDirectory(ROMFILENAME_DIR);
 }

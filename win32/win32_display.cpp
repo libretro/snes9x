@@ -288,6 +288,8 @@ bool8 S9xContinueUpdate(int Width, int Height)
 	// avi writing
 	DoAVIVideoFrame();
 
+	WinThrottleFramerate();
+
 	return true;
 }
 
@@ -706,7 +708,7 @@ void WinThrottleFramerate()
 	static HANDLE throttle_timer = nullptr;
 	static int64_t PCBase, PCFrameTime, PCFrameTimeNTSC, PCFrameTimePAL, PCStart, PCEnd;
 
-	if (Settings.SkipFrames != AUTO_FRAMERATE)
+	if (Settings.SkipFrames != AUTO_FRAMERATE || Settings.TurboMode)
 		return;
 
 	if (!throttle_timer)

@@ -237,11 +237,11 @@ BEGIN
 END
 
 IDD_CHEATER DIALOGEX 0, 0, 378, 189
-STYLE DS_SETFONT | DS_SETFOREGROUND | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
 CAPTION "Cheat Entry and Editor"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "List1",IDC_CHEAT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,6,6,294,120,WS_EX_CLIENTEDGE
+    CONTROL         "List1",IDC_CHEAT_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,6,6,294,120,WS_EX_CLIENTEDGE
     DEFPUSHBUTTON   "&Add",IDC_ADD_CHEAT,306,6,66,14,WS_DISABLED
     PUSHBUTTON      "&Delete",IDC_DELETE_CHEAT,306,60,66,14,WS_DISABLED
     PUSHBUTTON      "&Update",IDC_UPDATE_CHEAT,306,24,66,14,WS_DISABLED
@@ -802,8 +802,6 @@ IDC_CURSOR_SCOPE        CURSOR                  "nodrop.cur"
 
 IDR_SNES9X_ACCELERATORS ACCELERATORS
 BEGIN
-    "G",            ID_CHEAT_ENTER,         VIRTKEY, ALT, NOINVERT
-    "A",            ID_CHEAT_SEARCH,        VIRTKEY, ALT, NOINVERT
     "O",            ID_FILE_LOAD_GAME,      VIRTKEY, CONTROL, NOINVERT
     VK_F5,          ID_OPTIONS_DISPLAY,     VIRTKEY, ALT, NOINVERT
     VK_F7,          ID_OPTIONS_JOYPAD,      VIRTKEY, ALT, NOINVERT
@@ -885,12 +883,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "http://www.snes9x.com"
             VALUE "FileDescription", "Snes9x"
-            VALUE "FileVersion", "1.62.3"
+            VALUE "FileVersion", "1.63"
             VALUE "InternalName", "Snes9x"
-            VALUE "LegalCopyright", "Copyright  1996-2023"
+            VALUE "LegalCopyright", "Copyright  1996-2024"
             VALUE "OriginalFilename", "Snes9x.exe"
             VALUE "ProductName", "Snes9x SNES Emulator"
-            VALUE "ProductVersion", "1.62.3"
+            VALUE "ProductVersion", "1.63"
         END
     END
     BLOCK "VarFileInfo"
@@ -1081,9 +1079,8 @@ BEGIN
     END
     POPUP "&Cheat",                         0,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Game Genie, Pro-Action Replay Codes\tAlt+G", ID_CHEAT_ENTER,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Search for New Cheats",      ID_CHEAT_SEARCH_MODAL,MFT_STRING,MFS_ENABLED
-        MENUITEM "Search for New Cheats (active)\tAlt+A", 40064,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Game Genie, Pro-Action Replay Codes", ID_CHEAT_ENTER,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Search for New Cheats",      ID_CHEAT_SEARCH,MFT_STRING,MFS_ENABLED
         MENUITEM "&Apply Cheats",               ID_CHEAT_APPLY,MFT_STRING,MFS_CHECKED
     END
     POPUP "&Netplay",                       0,MFT_STRING,MFS_ENABLED
