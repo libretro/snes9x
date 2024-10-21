@@ -248,6 +248,7 @@ else ifneq (,$(findstring ios,$(platform)))
    endif
    CFLAGS   += $(MINVERSION)
    CXXFLAGS += $(MINVERSION)
+   LDFLAGS  += $(MINVERSION)
 
 #tvOS
 else ifeq ($(platform), tvos-arm64)
@@ -264,6 +265,10 @@ else ifeq ($(platform), tvos-arm64)
    CXXFLAGS += -DARM
    CC = cc -arch arm64 -isysroot $(IOSSDK)
    CXX = c++ -arch arm64 -isysroot $(IOSSDK)
+   MINVERSION = -mappletvos-version-min=11.0
+   CFLAGS   += $(MINVERSION)
+   CXXFLAGS += $(MINVERSION)
+   LDFLAGS  += $(MINVERSION)
 
 # Theos
 else ifeq ($(platform), theos_ios)
