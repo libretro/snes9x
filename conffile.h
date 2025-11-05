@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 
+#include "snes9x.h"
 #ifdef UNZIP_SUPPORT
 #  ifdef SYSTEM_ZIP
 #    include <minizip/unzip.h>
@@ -19,7 +20,6 @@
 #    include "unzip/unzip.h"
 #  endif
 #endif
-#include "snes9x.h"
 
 #ifndef MAX
 #  define MAX(a,b)  ((a) > (b)? (a) : (b))

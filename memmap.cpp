@@ -10,6 +10,7 @@
 #include <numeric>
 #include <assert.h>
 
+#include "snes9x.h"
 #ifdef UNZIP_SUPPORT
 #  ifdef SYSTEM_ZIP
 #    include <minizip/unzip.h>
@@ -25,7 +26,6 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-#include "snes9x.h"
 #include "memmap.h"
 #include "apu/apu.h"
 #include "fxemu.h"
