@@ -926,7 +926,7 @@ struct retro_core_options_v2 options_us = {
 struct retro_core_options_v2 *options_intl[RETRO_LANGUAGE_LAST] = {
    &options_us, /* RETRO_LANGUAGE_ENGLISH */
    NULL,        /* RETRO_LANGUAGE_JAPANESE */
-   NULL,        /* RETRO_LANGUAGE_FRENCH */
+   &options_fr, /* RETRO_LANGUAGE_FRENCH */
    NULL,        /* RETRO_LANGUAGE_SPANISH */
    NULL,        /* RETRO_LANGUAGE_GERMAN */
    NULL,        /* RETRO_LANGUAGE_ITALIAN */
@@ -942,7 +942,7 @@ struct retro_core_options_v2 *options_intl[RETRO_LANGUAGE_LAST] = {
    NULL,        /* RETRO_LANGUAGE_VIETNAMESE */
    NULL,        /* RETRO_LANGUAGE_ARABIC */
    NULL,        /* RETRO_LANGUAGE_GREEK */
-   &options_tr, /* RETRO_LANGUAGE_TURKISH */
+   NULL,        /* RETRO_LANGUAGE_TURKISH */
    NULL,        /* RETRO_LANGUAGE_SLOVAK */
    NULL,        /* RETRO_LANGUAGE_PERSIAN */
    NULL,        /* RETRO_LANGUAGE_HEBREW */
