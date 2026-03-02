@@ -868,9 +868,9 @@ inline void SPC_DSP::voice_output( voice_t const* v, int ch )
 	// Apply user-set volume (if set)
 	if (Settings.ChannelsVolumePercent[v->voice_number] < 100)
 	{
-		//amp = amp * Settings.ChannelsVolumePercent[v->voice_number] / 100;
-		amp = (amp * Settings.ChannelsVolumePercent[v->voice_number] * 655) >> 16;  // Optimization: 655 / 65536 is approx 1/100
-		// TODO: remove * 655
+		//amp = amp * Settings.ChannelsVolumePercent[v->voice_number] / 100;  // slower
+		// 16384 / 100 is approx 163.84.
+		amp = (amp * Settings.ChannelsVolumePercent[v->voice_number] * 164) >> 14;
 	}
 	#endif
 	
