@@ -1014,7 +1014,11 @@ static void init_descriptors(void)
         { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-
+        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
+    
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,  "D-Pad Down" },
@@ -1027,6 +1031,10 @@ static void init_descriptors(void)
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
+        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1040,6 +1048,10 @@ static void init_descriptors(void)
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
+        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1053,6 +1065,10 @@ static void init_descriptors(void)
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
+        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1066,7 +1082,11 @@ static void init_descriptors(void)
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-	    
+        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
+
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,  "D-Pad Down" },
@@ -1079,7 +1099,11 @@ static void init_descriptors(void)
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-	    
+        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
+        
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,  "D-Pad Down" },
@@ -1092,6 +1116,10 @@ static void init_descriptors(void)
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
+        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1105,6 +1133,10 @@ static void init_descriptors(void)
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
+        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
+        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
+        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
+        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 	    
         { 0, 0, 0, 0, NULL },
     };
@@ -1507,8 +1539,12 @@ void retro_init(void)
 #define BTN_X RETRO_DEVICE_ID_JOYPAD_X
 #define BTN_L RETRO_DEVICE_ID_JOYPAD_L
 #define BTN_R RETRO_DEVICE_ID_JOYPAD_R
+#define BTN_L2 RETRO_DEVICE_ID_JOYPAD_L2
+#define BTN_R2 RETRO_DEVICE_ID_JOYPAD_R2
+#define BTN_L3 RETRO_DEVICE_ID_JOYPAD_L3
+#define BTN_R3 RETRO_DEVICE_ID_JOYPAD_R3
 #define BTN_FIRST BTN_B
-#define BTN_LAST BTN_R
+#define BTN_LAST BTN_R3
 
 #define MOUSE_X RETRO_DEVICE_ID_MOUSE_X
 #define MOUSE_Y RETRO_DEVICE_ID_MOUSE_Y
@@ -1556,6 +1592,10 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_RIGHT), "Joypad1 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_UP), "Joypad1 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_DOWN), "Joypad1 Down");
+    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L2), "Joypad1 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R2), "Joypad1 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L3), "Joypad1 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R3), "Joypad1 Turbo X");
     S9xMapPointer((BTN_POINTER), S9xGetCommandT("Pointer Mouse1+Superscope+Justifier1+MacsRifle"), false);
     S9xMapPointer((BTN_POINTER2), S9xGetCommandT("Pointer Mouse2+Justifier2"), false);
 
@@ -1571,6 +1611,10 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_X), "Joypad2 X");
     MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L), "Joypad2 L");
     MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R), "Joypad2 R");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L2), "Joypad2 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R2), "Joypad2 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L3), "Joypad2 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R3), "Joypad2 Turbo X");
 
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_B), "Joypad3 B");
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_Y), "Joypad3 Y");
@@ -1584,6 +1628,10 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_X), "Joypad3 X");
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L), "Joypad3 L");
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R), "Joypad3 R");
+    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L2), "Joypad3 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R2), "Joypad3 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L3), "Joypad3 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R3), "Joypad3 Turbo X");
 
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_A), "Joypad4 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_B), "Joypad4 B");
@@ -1597,6 +1645,10 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_RIGHT), "Joypad4 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_UP), "Joypad4 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_DOWN), "Joypad4 Down");
+    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_L2), "Joypad4 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_R2), "Joypad4 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_L3), "Joypad4 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_R3), "Joypad4 Turbo X");
 
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_A), "Joypad5 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_B), "Joypad5 B");
@@ -1610,7 +1662,11 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_RIGHT), "Joypad5 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_UP), "Joypad5 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_DOWN), "Joypad5 Down");
-
+    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_L2), "Joypad5 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_R2), "Joypad5 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_L3), "Joypad5 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_R3), "Joypad5 Turbo X");
+    
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_A), "Joypad6 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_B), "Joypad6 B");
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_X), "Joypad6 X");
@@ -1623,7 +1679,11 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_RIGHT), "Joypad6 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_UP), "Joypad6 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_DOWN), "Joypad6 Down");
-	
+    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_L2), "Joypad6 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_R2), "Joypad6 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_L3), "Joypad6 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_R3), "Joypad6 Turbo X");
+    
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_A), "Joypad7 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_B), "Joypad7 B");
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_X), "Joypad7 X");
@@ -1636,7 +1696,11 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_RIGHT), "Joypad7 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_UP), "Joypad7 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_DOWN), "Joypad7 Down");
-	
+    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_L2), "Joypad7 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_R2), "Joypad7 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_L3), "Joypad7 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_R3), "Joypad7 Turbo X");
+
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_A), "Joypad8 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_B), "Joypad8 B");
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_X), "Joypad8 X");
@@ -1649,6 +1713,10 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_RIGHT), "Joypad8 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_UP), "Joypad8 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_DOWN), "Joypad8 Down");
+    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_L2), "Joypad8 Turbo B");
+    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_R2), "Joypad8 Turbo A");
+    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_L3), "Joypad8 Turbo Y");
+    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_R3), "Joypad8 Turbo X");
 }
 
 static int16_t snes_mouse_state[2][2] = {{0}, {0}};
@@ -2046,14 +2114,14 @@ void* retro_get_memory_data(unsigned type)
             data = RTCData.reg;
             break;
         case RETRO_MEMORY_SYSTEM_RAM:
-        data = Memory.RAM;
-        break;
+            data = Memory.RAM;
+            break;
         case RETRO_MEMORY_VIDEO_RAM:
-        data = Memory.VRAM;
-        break;
-        //case RETRO_MEMORY_ROM:
-        //	data = Memory.ROM;
-        //	break;
+            data = Memory.VRAM;
+            break;
+        case RETRO_MEMORY_ROM:
+            data = Memory.ROM;
+            break;
         default:
             data = NULL;
             break;
@@ -2085,9 +2153,9 @@ size_t retro_get_memory_size(unsigned type)
         case RETRO_MEMORY_VIDEO_RAM:
             size = 64 * 1024;
             break;
-        //case RETRO_MEMORY_ROM:
-        //	size = Memory.CalculatedSize;
-        //	break;
+        case RETRO_MEMORY_ROM:
+            size = Memory.CalculatedSize;
+            break;
         default:
             size = 0;
             break;
