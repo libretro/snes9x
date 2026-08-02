@@ -177,34 +177,105 @@
  ***********************************************************************************/
 
 
-#ifndef _OBC1_H_
-#define _OBC1_H_
-
 #include <stdint.h>
+#include "port.h"
+#include "obc1.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+uint8_t *OBC1RAMBase = 0;
 
-extern uint8_t *OBC1RAMBase;
-
-struct SOBC1
+uint8_t S9xGetOBC1 (uint16_t Address)
 {
-	uint16_t	address;
-	uint16_t	basePtr;
-	uint16_t	shift;
-};
+	switch (Address)
+	{
+		case 0x7ff0:
+			return (OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2)]);
 
-extern struct SOBC1	OBC1;
+		case 0x7ff1:
+			return (OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2) + 1]);
 
-void S9xSetOBC1 (uint8_t, uint16_t);
-uint8_t S9xGetOBC1 (uint16_t);
-void S9xResetOBC1 (void);
-uint8_t * S9xGetBasePointerOBC1 (uint16_t);
-uint8_t * S9xGetMemPointerOBC1 (uint16_t);
+		case 0x7ff2:
+			return (OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2) + 2]);
 
-#ifdef __cplusplus
+		case 0x7ff3:
+			return (OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2) + 3]);
+
+		case 0x7ff4:
+			return (OBC1RAMBase[OBC1.basePtr + (OBC1.address >> 2) + 0x200]);
+	}
+
+	return (OBC1RAMBase[Address - 0x6000]);
 }
-#endif
 
-#endif
+void S9xSetOBC1 (uint8_t Byte, uint16_t Address)
+{
+	switch (Address)
+	{
+		case 0x7ff0:
+			OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2)] = Byte;
+			break;
+
+		case 0x7ff1:
+			OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2) + 1] = Byte;
+			break;
+
+		case 0x7ff2:
+			OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2) + 2] = Byte;
+			break;
+
+		case 0x7ff3:
+			OBC1RAMBase[OBC1.basePtr + (OBC1.address << 2) + 3] = Byte;
+			break;
+
+		case 0x7ff4:
+		{
+			uint8_t Temp;
+			Temp = OBC1RAMBase[OBC1.basePtr + (OBC1.address >> 2) + 0x200];
+			Temp = (Temp & ~(3 << OBC1.shift)) | ((Byte & 3) << OBC1.shift);
+			OBC1RAMBase[OBC1.basePtr + (OBC1.address >> 2) + 0x200] = Temp;
+			break;
+		}
+
+		case 0x7ff5:
+			if (Byte & 1)
+				OBC1.basePtr = 0x1800;
+			else
+				OBC1.basePtr = 0x1c00;
+			break;
+
+		case 0x7ff6:
+			OBC1.address = Byte & 0x7f;
+			OBC1.shift = (Byte & 3) << 1;
+			break;
+	}
+
+	OBC1RAMBase[Address - 0x6000] = Byte;
+}
+
+void S9xResetOBC1 (void)
+{
+	int i;
+	for ( i = 0; i <= 0x1fff; i++)
+		OBC1RAMBase[i] = 0xff;
+
+	if (OBC1RAMBase[0x1ff5] & 1)
+		OBC1.basePtr = 0x1800;
+	else
+		OBC1.basePtr = 0x1c00;
+
+	OBC1.address = OBC1RAMBase[0x1ff6] & 0x7f;
+	OBC1.shift = (OBC1RAMBase[0x1ff6] & 3) << 1;
+}
+
+uint8_t * S9xGetBasePointerOBC1 (uint16_t Address)
+{
+	if (Address >= 0x7ff0 && Address <= 0x7ff6)
+		return (NULL);
+	return (OBC1RAMBase - 0x6000);
+}
+
+uint8_t * S9xGetMemPointerOBC1 (uint16_t Address)
+{
+	if (Address >= 0x7ff0 && Address <= 0x7ff6)
+		return (NULL);
+	return (OBC1RAMBase + Address - 0x6000);
+}
