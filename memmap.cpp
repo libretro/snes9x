@@ -984,6 +984,7 @@ bool8 CMemory::Init (void)
 	BSRAM   = ROM + 0x400000; // BS
 
 	SuperFX.pvRegisters = FillRAM + 0x3000;
+	SFXFillRAM = FillRAM;
 	SuperFX.nRamBanks   = 2; // Most only use 1.  1=64KB=512Mb, 2=128KB=1024Mb
 	SuperFX.pvRam       = SRAM;
 	SuperFX.nRomBanks   = (2 * 1024 * 1024) / (32 * 1024);
@@ -2360,9 +2361,9 @@ void CMemory::InitROM (void)
 
 	// NTSC/PAL
 	if (Settings.ForceNTSC)
-		Settings.PAL = FALSE;
+		Settings.PAL = FALSE, SuperFXPalFlag = 0;
 	else if (Settings.ForcePAL)
-		Settings.PAL = TRUE;
+		Settings.PAL = TRUE, SuperFXPalFlag = 1;
 	else if (!Settings.BS && (((ROMRegion >= 2) && (ROMRegion <= 12)) || ROMRegion == 18)) // 18 is used by "Tintin in Tibet (Europe) (En,Es,Sv)"
 		Settings.PAL = TRUE;
 	else

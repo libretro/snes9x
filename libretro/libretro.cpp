@@ -2,6 +2,7 @@
 #include "libretro_core_options.h"
 
 #include "snes9x.h"
+#include "fxemu.h"
 #include "memmap.h"
 #include "srtc.h"
 #include "apu/apu.h"
@@ -378,6 +379,7 @@ static void update_variables(void)
     {
         int freq = atoi(var.value);
         Settings.SuperFXClockMultiplier = freq;
+        SuperFXSpeedPerLineHz = (uint32) ((uint64) 4378500 * freq / 100);
     }
 
     var.key = "snes9x_up_down_allowed";

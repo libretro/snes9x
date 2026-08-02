@@ -167,3 +167,13 @@ void S9xSoftReset (void)
 
 	S9xInitCheatData();
 }
+
+extern "C" void S9xSuperFXIRQHook (void)
+{
+	CPU.IRQExternal = TRUE;
+}
+
+extern "C" void S9xSuperFXIRQClearHook (void)
+{
+	CPU.IRQExternal = FALSE;
+}

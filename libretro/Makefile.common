@@ -9,6 +9,7 @@ INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
 endif
 
 SOURCES_C   := $(CORE_DIR)/c4emu.c \
+				$(CORE_DIR)/fxemu.c \
 				$(CORE_DIR)/sdd1.c \
 				$(CORE_DIR)/seta.c \
 				$(CORE_DIR)/sa1hw.c \
@@ -29,8 +30,6 @@ SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 				 $(CORE_DIR)/cpuops.cpp \
 				 $(CORE_DIR)/crosshairs.cpp \
 				 $(CORE_DIR)/dma.cpp \
-				 $(CORE_DIR)/fxinst.cpp \
-				 $(CORE_DIR)/fxemu.cpp \
 				 $(CORE_DIR)/gfx.cpp \
 				 $(CORE_DIR)/globals.cpp \
 				 $(CORE_DIR)/loadzip.cpp \

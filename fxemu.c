@@ -1,16 +1,221 @@
-/*****************************************************************************\
-     Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
-                This file is licensed under the Snes9x License.
-   For further information, consult the LICENSE file in the root directory.
-\*****************************************************************************/
+/***********************************************************************************
+  Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
 
-#include "snes9x.h"
+  (c) Copyright 1996 - 2002  Gary Henderson (gary.henderson@ntlworld.com),
+                             Jerremy Koot (jkoot@snes9x.com)
+
+  (c) Copyright 2002 - 2004  Matthew Kendora
+
+  (c) Copyright 2002 - 2005  Peter Bortas (peter@bortas.org)
+
+  (c) Copyright 2004 - 2005  Joel Yliluoma (http://iki.fi/bisqwit/)
+
+  (c) Copyright 2001 - 2006  John Weidman (jweidman@slip.net)
+
+  (c) Copyright 2002 - 2006  funkyass (funkyass@spam.shaw.ca),
+                             Kris Bleakley (codeviolation@hotmail.com)
+
+  (c) Copyright 2002 - 2010  Brad Jorsch (anomie@users.sourceforge.net),
+                             Nach (n-a-c-h@users.sourceforge.net),
+                             zones (kasumitokoduck@yahoo.com)
+
+  (c) Copyright 2006 - 2007  nitsuja
+
+  (c) Copyright 2009 - 2010  BearOso,
+                             OV2
+
+
+  BS-X C emulator code
+  (c) Copyright 2005 - 2006  Dreamer Nom,
+                             zones
+
+  C4 C++ code
+  (c) Copyright 2003 - 2006  Brad Jorsch,
+                             Nach
+
+  DSP-1 emulator code
+  (c) Copyright 1998 - 2006  _Demo_,
+                             Andreas Naive (andreasnaive@gmail.com),
+                             Gary Henderson,
+                             Ivar (ivar@snes9x.com),
+                             John Weidman,
+                             Kris Bleakley,
+                             Matthew Kendora,
+                             Nach,
+                             neviksti (neviksti@hotmail.com)
+
+  DSP-2 emulator code
+  (c) Copyright 2003         John Weidman,
+                             Kris Bleakley,
+                             Lord Nightmare (lord_nightmare@users.sourceforge.net),
+                             Matthew Kendora,
+                             neviksti
+
+  DSP-3 emulator code
+  (c) Copyright 2003 - 2006  John Weidman,
+                             Kris Bleakley,
+                             Lancer,
+                             z80 gaiden
+
+  DSP-4 emulator code
+  (c) Copyright 2004 - 2006  Dreamer Nom,
+                             John Weidman,
+                             Kris Bleakley,
+                             Nach,
+                             z80 gaiden
+
+  OBC1 emulator code
+  (c) Copyright 2001 - 2004  zsKnight,
+                             pagefault (pagefault@zsnes.com),
+                             Kris Bleakley
+                             Ported from x86 assembler to C by sanmaiwashi
+
+  SPC7110 and RTC C++ emulator code used in 1.39-1.51
+  (c) Copyright 2002         Matthew Kendora with research by
+                             zsKnight,
+                             John Weidman,
+                             Dark Force
+
+  SPC7110 and RTC C++ emulator code used in 1.52+
+  (c) Copyright 2009         byuu,
+                             neviksti
+
+  S-DD1 C emulator code
+  (c) Copyright 2003         Brad Jorsch with research by
+                             Andreas Naive,
+                             John Weidman
+
+  S-RTC C emulator code
+  (c) Copyright 2001 - 2006  byuu,
+                             John Weidman
+
+  ST010 C++ emulator code
+  (c) Copyright 2003         Feather,
+                             John Weidman,
+                             Kris Bleakley,
+                             Matthew Kendora
+
+  Super FX C emulator code
+  (c) Copyright 1997 - 1999  Ivar,
+                             Gary Henderson,
+                             John Weidman
+
+  Sound emulator code used in 1.5-1.51
+  (c) Copyright 1998 - 2003  Brad Martin
+  (c) Copyright 1998 - 2006  Charles Bilyue'
+
+  Sound emulator code used in 1.52+
+  (c) Copyright 2004 - 2007  Shay Green (gblargg@gmail.com)
+
+  NTSC filter
+  (c) Copyright 2006 - 2007  Shay Green
+
+  (c) Copyright 2009 - 2010  OV2
+
+  (c) Copyright 2010 - 2016 Daniel De Matteis. (UNDER NO CIRCUMSTANCE 
+  WILL COMMERCIAL RIGHTS EVER BE APPROPRIATED TO ANY PARTY)
+
+  Specific ports contains the works of other authors. See headers in
+  individual files.
+
+
+  Snes9x homepage: http://www.snes9x.com/
+
+  Permission to use, copy, modify and/or distribute Snes9x in both binary
+  and source form, for non-commercial purposes, is hereby granted without
+  fee, providing that this license information and copyright notice appear
+  with all copies and any derived work.
+
+  This software is provided 'as-is', without any express or implied
+  warranty. In no event shall the authors be held liable for any damages
+  arising from the use of this software or it's derivatives.
+
+  Snes9x is freeware for PERSONAL USE only. Commercial users should
+  seek permission of the copyright holders first. Commercial use includes,
+  but is not limited to, charging money for Snes9x or software derived from
+  Snes9x, including Snes9x or derivatives in commercial game bundles, and/or
+  using Snes9x as a promotion for your commercial product.
+
+  The copyright holders request that bug fixes and improvements to the code
+  should be forwarded to them so everyone can benefit from the modifications
+  in future versions.
+
+  Super NES and Super Nintendo Entertainment System are trademarks of
+  Nintendo Co., Limited and its subsidiary companies.
+ ***********************************************************************************/
+
+#include <string.h>
+#include <stdint.h>
+#include <string.h>
+#include "port.h"
 #include "fxinst.h"
 #include "fxemu.h"
 
-// Set this define if you wish the plot instruction to check for y-pos limits (I don't think it's nessecary)
-#define CHECK_LIMITS
+#ifndef TRUE
+#define TRUE  1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
+uint8_t  *SFXFillRAM           = 0;
+uint32_t  SuperFXSpeedPerLineHz = 4378500; /* 0.417 duty * 10.5MHz GSU clock */
+uint8_t   SuperFXPalFlag        = 0;
+
+#ifndef SNES_CYCLES_PER_SCANLINE
+#define SNES_CYCLES_PER_SCANLINE 1364
+#endif
+#ifndef NTSC_MASTER_CLOCK
+#define NTSC_MASTER_CLOCK 21477272.0
+#endif
+#ifndef PAL_MASTER_CLOCK
+#define PAL_MASTER_CLOCK 21281370.0
+#endif
+
+/* Sign extend from 8 bit to 32 bit */
+#define SEX8(a)	((int32_t)  ((int8_t)   (a)))
+/* Sign extend from 16 bit to 32 bit */
+#define FX_SEX16(a) ((int32_t)  ((int16_t)  (a)))
+
+/* Unsign extend from 8/16 bit to 32 bit */
+#define USEX8(a)		((uint32_t) ((uint8_t)  (a)))
+#define USEX16(a)		((uint32_t) ((uint16_t) (a)))
+#define SUSEX16(a)		((int32_t)  ((uint16_t) (a)))
+
+/* Clear flags */
+#define CLRFLAGS		GSU.vStatusReg &= ~(FLG_ALT1 | FLG_ALT2 | FLG_B); GSU.pvDreg = GSU.pvSreg = &R0
+
+/* Read current RAM-Bank */
+#define RAM(adr)		GSU.pvRamBank[USEX16(adr)]
+
+/* Read current ROM-Bank */
+#define ROM(idx)		GSU.pvRomBank[USEX16(idx)]
+
+/* Access source register */
+#define SREG			(*GSU.pvSreg)
+
+/* Access destination register */
+#define DREG			(*GSU.pvDreg)
+
+
+/* Test flag */
+#define TF(a)			(GSU.vStatusReg &   FLG_##a)
+#define CF(a)			(GSU.vStatusReg &= ~FLG_##a)
+#define SF(a)			(GSU.vStatusReg |=  FLG_##a)
+
+/* Testing ALT1 & ALT2 bits */
+#define ALT1			( TF(ALT1) && !TF(ALT2))
+#define ALT2			(!TF(ALT1) &&  TF(ALT2))
+#define ALT3			( TF(ALT1) &&  TF(ALT2))
+
+/* Access the current value in the pipe */
+#define PIPE			GSU.vPipe
+
+/* Update pipe from ROM */
+#define FETCHPIPE		{ GSU.vPipe = PRGBANK(R15); }
+
+/* Access data in the current program bank */
+#define PRGBANK(idx)	GSU.pvPrgBank[USEX16(idx)]
 
 /*
  Codes used:
@@ -22,14 +227,14 @@
    (xx) = 16 bit address (0x0000 - 0xffff)
 */
 
-// 00 - stop - stop GSU execution (and maybe generate an IRQ)
+/* 00 - stop - stop GSU execution (and maybe generate an IRQ) */
 static void fx_stop (void)
 {
 	CF(G);
 	GSU.vCounter = 0;
-	GSU.vInstCount = GSU.vCounter;
+	GSU.vInstCount = 0;
 
-	// Check if we need to generate an IRQ
+	/* Check if we need to generate an IRQ */
 	if (!(GSU.pvRegisters[GSU_CFGR] & 0x80))
 		SF(IRQ);
 
@@ -39,52 +244,34 @@ static void fx_stop (void)
 	R15++;
 }
 
-// 01 - nop - no operation
+/* 01 - nop - no operation*/
 static void fx_nop (void)
 {
 	CLRFLAGS;
 	R15++;
 }
 
-// 02 - cache - reintialize GSU cache
+/* 02 - cache - reintialize GSU cache*/
 static void fx_cache (void)
 {
-	uint32	c = R15 & 0xfff0;
+	uint32_t c = R15 & 0xfff0;
 
 	if (GSU.vCacheBaseReg != c || !GSU.bCacheActive)
 	{
-		fx_flushCache();
+		GSU.vCacheFlags = 0;
 		GSU.vCacheBaseReg = c;
 		GSU.bCacheActive = TRUE;
-
-	#if 0
-		if (c < (0x10000 - 512))
-		{
-			const uint8	*t = &ROM(c);
-			memcpy(GSU.pvCache, t, 512);
-		}
-		else
-		{
-			const uint8	*t1, t2;
-			uint32	i = 0x10000 - c;
-			t1 = &ROM(c);
-			t2 = &ROM(0);
-			memcpy(GSU.pvCache, t1, i);
-			memcpy(&GSU.pvCache[i], t2, 512 - i);
-		}
-	#endif
 	}
 
 	CLRFLAGS;
 	R15++;
 }
 
-// 03 - lsr - logic shift right
+/* 03 - lsr - logic shift right*/
 static void fx_lsr (void)
 {
-	uint32	v;
+	uint32_t	v = USEX16(SREG) >> 1;
 	GSU.vCarry = SREG & 1;
-	v = USEX16(SREG) >> 1;
 	R15++;
 	DREG = v;
 	GSU.vSign = v;
@@ -93,10 +280,10 @@ static void fx_lsr (void)
 	CLRFLAGS;
 }
 
-// 04 - rol - rotate left
+/* 04 - rol - rotate left*/
 static void fx_rol (void)
 {
-	uint32	v = USEX16((SREG << 1) + GSU.vCarry);
+	uint32_t v = USEX16((SREG << 1) + GSU.vCarry);
 	GSU.vCarry = (SREG >> 15) & 1;
 	R15++;
 	DREG = v;
@@ -106,18 +293,18 @@ static void fx_rol (void)
 	CLRFLAGS;
 }
 
-// 05 - bra - branch always
+/* 05 - bra - branch always*/
 static void fx_bra (void)
 {
-	uint8	v = PIPE;
+	uint8_t v = PIPE;
 	R15++;
 	FETCHPIPE;
 	R15 += SEX8(v);
 }
 
-// Branch on condition
+/* Branch on condition*/
 #define	BRA_COND(cond) \
-	uint8 v = PIPE; \
+	uint8_t v = PIPE; \
 	R15++; \
 	FETCHPIPE; \
 	if (cond) \
@@ -130,68 +317,68 @@ static void fx_bra (void)
 #define TEST_OV	(GSU.vOverflow >= 0x8000 || GSU.vOverflow < -0x8000)
 #define TEST_CY	(GSU.vCarry & 1)
 
-// 06 - blt - branch on less than
+/* 06 - blt - branch on less than*/
 static void fx_blt (void)
 {
 	BRA_COND((TEST_S != 0) != (TEST_OV != 0));
 }
 
-// 07 - bge - branch on greater or equals
+/* 07 - bge - branch on greater or equals*/
 static void fx_bge (void)
 {
 	BRA_COND((TEST_S != 0) == (TEST_OV != 0));
 }
 
-// 08 - bne - branch on not equal
+/* 08 - bne - branch on not equal*/
 static void fx_bne (void)
 {
 	BRA_COND(!TEST_Z);
 }
 
-// 09 - beq - branch on equal
+/* 09 - beq - branch on equal*/
 static void fx_beq (void)
 {
 	BRA_COND(TEST_Z);
 }
 
-// 0a - bpl - branch on plus
+/* 0a - bpl - branch on plus*/
 static void fx_bpl (void)
 {
 	BRA_COND(!TEST_S);
 }
 
-// 0b - bmi - branch on minus
+/* 0b - bmi - branch on minus*/
 static void fx_bmi (void)
 {
 	BRA_COND(TEST_S);
 }
 
-// 0c - bcc - branch on carry clear
+/* 0c - bcc - branch on carry clear*/
 static void fx_bcc (void)
 {
 	BRA_COND(!TEST_CY);
 }
 
-// 0d - bcs - branch on carry set
+/* 0d - bcs - branch on carry set*/
 static void fx_bcs (void)
 {
 	BRA_COND(TEST_CY);
 }
 
-// 0e - bvc - branch on overflow clear
+/* 0e - bvc - branch on overflow clear*/
 static void fx_bvc (void)
 {
 	BRA_COND(!TEST_OV);
 }
 
-// 0f - bvs - branch on overflow set
+/* 0f - bvs - branch on overflow set*/
 static void fx_bvs (void)
 {
 	BRA_COND(TEST_OV);
 }
 
-// 10-1f - to rn - set register n as destination register
-// 10-1f (B) - move rn - move one register to another (if B flag is set)
+/* 10-1f - to rn - set register n as destination register*/
+/* 10-1f (B) - move rn - move one register to another (if B flag is set)*/
 #define FX_TO(reg) \
 	if (TF(B)) \
 	{ \
@@ -305,7 +492,7 @@ static void fx_to_r15 (void)
 	FX_TO_R15(15);
 }
 
-// 20-2f - to rn - set register n as source and destination register
+/* 20-2f - to rn - set register n as source and destination register*/
 #define FX_WITH(reg) \
 	SF(B); \
 	GSU.pvSreg = GSU.pvDreg = &GSU.avReg[reg]; \
@@ -391,11 +578,11 @@ static void fx_with_r15 (void)
 	FX_WITH(15);
 }
 
-// 30-3b - stw (rn) - store word
+/* 30-3b - stw (rn) - store word*/
 #define FX_STW(reg) \
 	GSU.vLastRamAdr = GSU.avReg[reg]; \
-	RAM(GSU.avReg[reg]) = (uint8) SREG; \
-	RAM(GSU.avReg[reg] ^ 1) = (uint8) (SREG >> 8); \
+	RAM(GSU.avReg[reg]) = (uint8_t) SREG; \
+	RAM(GSU.avReg[reg] ^ 1) = (uint8_t) (SREG >> 8); \
 	CLRFLAGS; \
 	R15++
 
@@ -459,10 +646,10 @@ static void fx_stw_r11 (void)
 	FX_STW(11);
 }
 
-// 30-3b (ALT1) - stb (rn) - store byte
+/* 30-3b (ALT1) - stb (rn) - store byte*/
 #define FX_STB(reg) \
 	GSU.vLastRamAdr = GSU.avReg[reg]; \
-	RAM(GSU.avReg[reg]) = (uint8) SREG; \
+	RAM(GSU.avReg[reg]) = (uint8_t) SREG; \
 	CLRFLAGS; \
 	R15++
 
@@ -526,18 +713,18 @@ static void fx_stb_r11 (void)
 	FX_STB(11);
 }
 
-// 3c - loop - decrement loop counter, and branch on not zero
+/* 3c - loop - decrement loop counter, and branch on not zero*/
 static void fx_loop (void)
 {
 	GSU.vSign = GSU.vZero = --R12;
-	if ((uint16) R12 != 0)
+	if ((uint16_t) R12 != 0)
 		R15 = R13;
 	else
 		R15++;
 	CLRFLAGS;
 }
 
-// 3d - alt1 - set alt1 mode
+/* 3d - alt1 - set alt1 mode*/
 static void fx_alt1 (void)
 {
 	SF(ALT1);
@@ -545,7 +732,7 @@ static void fx_alt1 (void)
 	R15++;
 }
 
-// 3e - alt2 - set alt2 mode
+/* 3e - alt2 - set alt2 mode*/
 static void fx_alt2 (void)
 {
 	SF(ALT2);
@@ -553,7 +740,7 @@ static void fx_alt2 (void)
 	R15++;
 }
 
-// 3f - alt3 - set alt3 mode
+/* 3f - alt3 - set alt3 mode*/
 static void fx_alt3 (void)
 {
 	SF(ALT1);
@@ -562,12 +749,12 @@ static void fx_alt3 (void)
 	R15++;
 }
 
-// 40-4b - ldw (rn) - load word from RAM
+/* 40-4b - ldw (rn) - load word from RAM*/
 #define FX_LDW(reg) \
-	uint32	v; \
+	uint32_t	v; \
 	GSU.vLastRamAdr = GSU.avReg[reg]; \
-	v = (uint32) RAM(GSU.avReg[reg]); \
-	v |= ((uint32) RAM(GSU.avReg[reg] ^ 1)) << 8; \
+	v = (uint32_t) RAM(GSU.avReg[reg]); \
+	v |= ((uint32_t) RAM(GSU.avReg[reg] ^ 1)) << 8; \
 	R15++; \
 	DREG = v; \
 	TESTR14; \
@@ -633,11 +820,10 @@ static void fx_ldw_r11 (void)
 	FX_LDW(11);
 }
 
-// 40-4b (ALT1) - ldb (rn) - load byte
+/* 40-4b (ALT1) - ldb (rn) - load byte*/
 #define FX_LDB(reg) \
-	uint32	v; \
+	uint32_t	v = (uint32_t) RAM(GSU.avReg[reg]); \
 	GSU.vLastRamAdr = GSU.avReg[reg]; \
-	v = (uint32) RAM(GSU.avReg[reg]); \
 	R15++; \
 	DREG = v; \
 	TESTR14; \
@@ -703,30 +889,53 @@ static void fx_ldb_r11 (void)
 	FX_LDB(11);
 }
 
-// 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color
+/* 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color*/
+/* SuperFX plot transparency (the hardware PLOT_EXEC test): in each colour
+ * depth only the bits that actually exist are compared against zero.
+ *   mode 0 (2bpp): colour & 0x03
+ *   mode 1 (4bpp): colour & 0x0f
+ *   mode 2 / 3   : colour & 0xff, or & 0x0f when the freeze-high bit (POR bit
+ *                  3) is set
+ * POR bit 0 (transparency disabled) always forces the pixel opaque. */
+static int fx_plot_opaque (void)
+{
+	uint8_t c = (uint8_t) GSU.vColorReg;
+
+	if (GSU.vPlotOptionReg & 0x01)
+		return TRUE;
+	switch (GSU.vMode)
+	{
+		case 0:
+			/* ares tests COLR & 0x0f in 2bpp as well (SuperFX::plot:
+			 * the non-8bpp path); 0x03 diverged from hardware. Matches
+			 * mainline snes9x. */
+			return (c & 0x0f) != 0;
+		case 1:
+			return (c & 0x0f) != 0;
+		default:
+			if (GSU.vPlotOptionReg & 0x08)
+				return (c & 0x0f) != 0;
+			return (c & 0xff) != 0;
+	}
+}
+
 static void fx_plot_2bit (void)
 {
-	uint32	x = USEX8(R1);
-	uint32	y = USEX8(R2);
-	uint8	*a;
-	uint8	v, c;
+   uint32_t x = USEX8(R1);
+	uint32_t y = USEX8(R2);
+	uint8_t	*a, v, c;
 
 	R15++;
 	CLRFLAGS;
 	R1++;
 
-#ifdef CHECK_LIMITS
-	if (y >= GSU.vScreenHeight)
-		return;
-#endif
-
-	if (!(GSU.vPlotOptionReg & 0x01) && !(COLR & 0xf))
+	if (!fx_plot_opaque())
 		return;
 
 	if (GSU.vPlotOptionReg & 0x02)
-		c = ((x ^ y) & 1) ? (uint8) (GSU.vColorReg >> 4) : (uint8) GSU.vColorReg;
+		c = (x ^ y) & 1 ? (uint8_t) (GSU.vColorReg >> 4) : (uint8_t) GSU.vColorReg;
 	else
-		c = (uint8) GSU.vColorReg;
+		c = (uint8_t) GSU.vColorReg;
 
 	a = GSU.apvScreen[y >> 3] + GSU.x[x >> 3] + ((y & 7) << 1);
 	v = 128 >> (x & 7);
@@ -742,59 +951,45 @@ static void fx_plot_2bit (void)
 		a[1] &= ~v;
 }
 
-// 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y
+/* 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y*/
 static void fx_rpix_2bit (void)
 {
-	uint32	x = USEX8(R1);
-	uint32	y = USEX8(R2);
-	uint8	*a;
-	uint8	v;
+   uint32_t x = USEX8(R1);
+	uint32_t y = USEX8(R2);
+	uint8_t *a, v;
 
 	R15++;
-
-#ifdef CHECK_LIMITS
-	if (y >= GSU.vScreenHeight)
-		return;
-#endif
+	CLRFLAGS;
 
 	a = GSU.apvScreen[y >> 3] + GSU.x[x >> 3] + ((y & 7) << 1);
 	v = 128 >> (x & 7);
 
 	DREG = 0;
-	DREG |= ((uint32) ((a[0] & v) != 0)) << 0;
-	DREG |= ((uint32) ((a[1] & v) != 0)) << 1;
-	// RPIX sets S and Z from the read colour in every depth
-	// (ares GSU::instructionPLOT_RPIX; fix from snes9x2010).
+	DREG |= ((uint32_t) ((a[0] & v) != 0)) << 0;
+	DREG |= ((uint32_t) ((a[1] & v) != 0)) << 1;
 	GSU.vSign = DREG;
 	GSU.vZero = DREG;
 	TESTR14;
-	CLRFLAGS;
 }
 
-// 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color
+/* 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color*/
 static void fx_plot_4bit (void)
 {
-	uint32	x = USEX8(R1);
-	uint32	y = USEX8(R2);
-	uint8	*a;
-	uint8	v, c;
+   uint32_t x = USEX8(R1);
+	uint32_t y = USEX8(R2);
+	uint8_t *a, v, c;
 
 	R15++;
 	CLRFLAGS;
 	R1++;
 
-#ifdef CHECK_LIMITS
-	if (y >= GSU.vScreenHeight)
-		return;
-#endif
-
-	if (!(GSU.vPlotOptionReg & 0x01) && !(COLR & 0xf))
+	if (!fx_plot_opaque())
 		return;
 
 	if (GSU.vPlotOptionReg & 0x02)
-		c = ((x ^ y) & 1) ? (uint8) (GSU.vColorReg >> 4) : (uint8) GSU.vColorReg;
+		c = (x ^ y) & 1 ? (uint8_t) (GSU.vColorReg >> 4) : (uint8_t) GSU.vColorReg;
 	else
-		c = (uint8) GSU.vColorReg;
+		c = (uint8_t) GSU.vColorReg;
 
 	a = GSU.apvScreen[y >> 3] + GSU.x[x >> 3] + ((y & 7) << 1);
 	v = 128 >> (x & 7);
@@ -820,62 +1015,44 @@ static void fx_plot_4bit (void)
 		a[0x11] &= ~v;
 }
 
-// 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y
+/* 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y*/
 static void fx_rpix_4bit (void)
 {
-	uint32	x = USEX8(R1);
-	uint32	y = USEX8(R2);
-	uint8	*a;
-	uint8	v;
+	uint32_t	x = USEX8(R1);
+	uint32_t	y = USEX8(R2);
+	uint8_t	*a;
+	uint8_t	v;
 
 	R15++;
-
-#ifdef CHECK_LIMITS
-	if (y >= GSU.vScreenHeight)
-		return;
-#endif
+	CLRFLAGS;
 
 	a = GSU.apvScreen[y >> 3] + GSU.x[x >> 3] + ((y & 7) << 1);
 	v = 128 >> (x & 7);
 
 	DREG = 0;
-	DREG |= ((uint32) ((a[0x00] & v) != 0)) << 0;
-	DREG |= ((uint32) ((a[0x01] & v) != 0)) << 1;
-	DREG |= ((uint32) ((a[0x10] & v) != 0)) << 2;
-	DREG |= ((uint32) ((a[0x11] & v) != 0)) << 3;
-	// RPIX sets S and Z from the read colour in every depth
-	// (ares GSU::instructionPLOT_RPIX; fix from snes9x2010).
+	DREG |= ((uint32_t) ((a[0x00] & v) != 0)) << 0;
+	DREG |= ((uint32_t) ((a[0x01] & v) != 0)) << 1;
+	DREG |= ((uint32_t) ((a[0x10] & v) != 0)) << 2;
+	DREG |= ((uint32_t) ((a[0x11] & v) != 0)) << 3;
 	GSU.vSign = DREG;
 	GSU.vZero = DREG;
 	TESTR14;
-	CLRFLAGS;
 }
 
-// 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color
+/* 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color*/
 static void fx_plot_8bit (void)
 {
-	uint32	x = USEX8(R1);
-	uint32	y = USEX8(R2);
-	uint8	*a;
-	uint8	v, c;
+	uint32_t	x = USEX8(R1);
+	uint32_t	y = USEX8(R2);
+	uint8_t	*a;
+	uint8_t	v, c;
 
 	R15++;
 	CLRFLAGS;
 	R1++;
 
-#ifdef CHECK_LIMITS
-	if (y >= GSU.vScreenHeight)
-		return;
-#endif
-
-	c = (uint8) GSU.vColorReg;
-	if (!(GSU.vPlotOptionReg & 0x10))
-	{
-		if (!(GSU.vPlotOptionReg & 0x01) && (!c || ((GSU.vPlotOptionReg & 0x08) && !(c & 0xf))))
-			return;
-	}
-	else
-	if (!(GSU.vPlotOptionReg & 0x01) && !c)
+	c = (uint8_t) GSU.vColorReg;
+	if (!fx_plot_opaque())
 		return;
 
 	a = GSU.apvScreen[y >> 3] + GSU.x[x >> 3] + ((y & 7) << 1);
@@ -922,63 +1099,50 @@ static void fx_plot_8bit (void)
 		a[0x31] &= ~v;
 }
 
-// 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y
+/* 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y*/
 static void fx_rpix_8bit (void)
 {
-	uint32	x = USEX8(R1);
-	uint32	y = USEX8(R2);
-	uint8	*a;
-	uint8	v;
+	uint32_t x = USEX8(R1);
+	uint32_t y = USEX8(R2);
+	uint8_t *a, v;
 
 	R15++;
-
-#ifdef CHECK_LIMITS
-	if (y >= GSU.vScreenHeight)
-		return;
-#endif
+	CLRFLAGS;
 
 	a = GSU.apvScreen[y >> 3] + GSU.x[x >> 3] + ((y & 7) << 1);
 	v = 128 >> (x & 7);
 
 	DREG = 0;
-	DREG |= ((uint32) ((a[0x00] & v) != 0)) << 0;
-	DREG |= ((uint32) ((a[0x01] & v) != 0)) << 1;
-	DREG |= ((uint32) ((a[0x10] & v) != 0)) << 2;
-	DREG |= ((uint32) ((a[0x11] & v) != 0)) << 3;
-	DREG |= ((uint32) ((a[0x20] & v) != 0)) << 4;
-	DREG |= ((uint32) ((a[0x21] & v) != 0)) << 5;
-	DREG |= ((uint32) ((a[0x30] & v) != 0)) << 6;
-	DREG |= ((uint32) ((a[0x31] & v) != 0)) << 7;
-	// RPIX sets S and Z from the read colour in every depth
-	// (ares GSU::instructionPLOT_RPIX; fix from snes9x2010).
+	DREG |= ((uint32_t) ((a[0x00] & v) != 0)) << 0;
+	DREG |= ((uint32_t) ((a[0x01] & v) != 0)) << 1;
+	DREG |= ((uint32_t) ((a[0x10] & v) != 0)) << 2;
+	DREG |= ((uint32_t) ((a[0x11] & v) != 0)) << 3;
+	DREG |= ((uint32_t) ((a[0x20] & v) != 0)) << 4;
+	DREG |= ((uint32_t) ((a[0x21] & v) != 0)) << 5;
+	DREG |= ((uint32_t) ((a[0x30] & v) != 0)) << 6;
+	DREG |= ((uint32_t) ((a[0x31] & v) != 0)) << 7;
 	GSU.vSign = DREG;
 	GSU.vZero = DREG;
 	TESTR14;
-	CLRFLAGS;
 }
 
-// 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color
+/* 4c - plot - plot pixel with R1, R2 as x, y and the color register as the color*/
 static void fx_plot_obj (void)
 {
-#ifdef DEBUGGER
-	fprintf(stderr, "ERROR fx_plot_obj called\n");
-#endif
 }
 
-// 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y
+/* 4c (ALT1) - rpix - read color of the pixel with R1, R2 as x, y*/
 static void fx_rpix_obj (void)
 {
-#ifdef DEBUGGER
-	fprintf(stderr, "ERROR fx_rpix_obj called\n");
-#endif
 }
 
-// 4d - swap - swap upper and lower byte of a register
+/* 4d - swap - swap upper and lower byte of a register*/
 static void fx_swap (void)
 {
-	uint8	c = (uint8) SREG;
-	uint8	d = (uint8) (SREG >> 8);
-	uint32	v = (((uint32) c) << 8) | ((uint32) d);
+	uint8_t c = (uint8_t) SREG;
+	uint8_t d = (uint8_t) (SREG >> 8);
+	uint32_t v = (((uint32_t) c) << 8) | ((uint32_t) d);
+
 	R15++;
 	DREG = v;
 	GSU.vSign = v;
@@ -987,10 +1151,10 @@ static void fx_swap (void)
 	CLRFLAGS;
 }
 
-// 4e - color - copy source register to color register
+/* 4e - color - copy source register to color register*/
 static void fx_color (void)
 {
-	uint8	c = (uint8) SREG;
+	uint8_t c = (uint8_t) SREG;
 
 	if (GSU.vPlotOptionReg & 0x04)
 		c = (c & 0xf0) | (c >> 4);
@@ -1006,25 +1170,77 @@ static void fx_color (void)
 	R15++;
 }
 
-// 4e (ALT1) - cmode - set plot option register
+static void fx_computeScreenPointers (void)
+{
+   int i;
+   uint8_t *pvScreenBase;
+   int32_t condition, mask, result;
+   uint32_t vmode, screenheight, incrementvalue;
+
+   GSU.vSCBRDirty = FALSE;
+
+   /* Make a list of pointers to the start of each screen column*/
+   pvScreenBase = GSU.pvScreenBase;
+   vmode = GSU.vMode;
+   condition = vmode - 2;
+   mask = (condition | -condition) >> 31;
+   result = (vmode & mask) | (3 & ~mask);
+   screenheight = GSU.vScreenHeight;
+   incrementvalue = screenheight+screenheight;
+   vmode = result;
+   vmode++;
+
+   if (screenheight == 256)
+   {
+      uint32_t mul_8192 = vmode << 13;
+      uint32_t mul_4096 = vmode << 12;
+      uint32_t apv_multiply = 0;
+      uint32_t gsu_x_multiply = 0;
+      for( i = 0; i < 16; i++)
+      {
+         GSU.apvScreen[i] = GSU.apvScreen[i+16] = pvScreenBase + (apv_multiply * vmode);
+         GSU.x[i] = GSU.x[i+16] = (gsu_x_multiply * vmode);
+         GSU.apvScreen[i+16] += mul_8192;
+         GSU.x[i+16] += mul_4096;
+         apv_multiply += 256;
+         gsu_x_multiply += 16;
+      }
+   }
+   else
+   {
+      uint32_t vmode_mul = 0;
+      for( i = 0; i < 32; i++)
+      {
+         GSU.x[i] = incrementvalue * i * vmode;
+         GSU.apvScreen[i] = pvScreenBase + (vmode_mul * vmode);
+         vmode_mul += 16;
+      }
+   }
+
+   GSU.vPrevMode = GSU.vMode;
+   GSU.vPrevScreenHeight = GSU.vScreenHeight;
+}
+
+/* 4e (ALT1) - cmode - set plot option register*/
 static void fx_cmode (void)
 {
 	GSU.vPlotOptionReg = SREG;
 
-	if (GSU.vPlotOptionReg & 0x10)
-		GSU.vScreenHeight = 256; // OBJ Mode (for drawing into sprites)
+	if (GSU.vPlotOptionReg & 0x10)		
+		GSU.vScreenHeight = 256; /* OBJ Mode (for drawing into sprites)*/
 	else
 		GSU.vScreenHeight = GSU.vScreenRealHeight;
 
-	fx_computeScreenPointers();
+	if (GSU.vMode != GSU.vPrevMode || GSU.vPrevScreenHeight != GSU.vScreenHeight || GSU.vSCBRDirty)
+      fx_computeScreenPointers();
 	CLRFLAGS;
 	R15++;
 }
 
-// 4f - not - perform exclusive exor with 1 on all bits
+/* 4f - not - perform exclusive exor with 1 on all bits*/
 static void fx_not (void)
 {
-	uint32	v = ~SREG;
+	uint32_t v = ~SREG;
 	R15++;
 	DREG = v;
 	GSU.vSign = v;
@@ -1033,9 +1249,9 @@ static void fx_not (void)
 	CLRFLAGS;
 }
 
-// 50-5f - add rn - add, register + register
+/* 50-5f - add rn - add, register + register*/
 #define FX_ADD(reg) \
-	int32	s = SUSEX16(SREG) + SUSEX16(GSU.avReg[reg]); \
+	int32_t	s = SUSEX16(SREG) + SUSEX16(GSU.avReg[reg]); \
 	GSU.vCarry = s >= 0x10000; \
 	GSU.vOverflow = ~(SREG ^ GSU.avReg[reg]) & (GSU.avReg[reg] ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1125,9 +1341,9 @@ static void fx_add_r15 (void)
 	FX_ADD(15);
 }
 
-// 50-5f (ALT1) - adc rn - add with carry, register + register
+/* 50-5f (ALT1) - adc rn - add with carry, register + register*/
 #define FX_ADC(reg) \
-	int32	s = SUSEX16(SREG) + SUSEX16(GSU.avReg[reg]) + SEX16(GSU.vCarry); \
+	int32_t	s = SUSEX16(SREG) + SUSEX16(GSU.avReg[reg]) + FX_SEX16(GSU.vCarry); \
 	GSU.vCarry = s >= 0x10000; \
 	GSU.vOverflow = ~(SREG ^ GSU.avReg[reg]) & (GSU.avReg[reg] ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1217,9 +1433,9 @@ static void fx_adc_r15 (void)
 	FX_ADC(15);
 }
 
-// 50-5f (ALT2) - add #n - add, register + immediate
+/* 50-5f (ALT2) - add #n - add, register + immediate*/
 #define FX_ADD_I(imm) \
-	int32	s = SUSEX16(SREG) + imm; \
+	int32_t	s = SUSEX16(SREG) + imm; \
 	GSU.vCarry = s >= 0x10000; \
 	GSU.vOverflow = ~(SREG ^ imm) & (imm ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1309,9 +1525,9 @@ static void fx_add_i15 (void)
 	FX_ADD_I(15);
 }
 
-// 50-5f (ALT3) - adc #n - add with carry, register + immediate
+/* 50-5f (ALT3) - adc #n - add with carry, register + immediate*/
 #define FX_ADC_I(imm) \
-	int32	s = SUSEX16(SREG) + imm + SUSEX16(GSU.vCarry); \
+	int32_t	s = SUSEX16(SREG) + imm + SUSEX16(GSU.vCarry); \
 	GSU.vCarry = s >= 0x10000; \
 	GSU.vOverflow = ~(SREG ^ imm) & (imm ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1401,9 +1617,9 @@ static void fx_adc_i15 (void)
 	FX_ADC_I(15);
 }
 
-// 60-6f - sub rn - subtract, register - register
+/* 60-6f - sub rn - subtract, register - register*/
 #define FX_SUB(reg) \
-	int32	s = SUSEX16(SREG) - SUSEX16(GSU.avReg[reg]); \
+	int32_t	s = SUSEX16(SREG) - SUSEX16(GSU.avReg[reg]); \
 	GSU.vCarry = s >= 0; \
 	GSU.vOverflow = (SREG ^ GSU.avReg[reg]) & (SREG ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1493,9 +1709,9 @@ static void fx_sub_r15 (void)
 	FX_SUB(15);
 }
 
-// 60-6f (ALT1) - sbc rn - subtract with carry, register - register
+/* 60-6f (ALT1) - sbc rn - subtract with carry, register - register*/
 #define FX_SBC(reg) \
-	int32	s = SUSEX16(SREG) - SUSEX16(GSU.avReg[reg]) - (SUSEX16(GSU.vCarry ^ 1)); \
+	int32_t	s = SUSEX16(SREG) - SUSEX16(GSU.avReg[reg]) - (SUSEX16(GSU.vCarry ^ 1)); \
 	GSU.vCarry = s >= 0; \
 	GSU.vOverflow = (SREG ^ GSU.avReg[reg]) & (SREG ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1585,9 +1801,9 @@ static void fx_sbc_r15 (void)
 	FX_SBC(15);
 }
 
-// 60-6f (ALT2) - sub #n - subtract, register - immediate
+/* 60-6f (ALT2) - sub #n - subtract, register - immediate*/
 #define FX_SUB_I(imm) \
-	int32	s = SUSEX16(SREG) - imm; \
+	int32_t	s = SUSEX16(SREG) - imm; \
 	GSU.vCarry = s >= 0; \
 	GSU.vOverflow = (SREG ^ imm) & (SREG ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1677,9 +1893,9 @@ static void fx_sub_i15 (void)
 	FX_SUB_I(15);
 }
 
-// 60-6f (ALT3) - cmp rn - compare, register, register
+/* 60-6f (ALT3) - cmp rn - compare, register, register*/
 #define FX_CMP(reg) \
-	int32	s = SUSEX16(SREG) - SUSEX16(GSU.avReg[reg]); \
+	int32_t	s = SUSEX16(SREG) - SUSEX16(GSU.avReg[reg]); \
 	GSU.vCarry = s >= 0; \
 	GSU.vOverflow = (SREG ^ GSU.avReg[reg]) & (SREG ^ s) & 0x8000; \
 	GSU.vSign = s; \
@@ -1767,10 +1983,10 @@ static void fx_cmp_r15 (void)
 	FX_CMP(15);
 }
 
-// 70 - merge - R7 as upper byte, R8 as lower byte (used for texture-mapping)
+/* 70 - merge - R7 as upper byte, R8 as lower byte (used for texture-mapping)*/
 static void fx_merge (void)
 {
-	uint32	v = (R7 & 0xff00) | ((R8 & 0xff00) >> 8);
+	uint32_t	v = (R7 & 0xff00) | ((R8 & 0xff00) >> 8);
 	R15++;
 	DREG = v;
 	GSU.vOverflow = (v & 0xc0c0) << 16;
@@ -1781,9 +1997,9 @@ static void fx_merge (void)
 	CLRFLAGS;
 }
 
-// 71-7f - and rn - reister & register
+/* 71-7f - and rn - reister & register*/
 #define FX_AND(reg) \
-	uint32	v = SREG & GSU.avReg[reg]; \
+	uint32_t	v = SREG & GSU.avReg[reg]; \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -1866,9 +2082,9 @@ static void fx_and_r15 (void)
 	FX_AND(15);
 }
 
-// 71-7f (ALT1) - bic rn - reister & ~register
+/* 71-7f (ALT1) - bic rn - reister & ~register*/
 #define FX_BIC(reg) \
-	uint32	v = SREG & ~GSU.avReg[reg];	\
+	uint32_t	v = SREG & ~GSU.avReg[reg];	\
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -1951,9 +2167,9 @@ static void fx_bic_r15 (void)
 	FX_BIC(15);
 }
 
-// 71-7f (ALT2) - and #n - reister & immediate
+/* 71-7f (ALT2) - and #n - reister & immediate*/
 #define FX_AND_I(imm) \
-	uint32	v = SREG & imm; \
+	uint32_t	v = SREG & imm; \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -2036,9 +2252,9 @@ static void fx_and_i15 (void)
 	FX_AND_I(15);
 }
 
-// 71-7f (ALT3) - bic #n - reister & ~immediate
+/* 71-7f (ALT3) - bic #n - reister & ~immediate*/
 #define FX_BIC_I(imm) \
-	uint32	v = SREG & ~imm; \
+	uint32_t	v = SREG & ~imm; \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -2121,9 +2337,9 @@ static void fx_bic_i15 (void)
 	FX_BIC_I(15);
 }
 
-// 80-8f - mult rn - 8 bit to 16 bit signed multiply, register * register
+/* 80-8f - mult rn - 8 bit to 16 bit signed multiply, register * register*/
 #define FX_MULT(reg) \
-	uint32	v = (uint32) (SEX8(SREG) * SEX8(GSU.avReg[reg])); \
+	uint32_t	v = (uint32_t) (SEX8(SREG) * SEX8(GSU.avReg[reg])); \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -2211,9 +2427,9 @@ static void fx_mult_r15 (void)
 	FX_MULT(15);
 }
 
-// 80-8f (ALT1) - umult rn - 8 bit to 16 bit unsigned multiply, register * register
+/* 80-8f (ALT1) - umult rn - 8 bit to 16 bit unsigned multiply, register * register*/
 #define FX_UMULT(reg) \
-	uint32	v = USEX8(SREG) * USEX8(GSU.avReg[reg]); \
+	uint32_t	v = USEX8(SREG) * USEX8(GSU.avReg[reg]); \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -2301,9 +2517,9 @@ static void fx_umult_r15 (void)
 	FX_UMULT(15);
 }
 
-// 80-8f (ALT2) - mult #n - 8 bit to 16 bit signed multiply, register * immediate
+/* 80-8f (ALT2) - mult #n - 8 bit to 16 bit signed multiply, register * immediate*/
 #define FX_MULT_I(imm) \
-	uint32	v = (uint32) (SEX8(SREG) * ((int32) imm)); \
+	uint32_t	v = (uint32_t) (SEX8(SREG) * ((int32_t) imm)); \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -2391,9 +2607,9 @@ static void fx_mult_i15 (void)
 	FX_MULT_I(15);
 }
 
-// 80-8f (ALT3) - umult #n - 8 bit to 16 bit unsigned multiply, register * immediate
+/* 80-8f (ALT3) - umult #n - 8 bit to 16 bit unsigned multiply, register * immediate*/
 #define FX_UMULT_I(imm) \
-	uint32	v = USEX8(SREG) * ((uint32) imm); \
+	uint32_t	v = USEX8(SREG) * ((uint32_t) imm); \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -2481,16 +2697,16 @@ static void fx_umult_i15 (void)
 	FX_UMULT_I(15);
 }
 
-// 90 - sbk - store word to last accessed RAM address
+/* 90 - sbk - store word to last accessed RAM address*/
 static void fx_sbk (void)
 {
-	RAM(GSU.vLastRamAdr) = (uint8) SREG;
-	RAM(GSU.vLastRamAdr ^ 1) = (uint8) (SREG >> 8);
+	RAM(GSU.vLastRamAdr) = (uint8_t) SREG;
+	RAM(GSU.vLastRamAdr ^ 1) = (uint8_t) (SREG >> 8);
 	CLRFLAGS;
 	R15++;
 }
 
-// 91-94 - link #n - R11 = R15 + immediate
+/* 91-94 - link #n - R11 = R15 + immediate*/
 #define FX_LINK_I(lkn) \
 	R11 = R15 + lkn; \
 	CLRFLAGS; \
@@ -2516,10 +2732,10 @@ static void fx_link_i4 (void)
 	FX_LINK_I(4);
 }
 
-// 95 - sex - sign extend 8 bit to 16 bit
+/* 95 - sex - sign extend 8 bit to 16 bit*/
 static void fx_sex (void)
 {
-	uint32	v = (uint32) SEX8(SREG);
+	uint32_t v = (uint32_t) SEX8(SREG);
 	R15++;
 	DREG = v;
 	GSU.vSign = v;
@@ -2528,12 +2744,16 @@ static void fx_sex (void)
 	CLRFLAGS;
 }
 
-// 96 - asr - aritmetric shift right by one
+#ifdef _XBOX
+/* If we don't do this, SuperFX games will be totally bugged */
+#pragma optimize("", off)
+#endif
+
+/* 96 - asr - aritmetric shift right by one*/
 static void fx_asr (void)
 {
-	uint32	v;
+	uint32_t v = (uint32_t) (FX_SEX16(SREG) >> 1);
 	GSU.vCarry = SREG & 1;
-	v = (uint32) (SEX16(SREG) >> 1);
 	R15++;
 	DREG = v;
 	GSU.vSign = v;
@@ -2542,16 +2762,21 @@ static void fx_asr (void)
 	CLRFLAGS;
 }
 
-// 96 (ALT1) - div2 - aritmetric shift right by one
+#ifdef _XBOX
+#pragma optimize("", on)
+#endif
+
+/* 96 (ALT1) - div2 - aritmetric shift right by one*/
 static void fx_div2 (void)
 {
-	uint32	v;
-	int32	s = SEX16(SREG);
+   int32_t s = FX_SEX16(SREG);
+	uint32_t	v;
+
 	GSU.vCarry = s & 1;
 	if (s == -1)
 		v = 0;
 	else
-		v = (uint32) (s >> 1);
+		v = (uint32_t) (s >> 1);
 	R15++;
 	DREG = v;
 	GSU.vSign = v;
@@ -2560,10 +2785,10 @@ static void fx_div2 (void)
 	CLRFLAGS;
 }
 
-// 97 - ror - rotate right by one
+/* 97 - ror - rotate right by one*/
 static void fx_ror (void)
 {
-	uint32	v = (USEX16(SREG) >> 1) | (GSU.vCarry << 15);
+	uint32_t v = (USEX16(SREG) >> 1) | (GSU.vCarry << 15);
 	GSU.vCarry = SREG & 1;
 	R15++;
 	DREG = v;
@@ -2573,7 +2798,7 @@ static void fx_ror (void)
 	CLRFLAGS;
 }
 
-// 98-9d - jmp rn - jump to address of register
+/* 98-9d - jmp rn - jump to address of register*/
 #define FX_JMP(reg) \
 	R15 = GSU.avReg[reg]; \
 	CLRFLAGS
@@ -2608,7 +2833,7 @@ static void fx_jmp_r13 (void)
 	FX_JMP(13);
 }
 
-// 98-9d (ALT1) - ljmp rn - set program bank to source register and jump to address of register
+/* 98-9d (ALT1) - ljmp rn - set program bank to source register and jump to address of register*/
 #define FX_LJMP(reg) \
 	GSU.vPrgBankReg = GSU.avReg[reg] & 0x7f; \
 	GSU.pvPrgBank = GSU.apvRomBank[GSU.vPrgBankReg]; \
@@ -2647,10 +2872,10 @@ static void fx_ljmp_r13 (void)
 	FX_LJMP(13);
 }
 
-// 9e - lob - set upper byte to zero (keep low byte)
+/* 9e - lob - set upper byte to zero (keep low byte)*/
 static void fx_lob (void)
 {
-	uint32	v = USEX8(SREG);
+	uint32_t	v = USEX8(SREG);
 	R15++;
 	DREG = v;
 	GSU.vSign = v << 8;
@@ -2659,11 +2884,12 @@ static void fx_lob (void)
 	CLRFLAGS;
 }
 
-// 9f - fmult - 16 bit to 32 bit signed multiplication, upper 16 bits only
+/* 9f - fmult - 16 bit to 32 bit signed multiplication, upper 16 bits only*/
 static void fx_fmult (void)
 {
-	uint32	v;
-	uint32	c = (uint32) (SEX16(SREG) * SEX16(R6));
+	uint32_t	v, c;
+
+	c = (uint32_t) (FX_SEX16(SREG) * FX_SEX16(R6));
 	v = c >> 16;
 	R15++;
 	DREG = v;
@@ -2674,26 +2900,26 @@ static void fx_fmult (void)
 	CLRFLAGS;
 }
 
-// 9f (ALT1) - lmult - 16 bit to 32 bit signed multiplication
+/* 9f (ALT1) - lmult - 16 bit to 32 bit signed multiplication*/
 static void fx_lmult (void)
 {
-	uint32	v;
-	uint32	c = (uint32) (SEX16(SREG) * SEX16(R6));
+	uint32_t	v, c;
+
+	c = (uint32_t) (FX_SEX16(SREG) * FX_SEX16(R6));
 	R4 = c;
 	v = c >> 16;
 	R15++;
 	DREG = v;
 	GSU.vSign = v;
 	GSU.vZero = v;
-	// XXX: R6 or R4?
-	GSU.vCarry = (R4 >> 15) & 1; // should it be bit 15 of R4 instead ?
+	GSU.vCarry = (R4 >> 15) & 1;
 	TESTR14;
 	CLRFLAGS;
 }
 
-// a0-af - ibt rn, #pp - immediate byte transfer
+/* a0-af - ibt rn, #pp - immediate byte transfer*/
 #define FX_IBT(reg) \
-	uint8	v = PIPE; \
+	uint8_t	v = PIPE; \
 	R15++; \
 	FETCHPIPE; \
 	R15++; \
@@ -2781,14 +3007,14 @@ static void fx_ibt_r15 (void)
 	FX_IBT(15);
 }
 
-// a0-af (ALT1) - lms rn, (yy) - load word from RAM (short address)
+/* a0-af (ALT1) - lms rn, (yy) - load word from RAM (short address)*/
 #define FX_LMS(reg) \
-	GSU.vLastRamAdr = ((uint32) PIPE) << 1; \
+	GSU.vLastRamAdr = ((uint32_t) PIPE) << 1; \
 	R15++; \
 	FETCHPIPE; \
 	R15++; \
-	GSU.avReg[reg] = (uint32) RAM(GSU.vLastRamAdr); \
-	GSU.avReg[reg] |= ((uint32) RAM(GSU.vLastRamAdr + 1)) << 8; \
+	GSU.avReg[reg] = (uint32_t) RAM(GSU.vLastRamAdr); \
+	GSU.avReg[reg] |= ((uint32_t) RAM(GSU.vLastRamAdr + 1)) << 8; \
 	CLRFLAGS
 
 static void fx_lms_r0 (void)
@@ -2872,15 +3098,15 @@ static void fx_lms_r15 (void)
 	FX_LMS(15);
 }
 
-// a0-af (ALT2) - sms (yy), rn - store word in RAM (short address)
-// XXX: If rn == r15, is the value of r15 before or after the extra byte is read ?
+/* a0-af (ALT2) - sms (yy), rn - store word in RAM (short address)*/
+/* XXX: If rn == r15, is the value of r15 before or after the extra byte is read ?*/
 #define FX_SMS(reg) \
-	uint32	v = GSU.avReg[reg]; \
-	GSU.vLastRamAdr = ((uint32) PIPE) << 1; \
+	uint32_t	v = GSU.avReg[reg]; \
+	GSU.vLastRamAdr = ((uint32_t) PIPE) << 1; \
 	R15++; \
 	FETCHPIPE; \
-	RAM(GSU.vLastRamAdr) = (uint8) v; \
-	RAM(GSU.vLastRamAdr + 1) = (uint8) (v >> 8); \
+	RAM(GSU.vLastRamAdr) = (uint8_t) v; \
+	RAM(GSU.vLastRamAdr + 1) = (uint8_t) (v >> 8); \
 	CLRFLAGS; \
 	R15++
 
@@ -2964,12 +3190,12 @@ static void fx_sms_r15 (void)
 	FX_SMS(15);
 }
 
-// b0-bf - from rn - set source register
-// b0-bf (B) - moves rn - move register to register, and set flags, (if B flag is set)
+/* b0-bf - from rn - set source register*/
+/* b0-bf (B) - moves rn - move register to register, and set flags, (if B flag is set)*/
 #define FX_FROM(reg) \
 	if (TF(B)) \
 	{ \
-		uint32	v = GSU.avReg[reg]; \
+		uint32_t	v = GSU.avReg[reg]; \
 		R15++; \
 		DREG = v; \
 		GSU.vOverflow = (v & 0x80) << 16; \
@@ -3064,10 +3290,10 @@ static void fx_from_r15 (void)
 	FX_FROM(15);
 }
 
-// c0 - hib - move high-byte to low-byte
+/* c0 - hib - move high-byte to low-byte*/
 static void fx_hib (void)
 {
-	uint32	v = USEX8(SREG >> 8);
+	uint32_t	v = USEX8(SREG >> 8);
 	R15++;
 	DREG = v;
 	GSU.vSign = v << 8;
@@ -3076,9 +3302,9 @@ static void fx_hib (void)
 	CLRFLAGS;
 }
 
-// c1-cf - or rn
+/* c1-cf - or rn*/
 #define FX_OR(reg) \
-	uint32	v = SREG | GSU.avReg[reg]; \
+	uint32_t	v = SREG | GSU.avReg[reg]; \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -3161,9 +3387,9 @@ static void fx_or_r15 (void)
 	FX_OR(15);
 }
 
-// c1-cf (ALT1) - xor rn
+/* c1-cf (ALT1) - xor rn*/
 #define FX_XOR(reg) \
-	uint32	v = SREG ^ GSU.avReg[reg]; \
+	uint32_t	v = SREG ^ GSU.avReg[reg]; \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -3246,9 +3472,9 @@ static void fx_xor_r15 (void)
 	FX_XOR(15);
 }
 
-// c1-cf (ALT2) - or #n
+/* c1-cf (ALT2) - or #n*/
 #define FX_OR_I(imm) \
-	uint32	v = SREG | imm; \
+	uint32_t	v = SREG | imm; \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -3331,9 +3557,9 @@ static void fx_or_i15 (void)
 	FX_OR_I(15);
 }
 
-// c1-cf (ALT3) - xor #n
+/* c1-cf (ALT3) - xor #n*/
 #define FX_XOR_I(imm) \
-	uint32	v = SREG ^ imm; \
+	uint32_t	v = SREG ^ imm; \
 	R15++; \
 	DREG = v; \
 	GSU.vSign = v; \
@@ -3416,7 +3642,7 @@ static void fx_xor_i15 (void)
 	FX_XOR_I(15);
 }
 
-// d0-de - inc rn - increase by one
+/* d0-de - inc rn - increase by one*/
 #define FX_INC(reg) \
 	GSU.avReg[reg] += 1; \
 	GSU.vSign = GSU.avReg[reg]; \
@@ -3500,13 +3726,15 @@ static void fx_inc_r14 (void)
 	READR14;
 }
 
-// df - getc - transfer ROM buffer to color register
+/* df - getc - transfer ROM buffer to color register*/
 static void fx_getc (void)
 {
+	uint8_t c;
+
 #ifndef FX_DO_ROMBUFFER
-	uint8	c = ROM(R14);
+	c = ROM(R14);
 #else
-	uint8	c = GSU.vRomBuffer;
+	c = GSU.vRomBuffer;
 #endif
 
 	if (GSU.vPlotOptionReg & 0x04)
@@ -3524,7 +3752,7 @@ static void fx_getc (void)
 	R15++;
 }
 
-// df (ALT2) - ramb - set current RAM bank
+/* df (ALT2) - ramb - set current RAM bank*/
 static void fx_ramb (void)
 {
 	GSU.vRamBankReg = SREG & (FX_RAM_BANKS - 1);
@@ -3533,7 +3761,7 @@ static void fx_ramb (void)
 	R15++;
 }
 
-// df (ALT3) - romb - set current ROM bank
+/* df (ALT3) - romb - set current ROM bank*/
 static void fx_romb (void)
 {
 	GSU.vRomBankReg = USEX8(SREG) & 0x7f;
@@ -3542,7 +3770,7 @@ static void fx_romb (void)
 	R15++;
 }
 
-// e0-ee - dec rn - decrement by one
+/* e0-ee - dec rn - decrement by one*/
 #define FX_DEC(reg) \
 	GSU.avReg[reg] -= 1; \
 	GSU.vSign = GSU.avReg[reg]; \
@@ -3626,14 +3854,14 @@ static void fx_dec_r14 (void)
 	READR14;
 }
 
-// ef - getb - get byte from ROM at address R14
+/* ef - getb - get byte from ROM at address R14*/
 static void fx_getb (void)
 {
-	uint32	v;
+	uint32_t	v;
 #ifndef FX_DO_ROMBUFFER
-	v = (uint32) ROM(R14);
+	v = (uint32_t) ROM(R14);
 #else
-	v = (uint32) GSU.vRomBuffer;
+	v = (uint32_t) GSU.vRomBuffer;
 #endif
 	R15++;
 	DREG = v;
@@ -3641,14 +3869,14 @@ static void fx_getb (void)
 	CLRFLAGS;
 }
 
-// ef (ALT1) - getbh - get high-byte from ROM at address R14
+/* ef (ALT1) - getbh - get high-byte from ROM at address R14*/
 static void fx_getbh (void)
 {
-	uint32	v;
+	uint32_t	v;
 #ifndef FX_DO_ROMBUFFER
-	uint32	c = (uint32) ROM(R14);
+	uint32_t	c = (uint32_t) ROM(R14);
 #else
-	uint32	c = USEX8(GSU.vRomBuffer);
+	uint32_t	c = USEX8(GSU.vRomBuffer);
 #endif
 	v = USEX8(SREG) | (c << 8);
 	R15++;
@@ -3657,14 +3885,15 @@ static void fx_getbh (void)
 	CLRFLAGS;
 }
 
-// ef (ALT2) - getbl - get low-byte from ROM at address R14
+/* ef (ALT2) - getbl - get low-byte from ROM at address R14*/
 static void fx_getbl (void)
 {
-	uint32	v;
+	uint32_t	c, v;
+
 #ifndef FX_DO_ROMBUFFER
-	uint32	c = (uint32) ROM(R14);
+	c = (uint32_t) ROM(R14);
 #else
-	uint32	c = USEX8(GSU.vRomBuffer);
+	c = USEX8(GSU.vRomBuffer);
 #endif
 	v = (SREG & 0xff00) | c;
 	R15++;
@@ -3673,12 +3902,12 @@ static void fx_getbl (void)
 	CLRFLAGS;
 }
 
-// ef (ALT3) - getbs - get sign extended byte from ROM at address R14
+/* ef (ALT3) - getbs - get sign extended byte from ROM at address R14*/
 static void fx_getbs (void)
 {
-	uint32	v;
+	uint32_t	v;
 #ifndef FX_DO_ROMBUFFER
-	int8	c;
+	int8_t	c;
 	c = ROM(R14);
 	v = SEX8(c);
 #else
@@ -3690,9 +3919,9 @@ static void fx_getbs (void)
 	CLRFLAGS;
 }
 
-// f0-ff - iwt rn, #xx - immediate word transfer to register
+/* f0-ff - iwt rn, #xx - immediate word transfer to register*/
 #define FX_IWT(reg) \
-	uint32	v = PIPE; \
+	uint32_t	v = PIPE; \
 	R15++; \
 	FETCHPIPE; \
 	R15++; \
@@ -3783,7 +4012,7 @@ static void fx_iwt_r15 (void)
 	FX_IWT(15);
 }
 
-// f0-ff (ALT1) - lm rn, (xx) - load word from RAM
+/* f0-ff (ALT1) - lm rn, (xx) - load word from RAM*/
 #define FX_LM(reg) \
 	GSU.vLastRamAdr = PIPE; \
 	R15++; \
@@ -3877,18 +4106,18 @@ static void fx_lm_r15 (void)
 	FX_LM(15);
 }
 
-// f0-ff (ALT2) - sm (xx), rn - store word in RAM
-// XXX: If rn == r15, is the value of r15 before or after the extra bytes are read ?
+/* f0-ff (ALT2) - sm (xx), rn - store word in RAM*/
+/* XXX: If rn == r15, is the value of r15 before or after the extra bytes are read ?*/
 #define FX_SM(reg) \
-	uint32	v = GSU.avReg[reg]; \
+	uint32_t	v = GSU.avReg[reg]; \
 	GSU.vLastRamAdr = PIPE; \
 	R15++; \
 	FETCHPIPE; \
 	R15++; \
 	GSU.vLastRamAdr |= USEX8(PIPE) << 8; \
 	FETCHPIPE; \
-	RAM(GSU.vLastRamAdr) = (uint8) v; \
-	RAM(GSU.vLastRamAdr ^ 1) = (uint8) (v >> 8); \
+	RAM(GSU.vLastRamAdr) = (uint8_t) v; \
+	RAM(GSU.vLastRamAdr ^ 1) = (uint8_t) (v >> 8); \
 	CLRFLAGS; \
 	R15++
 
@@ -3972,292 +4201,647 @@ static void fx_sm_r15 (void)
 	FX_SM(15);
 }
 
-// GSU executions functions
+/* Special table for the different plot configurations*/
 
-uint32 fx_run (uint32 nInstructions)
-{
-	GSU.vCounter = nInstructions;
-	while (TF(G) && (GSU.vCounter-- > 0))
-		FX_STEP;
-#if 0
-#ifndef FX_ADDRESS_CHECK
-	GSU.vPipeAdr = USEX16(R15 - 1) | (USEX8(GSU.vPrgBankReg) << 16);
-#endif
-#endif
-
-	return (nInstructions - GSU.vInstCount);
-}
-
-/*
-uint32 fx_run_to_breakpoint (uint32 nInstructions)
-{
-	uint32	vCounter = 0;
-
-	while (TF(G) && vCounter < nInstructions)
-	{
-		vCounter++;
-		FX_STEP;
-
-		if (USEX16(R15) == GSU.vBreakPoint)
-		{
-			GSU.vErrorCode = FX_BREAKPOINT;
-			break;
-		}
-	}
-
-#if 0
-#ifndef FX_ADDRESS_CHECK
-	GSU.vPipeAdr = USEX16(R15 - 1) | (USEX8(GSU.vPrgBankReg) << 16);
-#endif
-#endif
-
-	return (vCounter);
-}
-*/
-
-/*
-uint32 fx_step_over (uint32 nInstructions)
-{
-	uint32	vCounter = 0;
-
-	while (TF(G) && vCounter < nInstructions)
-	{
-		vCounter++;
-		FX_STEP;
-
-		if (USEX16(R15) == GSU.vBreakPoint)
-		{
-			GSU.vErrorCode = FX_BREAKPOINT;
-			break;
-		}
-
-		if (USEX16(R15) == GSU.vStepPoint)
-			break;
-	}
-
-#if 0
-#ifndef FX_ADDRESS_CHECK
-	GSU.vPipeAdr = USEX16(R15 - 1) | (USEX8(GSU.vPrgBankReg) << 16);
-#endif
-#endif
-
-	return (vCounter);
-}
-*/
-
-// Special table for the different plot configurations
-
-void (*fx_PlotTable[]) (void) =
+static void (*fx_PlotTable[]) (void) =
 {
 	&fx_plot_2bit, &fx_plot_4bit, &fx_plot_4bit, &fx_plot_8bit, &fx_plot_obj,
 	&fx_rpix_2bit, &fx_rpix_4bit, &fx_rpix_4bit, &fx_rpix_8bit, &fx_rpix_obj
 };
 
-// Opcode table
+/* Opcode table*/
 
-void (*fx_OpcodeTable[]) (void) =
+static void (*fx_OpcodeTable[]) (void) =
 {
-	// ALT0 Table
+	/* ALT0 Table*/
 
-	// 00 - 0f
+	/* 00 - 0f*/
 	&fx_stop,      &fx_nop,       &fx_cache,     &fx_lsr,       &fx_rol,       &fx_bra,       &fx_bge,       &fx_blt,
 	&fx_bne,       &fx_beq,       &fx_bpl,       &fx_bmi,       &fx_bcc,       &fx_bcs,       &fx_bvc,       &fx_bvs,
-	// 10 - 1f
+	/* 10 - 1f*/
 	&fx_to_r0,     &fx_to_r1,     &fx_to_r2,     &fx_to_r3,     &fx_to_r4,     &fx_to_r5,     &fx_to_r6,     &fx_to_r7,
 	&fx_to_r8,     &fx_to_r9,     &fx_to_r10,    &fx_to_r11,    &fx_to_r12,    &fx_to_r13,    &fx_to_r14,    &fx_to_r15,
-	// 20 - 2f
+	/* 20 - 2f*/
 	&fx_with_r0,   &fx_with_r1,   &fx_with_r2,   &fx_with_r3,   &fx_with_r4,   &fx_with_r5,   &fx_with_r6,   &fx_with_r7,
 	&fx_with_r8,   &fx_with_r9,   &fx_with_r10,  &fx_with_r11,  &fx_with_r12,  &fx_with_r13,  &fx_with_r14,  &fx_with_r15,
-	// 30 - 3f
+	/* 30 - 3f*/
 	&fx_stw_r0,    &fx_stw_r1,    &fx_stw_r2,    &fx_stw_r3,    &fx_stw_r4,    &fx_stw_r5,    &fx_stw_r6,    &fx_stw_r7,
 	&fx_stw_r8,    &fx_stw_r9,    &fx_stw_r10,   &fx_stw_r11,   &fx_loop,      &fx_alt1,      &fx_alt2,      &fx_alt3,
-	// 40 - 4f
+	/* 40 - 4f*/
 	&fx_ldw_r0,    &fx_ldw_r1,    &fx_ldw_r2,    &fx_ldw_r3,    &fx_ldw_r4,    &fx_ldw_r5,    &fx_ldw_r6,    &fx_ldw_r7,
 	&fx_ldw_r8,    &fx_ldw_r9,    &fx_ldw_r10,   &fx_ldw_r11,   &fx_plot_2bit, &fx_swap,      &fx_color,     &fx_not,
-	// 50 - 5f
+	/* 50 - 5f*/
 	&fx_add_r0,    &fx_add_r1,    &fx_add_r2,    &fx_add_r3,    &fx_add_r4,    &fx_add_r5,    &fx_add_r6,    &fx_add_r7,
 	&fx_add_r8,    &fx_add_r9,    &fx_add_r10,   &fx_add_r11,   &fx_add_r12,   &fx_add_r13,   &fx_add_r14,   &fx_add_r15,
-	// 60 - 6f
+	/* 60 - 6f*/
 	&fx_sub_r0,    &fx_sub_r1,    &fx_sub_r2,    &fx_sub_r3,    &fx_sub_r4,    &fx_sub_r5,    &fx_sub_r6,    &fx_sub_r7,
 	&fx_sub_r8,    &fx_sub_r9,    &fx_sub_r10,   &fx_sub_r11,   &fx_sub_r12,   &fx_sub_r13,   &fx_sub_r14,   &fx_sub_r15,
-	// 70 - 7f
+	/* 70 - 7f*/
 	&fx_merge,     &fx_and_r1,    &fx_and_r2,    &fx_and_r3,    &fx_and_r4,    &fx_and_r5,    &fx_and_r6,    &fx_and_r7,
 	&fx_and_r8,    &fx_and_r9,    &fx_and_r10,   &fx_and_r11,   &fx_and_r12,   &fx_and_r13,   &fx_and_r14,   &fx_and_r15,
-	// 80 - 8f
+	/* 80 - 8f*/
 	&fx_mult_r0,   &fx_mult_r1,   &fx_mult_r2,   &fx_mult_r3,   &fx_mult_r4,   &fx_mult_r5,   &fx_mult_r6,   &fx_mult_r7,
 	&fx_mult_r8,   &fx_mult_r9,   &fx_mult_r10,  &fx_mult_r11,  &fx_mult_r12,  &fx_mult_r13,  &fx_mult_r14,  &fx_mult_r15,
-	// 90 - 9f
+	/* 90 - 9f*/
 	&fx_sbk,       &fx_link_i1,   &fx_link_i2,   &fx_link_i3,   &fx_link_i4,   &fx_sex,       &fx_asr,       &fx_ror,
 	&fx_jmp_r8,    &fx_jmp_r9,    &fx_jmp_r10,   &fx_jmp_r11,   &fx_jmp_r12,   &fx_jmp_r13,   &fx_lob,       &fx_fmult,
-	// a0 - af
+	/* a0 - af*/
 	&fx_ibt_r0,    &fx_ibt_r1,    &fx_ibt_r2,    &fx_ibt_r3,    &fx_ibt_r4,    &fx_ibt_r5,    &fx_ibt_r6,    &fx_ibt_r7,
 	&fx_ibt_r8,    &fx_ibt_r9,    &fx_ibt_r10,   &fx_ibt_r11,   &fx_ibt_r12,   &fx_ibt_r13,   &fx_ibt_r14,   &fx_ibt_r15,
-	// b0 - bf
+	/* b0 - bf*/
 	&fx_from_r0,   &fx_from_r1,   &fx_from_r2,   &fx_from_r3,   &fx_from_r4,   &fx_from_r5,   &fx_from_r6,   &fx_from_r7,
 	&fx_from_r8,   &fx_from_r9,   &fx_from_r10,  &fx_from_r11,  &fx_from_r12,  &fx_from_r13,  &fx_from_r14,  &fx_from_r15,
-	// c0 - cf
+	/* c0 - cf*/
 	&fx_hib,       &fx_or_r1,     &fx_or_r2,     &fx_or_r3,     &fx_or_r4,     &fx_or_r5,     &fx_or_r6,     &fx_or_r7,
 	&fx_or_r8,     &fx_or_r9,     &fx_or_r10,    &fx_or_r11,    &fx_or_r12,    &fx_or_r13,    &fx_or_r14,    &fx_or_r15,
-	// d0 - df
+	/* d0 - df*/
 	&fx_inc_r0,    &fx_inc_r1,    &fx_inc_r2,    &fx_inc_r3,    &fx_inc_r4,    &fx_inc_r5,    &fx_inc_r6,    &fx_inc_r7,
 	&fx_inc_r8,    &fx_inc_r9,    &fx_inc_r10,   &fx_inc_r11,   &fx_inc_r12,   &fx_inc_r13,   &fx_inc_r14,   &fx_getc,
-	// e0 - ef
+	/* e0 - ef*/
 	&fx_dec_r0,    &fx_dec_r1,    &fx_dec_r2,    &fx_dec_r3,    &fx_dec_r4,    &fx_dec_r5,    &fx_dec_r6,    &fx_dec_r7,
 	&fx_dec_r8,    &fx_dec_r9,    &fx_dec_r10,   &fx_dec_r11,   &fx_dec_r12,   &fx_dec_r13,   &fx_dec_r14,   &fx_getb,
-	// f0 - ff
+	/* f0 - ff*/
 	&fx_iwt_r0,    &fx_iwt_r1,    &fx_iwt_r2,    &fx_iwt_r3,    &fx_iwt_r4,    &fx_iwt_r5,    &fx_iwt_r6,    &fx_iwt_r7,
 	&fx_iwt_r8,    &fx_iwt_r9,    &fx_iwt_r10,   &fx_iwt_r11,   &fx_iwt_r12,   &fx_iwt_r13,   &fx_iwt_r14,   &fx_iwt_r15,
 
-	// ALT1 Table
+	/* ALT1 Table*/
 
-	// 00 - 0f
+	/* 00 - 0f*/
 	&fx_stop,      &fx_nop,       &fx_cache,     &fx_lsr,       &fx_rol,       &fx_bra,       &fx_bge,       &fx_blt,
 	&fx_bne,       &fx_beq,       &fx_bpl,       &fx_bmi,       &fx_bcc,       &fx_bcs,       &fx_bvc,       &fx_bvs,
-	// 10 - 1f
+	/* 10 - 1f*/
 	&fx_to_r0,     &fx_to_r1,     &fx_to_r2,     &fx_to_r3,     &fx_to_r4,     &fx_to_r5,     &fx_to_r6,     &fx_to_r7,
 	&fx_to_r8,     &fx_to_r9,     &fx_to_r10,    &fx_to_r11,    &fx_to_r12,    &fx_to_r13,    &fx_to_r14,    &fx_to_r15,
-	// 20 - 2f
+	/* 20 - 2f*/
 	&fx_with_r0,   &fx_with_r1,   &fx_with_r2,   &fx_with_r3,   &fx_with_r4,   &fx_with_r5,   &fx_with_r6,   &fx_with_r7,
 	&fx_with_r8,   &fx_with_r9,   &fx_with_r10,  &fx_with_r11,  &fx_with_r12,  &fx_with_r13,  &fx_with_r14,  &fx_with_r15,
-	// 30 - 3f
+	/* 30 - 3f*/
 	&fx_stb_r0,    &fx_stb_r1,    &fx_stb_r2,    &fx_stb_r3,    &fx_stb_r4,    &fx_stb_r5,    &fx_stb_r6,    &fx_stb_r7,
 	&fx_stb_r8,    &fx_stb_r9,    &fx_stb_r10,   &fx_stb_r11,   &fx_loop,      &fx_alt1,      &fx_alt2,      &fx_alt3,
-	// 40 - 4f
+	/* 40 - 4f*/
 	&fx_ldb_r0,    &fx_ldb_r1,    &fx_ldb_r2,    &fx_ldb_r3,    &fx_ldb_r4,    &fx_ldb_r5,    &fx_ldb_r6,    &fx_ldb_r7,
 	&fx_ldb_r8,    &fx_ldb_r9,    &fx_ldb_r10,   &fx_ldb_r11,   &fx_rpix_2bit, &fx_swap,      &fx_cmode,     &fx_not,
-	// 50 - 5f
+	/* 50 - 5f*/
 	&fx_adc_r0,    &fx_adc_r1,    &fx_adc_r2,    &fx_adc_r3,    &fx_adc_r4,    &fx_adc_r5,    &fx_adc_r6,    &fx_adc_r7,
 	&fx_adc_r8,    &fx_adc_r9,    &fx_adc_r10,   &fx_adc_r11,   &fx_adc_r12,   &fx_adc_r13,   &fx_adc_r14,   &fx_adc_r15,
-	// 60 - 6f
+	/* 60 - 6f*/
 	&fx_sbc_r0,    &fx_sbc_r1,    &fx_sbc_r2,    &fx_sbc_r3,    &fx_sbc_r4,    &fx_sbc_r5,    &fx_sbc_r6,    &fx_sbc_r7,
 	&fx_sbc_r8,    &fx_sbc_r9,    &fx_sbc_r10,   &fx_sbc_r11,   &fx_sbc_r12,   &fx_sbc_r13,   &fx_sbc_r14,   &fx_sbc_r15,
-	// 70 - 7f
+	/* 70 - 7f*/
 	&fx_merge,     &fx_bic_r1,    &fx_bic_r2,    &fx_bic_r3,    &fx_bic_r4,    &fx_bic_r5,    &fx_bic_r6,    &fx_bic_r7,
 	&fx_bic_r8,    &fx_bic_r9,    &fx_bic_r10,   &fx_bic_r11,   &fx_bic_r12,   &fx_bic_r13,   &fx_bic_r14,   &fx_bic_r15,
-	// 80 - 8f
+	/* 80 - 8f*/
 	&fx_umult_r0,  &fx_umult_r1,  &fx_umult_r2,  &fx_umult_r3,  &fx_umult_r4,  &fx_umult_r5,  &fx_umult_r6,  &fx_umult_r7,
 	&fx_umult_r8,  &fx_umult_r9,  &fx_umult_r10, &fx_umult_r11, &fx_umult_r12, &fx_umult_r13, &fx_umult_r14, &fx_umult_r15,
-	// 90 - 9f
+	/* 90 - 9f*/
 	&fx_sbk,       &fx_link_i1,   &fx_link_i2,   &fx_link_i3,   &fx_link_i4,   &fx_sex,       &fx_div2,      &fx_ror,
 	&fx_ljmp_r8,   &fx_ljmp_r9,   &fx_ljmp_r10,  &fx_ljmp_r11,  &fx_ljmp_r12,  &fx_ljmp_r13,  &fx_lob,       &fx_lmult,
-	// a0 - af
+	/* a0 - af*/
 	&fx_lms_r0,    &fx_lms_r1,    &fx_lms_r2,    &fx_lms_r3,    &fx_lms_r4,    &fx_lms_r5,    &fx_lms_r6,    &fx_lms_r7,
 	&fx_lms_r8,    &fx_lms_r9,    &fx_lms_r10,   &fx_lms_r11,   &fx_lms_r12,   &fx_lms_r13,   &fx_lms_r14,   &fx_lms_r15,
-	// b0 - bf
+	/* b0 - bf*/
 	&fx_from_r0,   &fx_from_r1,   &fx_from_r2,   &fx_from_r3,   &fx_from_r4,   &fx_from_r5,   &fx_from_r6,   &fx_from_r7,
 	&fx_from_r8,   &fx_from_r9,   &fx_from_r10,  &fx_from_r11,  &fx_from_r12,  &fx_from_r13,  &fx_from_r14,  &fx_from_r15,
-	// c0 - cf
+	/* c0 - cf*/
 	&fx_hib,       &fx_xor_r1,    &fx_xor_r2,    &fx_xor_r3,    &fx_xor_r4,    &fx_xor_r5,    &fx_xor_r6,    &fx_xor_r7,
 	&fx_xor_r8,    &fx_xor_r9,    &fx_xor_r10,   &fx_xor_r11,   &fx_xor_r12,   &fx_xor_r13,   &fx_xor_r14,   &fx_xor_r15,
-	// d0 - df
+	/* d0 - df*/
 	&fx_inc_r0,    &fx_inc_r1,    &fx_inc_r2,    &fx_inc_r3,    &fx_inc_r4,    &fx_inc_r5,    &fx_inc_r6,    &fx_inc_r7,
 	&fx_inc_r8,    &fx_inc_r9,    &fx_inc_r10,   &fx_inc_r11,   &fx_inc_r12,   &fx_inc_r13,   &fx_inc_r14,   &fx_getc,
-	// e0 - ef
+	/* e0 - ef*/
 	&fx_dec_r0,    &fx_dec_r1,    &fx_dec_r2,    &fx_dec_r3,    &fx_dec_r4,    &fx_dec_r5,    &fx_dec_r6,    &fx_dec_r7,
 	&fx_dec_r8,    &fx_dec_r9,    &fx_dec_r10,   &fx_dec_r11,   &fx_dec_r12,   &fx_dec_r13,   &fx_dec_r14,   &fx_getbh,
-	// f0 - ff
+	/* f0 - ff*/
 	&fx_lm_r0,     &fx_lm_r1,     &fx_lm_r2,     &fx_lm_r3,     &fx_lm_r4,     &fx_lm_r5,     &fx_lm_r6,     &fx_lm_r7,
 	&fx_lm_r8,     &fx_lm_r9,     &fx_lm_r10,    &fx_lm_r11,    &fx_lm_r12,    &fx_lm_r13,    &fx_lm_r14,    &fx_lm_r15,
 
-	// ALT2 Table
+	/* ALT2 Table*/
 
-	// 00 - 0f
+	/* 00 - 0f*/
 	&fx_stop,      &fx_nop,       &fx_cache,     &fx_lsr,       &fx_rol,       &fx_bra,       &fx_bge,       &fx_blt,
 	&fx_bne,       &fx_beq,       &fx_bpl,       &fx_bmi,       &fx_bcc,       &fx_bcs,       &fx_bvc,       &fx_bvs,
-	// 10 - 1f
+	/* 10 - 1f*/
 	&fx_to_r0,     &fx_to_r1,     &fx_to_r2,     &fx_to_r3,     &fx_to_r4,     &fx_to_r5,     &fx_to_r6,     &fx_to_r7,
 	&fx_to_r8,     &fx_to_r9,     &fx_to_r10,    &fx_to_r11,    &fx_to_r12,    &fx_to_r13,    &fx_to_r14,    &fx_to_r15,
-	// 20 - 2f
+	/* 20 - 2f*/
 	&fx_with_r0,   &fx_with_r1,   &fx_with_r2,   &fx_with_r3,   &fx_with_r4,   &fx_with_r5,   &fx_with_r6,   &fx_with_r7,
 	&fx_with_r8,   &fx_with_r9,   &fx_with_r10,  &fx_with_r11,  &fx_with_r12,  &fx_with_r13,  &fx_with_r14,  &fx_with_r15,
-	// 30 - 3f
+	/* 30 - 3f*/
 	&fx_stw_r0,    &fx_stw_r1,    &fx_stw_r2,    &fx_stw_r3,    &fx_stw_r4,    &fx_stw_r5,    &fx_stw_r6,    &fx_stw_r7,
 	&fx_stw_r8,    &fx_stw_r9,    &fx_stw_r10,   &fx_stw_r11,   &fx_loop,      &fx_alt1,      &fx_alt2,      &fx_alt3,
-	// 40 - 4f
+	/* 40 - 4f*/
 	&fx_ldw_r0,    &fx_ldw_r1,    &fx_ldw_r2,    &fx_ldw_r3,    &fx_ldw_r4,    &fx_ldw_r5,    &fx_ldw_r6,    &fx_ldw_r7,
 	&fx_ldw_r8,    &fx_ldw_r9,    &fx_ldw_r10,   &fx_ldw_r11,   &fx_plot_2bit, &fx_swap,      &fx_color,     &fx_not,
-	// 50 - 5f
+	/* 50 - 5f*/
 	&fx_add_i0,    &fx_add_i1,    &fx_add_i2,    &fx_add_i3,    &fx_add_i4,    &fx_add_i5,    &fx_add_i6,    &fx_add_i7,
 	&fx_add_i8,    &fx_add_i9,    &fx_add_i10,   &fx_add_i11,   &fx_add_i12,   &fx_add_i13,   &fx_add_i14,   &fx_add_i15,
-	// 60 - 6f
+	/* 60 - 6f*/
 	&fx_sub_i0,    &fx_sub_i1,    &fx_sub_i2,    &fx_sub_i3,    &fx_sub_i4,    &fx_sub_i5,    &fx_sub_i6,    &fx_sub_i7,
 	&fx_sub_i8,    &fx_sub_i9,    &fx_sub_i10,   &fx_sub_i11,   &fx_sub_i12,   &fx_sub_i13,   &fx_sub_i14,   &fx_sub_i15,
-	// 70 - 7f
+	/* 70 - 7f*/
 	&fx_merge,     &fx_and_i1,    &fx_and_i2,    &fx_and_i3,    &fx_and_i4,    &fx_and_i5,    &fx_and_i6,    &fx_and_i7,
 	&fx_and_i8,    &fx_and_i9,    &fx_and_i10,   &fx_and_i11,   &fx_and_i12,   &fx_and_i13,   &fx_and_i14,   &fx_and_i15,
-	// 80 - 8f
+	/* 80 - 8f*/
 	&fx_mult_i0,   &fx_mult_i1,   &fx_mult_i2,   &fx_mult_i3,   &fx_mult_i4,   &fx_mult_i5,   &fx_mult_i6,   &fx_mult_i7,
 	&fx_mult_i8,   &fx_mult_i9,   &fx_mult_i10,  &fx_mult_i11,  &fx_mult_i12,  &fx_mult_i13,  &fx_mult_i14,  &fx_mult_i15,
-	// 90 - 9f
+	/* 90 - 9f*/
 	&fx_sbk,       &fx_link_i1,   &fx_link_i2,   &fx_link_i3,   &fx_link_i4,   &fx_sex,       &fx_asr,       &fx_ror,
 	&fx_jmp_r8,    &fx_jmp_r9,    &fx_jmp_r10,   &fx_jmp_r11,   &fx_jmp_r12,   &fx_jmp_r13,   &fx_lob,       &fx_fmult,
-	// a0 - af
+	/* a0 - af*/
 	&fx_sms_r0,    &fx_sms_r1,    &fx_sms_r2,    &fx_sms_r3,    &fx_sms_r4,    &fx_sms_r5,    &fx_sms_r6,    &fx_sms_r7,
 	&fx_sms_r8,    &fx_sms_r9,    &fx_sms_r10,   &fx_sms_r11,   &fx_sms_r12,   &fx_sms_r13,   &fx_sms_r14,   &fx_sms_r15,
-	// b0 - bf
+	/* b0 - bf*/
 	&fx_from_r0,   &fx_from_r1,   &fx_from_r2,   &fx_from_r3,   &fx_from_r4,   &fx_from_r5,   &fx_from_r6,   &fx_from_r7,
 	&fx_from_r8,   &fx_from_r9,   &fx_from_r10,  &fx_from_r11,  &fx_from_r12,  &fx_from_r13,  &fx_from_r14,  &fx_from_r15,
-	// c0 - cf
+	/* c0 - cf*/
 	&fx_hib,       &fx_or_i1,     &fx_or_i2,     &fx_or_i3,     &fx_or_i4,     &fx_or_i5,     &fx_or_i6,     &fx_or_i7,
 	&fx_or_i8,     &fx_or_i9,     &fx_or_i10,    &fx_or_i11,    &fx_or_i12,    &fx_or_i13,    &fx_or_i14,    &fx_or_i15,
-	// d0 - df
+	/* d0 - df*/
 	&fx_inc_r0,    &fx_inc_r1,    &fx_inc_r2,    &fx_inc_r3,    &fx_inc_r4,    &fx_inc_r5,    &fx_inc_r6,    &fx_inc_r7,
 	&fx_inc_r8,    &fx_inc_r9,    &fx_inc_r10,   &fx_inc_r11,   &fx_inc_r12,   &fx_inc_r13,   &fx_inc_r14,   &fx_ramb,
-	// e0 - ef
+	/* e0 - ef*/
 	&fx_dec_r0,    &fx_dec_r1,    &fx_dec_r2,    &fx_dec_r3,    &fx_dec_r4,    &fx_dec_r5,    &fx_dec_r6,    &fx_dec_r7,
 	&fx_dec_r8,    &fx_dec_r9,    &fx_dec_r10,   &fx_dec_r11,   &fx_dec_r12,   &fx_dec_r13,   &fx_dec_r14,   &fx_getbl,
-	// f0 - ff
+	/* f0 - ff*/
 	&fx_sm_r0,     &fx_sm_r1,     &fx_sm_r2,     &fx_sm_r3,     &fx_sm_r4,     &fx_sm_r5,     &fx_sm_r6,     &fx_sm_r7,
 	&fx_sm_r8,     &fx_sm_r9,     &fx_sm_r10,    &fx_sm_r11,    &fx_sm_r12,    &fx_sm_r13,    &fx_sm_r14,    &fx_sm_r15,
 
-	// ALT3 Table
+	/* ALT3 Table*/
 
-	// 00 - 0f
+	/* 00 - 0f*/
 	&fx_stop,      &fx_nop,       &fx_cache,     &fx_lsr,       &fx_rol,       &fx_bra,       &fx_bge,       &fx_blt,
 	&fx_bne,       &fx_beq,       &fx_bpl,       &fx_bmi,       &fx_bcc,       &fx_bcs,       &fx_bvc,       &fx_bvs,
-	// 10 - 1f
+	/* 10 - 1f*/
 	&fx_to_r0,     &fx_to_r1,     &fx_to_r2,     &fx_to_r3,     &fx_to_r4,     &fx_to_r5,     &fx_to_r6,     &fx_to_r7,
 	&fx_to_r8,     &fx_to_r9,     &fx_to_r10,    &fx_to_r11,    &fx_to_r12,    &fx_to_r13,    &fx_to_r14,    &fx_to_r15,
-	// 20 - 2f
+	/* 20 - 2f*/
 	&fx_with_r0,   &fx_with_r1,   &fx_with_r2,   &fx_with_r3,   &fx_with_r4,   &fx_with_r5,   &fx_with_r6,   &fx_with_r7,
 	&fx_with_r8,   &fx_with_r9,   &fx_with_r10,  &fx_with_r11,  &fx_with_r12,  &fx_with_r13,  &fx_with_r14,  &fx_with_r15,
-	// 30 - 3f
+	/* 30 - 3f*/
 	&fx_stb_r0,    &fx_stb_r1,    &fx_stb_r2,    &fx_stb_r3,    &fx_stb_r4,    &fx_stb_r5,    &fx_stb_r6,    &fx_stb_r7,
 	&fx_stb_r8,    &fx_stb_r9,    &fx_stb_r10,   &fx_stb_r11,   &fx_loop,      &fx_alt1,      &fx_alt2,      &fx_alt3,
-	// 40 - 4f
+	/* 40 - 4f*/
 	&fx_ldb_r0,    &fx_ldb_r1,    &fx_ldb_r2,    &fx_ldb_r3,    &fx_ldb_r4,    &fx_ldb_r5,    &fx_ldb_r6,    &fx_ldb_r7,
 	&fx_ldb_r8,    &fx_ldb_r9,    &fx_ldb_r10,   &fx_ldb_r11,   &fx_rpix_2bit, &fx_swap,      &fx_cmode,     &fx_not,
-	// 50 - 5f
+	/* 50 - 5f*/
 	&fx_adc_i0,    &fx_adc_i1,    &fx_adc_i2,    &fx_adc_i3,    &fx_adc_i4,    &fx_adc_i5,    &fx_adc_i6,    &fx_adc_i7,
 	&fx_adc_i8,    &fx_adc_i9,    &fx_adc_i10,   &fx_adc_i11,   &fx_adc_i12,   &fx_adc_i13,   &fx_adc_i14,   &fx_adc_i15,
-	// 60 - 6f
+	/* 60 - 6f*/
 	&fx_cmp_r0,    &fx_cmp_r1,    &fx_cmp_r2,    &fx_cmp_r3,    &fx_cmp_r4,    &fx_cmp_r5,    &fx_cmp_r6,    &fx_cmp_r7,
 	&fx_cmp_r8,    &fx_cmp_r9,    &fx_cmp_r10,   &fx_cmp_r11,   &fx_cmp_r12,   &fx_cmp_r13,   &fx_cmp_r14,   &fx_cmp_r15,
-	// 70 - 7f
+	/* 70 - 7f*/
 	&fx_merge,     &fx_bic_i1,    &fx_bic_i2,    &fx_bic_i3,    &fx_bic_i4,    &fx_bic_i5,    &fx_bic_i6,    &fx_bic_i7,
 	&fx_bic_i8,    &fx_bic_i9,    &fx_bic_i10,   &fx_bic_i11,   &fx_bic_i12,   &fx_bic_i13,   &fx_bic_i14,   &fx_bic_i15,
-	// 80 - 8f
+	/* 80 - 8f*/
 	&fx_umult_i0,  &fx_umult_i1,  &fx_umult_i2,  &fx_umult_i3,  &fx_umult_i4,  &fx_umult_i5,  &fx_umult_i6,  &fx_umult_i7,
 	&fx_umult_i8,  &fx_umult_i9,  &fx_umult_i10, &fx_umult_i11, &fx_umult_i12, &fx_umult_i13, &fx_umult_i14, &fx_umult_i15,
-	// 90 - 9f
+	/* 90 - 9f*/
 	&fx_sbk,       &fx_link_i1,   &fx_link_i2,   &fx_link_i3,   &fx_link_i4,   &fx_sex,       &fx_div2,      &fx_ror,
 	&fx_ljmp_r8,   &fx_ljmp_r9,   &fx_ljmp_r10,  &fx_ljmp_r11,  &fx_ljmp_r12,  &fx_ljmp_r13,  &fx_lob,       &fx_lmult,
-	// a0 - af
+	/* a0 - af*/
 	&fx_lms_r0,    &fx_lms_r1,    &fx_lms_r2,    &fx_lms_r3,    &fx_lms_r4,    &fx_lms_r5,    &fx_lms_r6,    &fx_lms_r7,
 	&fx_lms_r8,    &fx_lms_r9,    &fx_lms_r10,   &fx_lms_r11,   &fx_lms_r12,   &fx_lms_r13,   &fx_lms_r14,   &fx_lms_r15,
-	// b0 - bf
+	/* b0 - bf*/
 	&fx_from_r0,   &fx_from_r1,   &fx_from_r2,   &fx_from_r3,   &fx_from_r4,   &fx_from_r5,   &fx_from_r6,   &fx_from_r7,
 	&fx_from_r8,   &fx_from_r9,   &fx_from_r10,  &fx_from_r11,  &fx_from_r12,  &fx_from_r13,  &fx_from_r14,  &fx_from_r15,
-	// c0 - cf
+	/* c0 - cf*/
 	&fx_hib,       &fx_xor_i1,    &fx_xor_i2,    &fx_xor_i3,    &fx_xor_i4,    &fx_xor_i5,    &fx_xor_i6,    &fx_xor_i7,
 	&fx_xor_i8,    &fx_xor_i9,    &fx_xor_i10,   &fx_xor_i11,   &fx_xor_i12,   &fx_xor_i13,   &fx_xor_i14,   &fx_xor_i15,
-	// d0 - df
+	/* d0 - df*/
 	&fx_inc_r0,    &fx_inc_r1,    &fx_inc_r2,    &fx_inc_r3,    &fx_inc_r4,    &fx_inc_r5,    &fx_inc_r6,    &fx_inc_r7,
 	&fx_inc_r8,    &fx_inc_r9,    &fx_inc_r10,   &fx_inc_r11,   &fx_inc_r12,   &fx_inc_r13,   &fx_inc_r14,   &fx_romb,
-	// e0 - ef
+	/* e0 - ef*/
 	&fx_dec_r0,    &fx_dec_r1,    &fx_dec_r2,    &fx_dec_r3,    &fx_dec_r4,    &fx_dec_r5,    &fx_dec_r6,    &fx_dec_r7,
 	&fx_dec_r8,    &fx_dec_r9,    &fx_dec_r10,   &fx_dec_r11,   &fx_dec_r12,   &fx_dec_r13,   &fx_dec_r14,   &fx_getbs,
-	// f0 - ff
+	/* f0 - ff*/
 	&fx_lm_r0,     &fx_lm_r1,     &fx_lm_r2,     &fx_lm_r3,     &fx_lm_r4,     &fx_lm_r5,     &fx_lm_r6,     &fx_lm_r7,
 	&fx_lm_r8,     &fx_lm_r9,     &fx_lm_r10,    &fx_lm_r11,    &fx_lm_r12,    &fx_lm_r13,    &fx_lm_r14,    &fx_lm_r15
 };
+
+static void fx_readRegisterSpace (void)
+{
+	uint8_t	*p;
+	int	i, n;
+
+	static const uint32_t	avHeight[] = { 128, 160, 192, 256 };
+	static const uint32_t	avMult[]   = {  16,  32,  32,  64 };
+
+	/*GSU.vErrorCode = 0;*/
+
+	/* Update R0-R15*/
+	p = GSU.pvRegisters;
+	for ( i = 0; i < 16; i++, p += 2)
+		GSU.avReg[i] = (uint32_t) READ_WORD(p);
+
+	/* Update other registers*/
+	p = GSU.pvRegisters;
+	GSU.vStatusReg     =  (uint32_t) READ_WORD(&p[GSU_SFR]);
+	GSU.vPrgBankReg    =  (uint32_t) p[GSU_PBR];
+	GSU.vRomBankReg    =  (uint32_t) p[GSU_ROMBR];
+	GSU.vRamBankReg    = ((uint32_t) p[GSU_RAMBR]) & (FX_RAM_BANKS - 1);
+	GSU.vCacheBaseReg  =  (uint32_t) READ_WORD(&p[GSU_CBR]);
+
+	/* Update status register variables*/
+	GSU.vZero     = !(GSU.vStatusReg & FLG_Z);
+	GSU.vSign     =  (GSU.vStatusReg & FLG_S)  << 12;
+	GSU.vOverflow =  (GSU.vStatusReg & FLG_OV) << 16;
+	GSU.vCarry    =  (GSU.vStatusReg & FLG_CY) >> 2;
+
+	/* Set bank pointers*/
+	GSU.pvRamBank = GSU.apvRamBank[GSU.vRamBankReg & 0x3];
+	GSU.pvRomBank = GSU.apvRomBank[GSU.vRomBankReg];
+	GSU.pvPrgBank = GSU.apvRomBank[GSU.vPrgBankReg];
+
+	/* Set screen pointers*/
+	GSU.pvScreenBase = &GSU.pvRam[USEX8(p[GSU_SCBR]) << 10];
+	n  =  (int) (!!(p[GSU_SCMR] & 0x04));
+	n |= ((int) (!!(p[GSU_SCMR] & 0x20))) << 1;
+	GSU.vScreenHeight = GSU.vScreenRealHeight = avHeight[n];
+	GSU.vMode = p[GSU_SCMR] & 0x03;
+
+	if (n == 3)
+		GSU.vScreenSize = 32768;
+	else
+		GSU.vScreenSize = (GSU.vScreenHeight / 8) * 32 * avMult[GSU.vMode];
+
+	if (GSU.vPlotOptionReg & 0x10) /* OBJ Mode (for drawing into sprites)*/
+		GSU.vScreenHeight = 256;
+
+	if (GSU.pvScreenBase + GSU.vScreenSize > GSU.pvRam + (GSU.nRamBanks * 65536))
+		GSU.pvScreenBase = GSU.pvRam + (GSU.nRamBanks * 65536) - GSU.vScreenSize;
+
+	fx_OpcodeTable[0x04c] = fx_PlotTable[GSU.vMode];
+	fx_OpcodeTable[0x14c] = fx_PlotTable[GSU.vMode + 5];
+	fx_OpcodeTable[0x24c] = fx_PlotTable[GSU.vMode];
+	fx_OpcodeTable[0x34c] = fx_PlotTable[GSU.vMode + 5];
+
+	if (GSU.vMode != GSU.vPrevMode || GSU.vPrevScreenHeight != GSU.vScreenHeight || GSU.vSCBRDirty)
+      fx_computeScreenPointers();
+}
+
+static void FxReset (struct FxInfo_s *psFxInfo)
+{
+	int i;
+	/* Clear all internal variables*/
+	memset((uint8_t *) &GSU, 0, sizeof(struct FxRegs_s));
+
+	/* Set default registers*/
+	GSU.pvSreg = GSU.pvDreg = &R0;
+
+	/* Set RAM and ROM pointers*/
+	GSU.pvRegisters       = psFxInfo->pvRegisters;
+	GSU.nRamBanks         = psFxInfo->nRamBanks;
+	GSU.pvRam             = psFxInfo->pvRam;
+	GSU.nRomBanks         = psFxInfo->nRomBanks;
+	GSU.pvRom             = psFxInfo->pvRom;
+	GSU.vPrevScreenHeight = ~0;
+	GSU.vPrevMode         = ~0;
+
+	/* The GSU can't access more than 2mb (16mbits)*/
+	if (GSU.nRomBanks > 0x20)
+		GSU.nRomBanks = 0x20;
+
+	/* Clear FxChip register space*/
+	memset(GSU.pvRegisters, 0, 0x300);
+
+	/* Set FxChip version Number*/
+	GSU.pvRegisters[0x3b] = 0;
+
+	/* Make ROM bank table*/
+	for ( i = 0; i < 256; i++)
+	{
+		uint32_t	b = i & 0x7f;
+
+		if (b >= 0x40)
+		{
+			if (GSU.nRomBanks > 1)
+				b %= GSU.nRomBanks;
+			else
+				b &= 1;
+
+			GSU.apvRomBank[i] = &GSU.pvRom[b << 16];
+		}
+		else
+		{
+			b %= GSU.nRomBanks * 2;
+			GSU.apvRomBank[i] = &GSU.pvRom[(b << 16) + 0x800000]; /* 8MB SuperFX (fork 8980c6fc) */
+		}
+	}
+
+	/* Make RAM bank table*/
+	for ( i = 0; i < 4; i++)
+	{
+		GSU.apvRamBank[i] = &GSU.pvRam[(i % GSU.nRamBanks) << 16];
+		GSU.apvRomBank[0x70 + i] = GSU.apvRamBank[i];
+	}
+
+	/* Start with a nop in the pipe*/
+	GSU.vPipe = 0x01;
+
+	/* Set pointer to GSU cache*/
+	GSU.pvCache = &GSU.pvRegisters[0x100];
+
+	fx_readRegisterSpace();
+}
+
+void S9xResetSuperFX (void)
+{
+   /* GSU cycles per scanline.  A scanline lasts SNES_CYCLES_PER_SCANLINE (1364)
+    * master-clock cycles, so the number of GSU cycles that elapse in one line is
+    *
+    *    speedPerLine = SuperFXSpeedPerLine * 1364 / master_clock
+    *
+    * This is the hardware-exact form: it uses the real master clock and dot
+    * count rather than a rounded 50/60 Hz refresh.  fps and V_Max both cancel
+    * out, since master_clock == fps * V_Max * SNES_CYCLES_PER_SCANLINE, so the
+    * divisor is a nonzero compile-time constant (no V_Max==0 hazard).
+    *
+    * Integer math throughout: the SNES has no FPU, and this value is the per-line
+    * SuperFX instruction budget, so it must be bit-identical across platforms for
+    * deterministic emulation (netplay/savestates/runahead).  The master-clock
+    * macros are doubles, but the casts are compile-time constant conversions
+    * (21477272.0 / 21281370.0 are exact), so no runtime float op is emitted; the
+    * SuperFXSpeedPerLine * 1364 product needs the 64-bit intermediate.
+    *
+    * FIXME: Snes9x can't execute CPU and SuperFX at a time. Don't ask me what
+    * is the 0.417 baked into SuperFXSpeedPerLineHz :P */
+   uint32_t master_clock = SuperFXPalFlag ? (uint32_t) PAL_MASTER_CLOCK : (uint32_t) NTSC_MASTER_CLOCK;
+
+   SuperFX.speedPerLine = (uint32_t) ((uint64_t) SuperFXSpeedPerLineHz
+                                      * SNES_CYCLES_PER_SCANLINE / master_clock);
+   SuperFX.oneLineDone = FALSE;
+   SuperFX.vFlags = 0;
+   FxReset(&SuperFX);
+}
+
+static uint8_t fx_checkStartAddress (void)
+{
+	/* Execution bank rules ported from mainline snes9x (65ef81ca,
+	 * 986dd2a0): with RON granted, code may run from any ROM bank
+	 * (<= 0x5f or the mirrors at >= 0x80, so higher banks execute);
+	 * with RAN granted, from any bank <= 0x7f (RAM region included).
+	 * The old rules required RON unconditionally and blocked banks
+	 * >= 0x74 outright. The caller already allows a cache-resident
+	 * start before consulting this. */
+	if (SCMR & 16)
+	{
+		if (GSU.vPrgBankReg <= 0x5f || GSU.vPrgBankReg >= 0x80)
+			return (TRUE);
+	}
+
+	if ((SCMR & 8) && GSU.vPrgBankReg <= 0x7f)
+		return (TRUE);
+
+	return (FALSE);
+}
+
+static void fx_writeRegisterSpace (void)
+{
+	int i;
+	uint8_t	*p;
+
+	p = GSU.pvRegisters;
+	for ( i = 0; i < 16; i++, p += 2)
+		WRITE_WORD(p, GSU.avReg[i]);
+
+	/* Update status register*/
+	if (USEX16(GSU.vZero) == 0)
+		SF(Z);
+	else
+		CF(Z);
+
+	if (GSU.vSign & 0x8000)
+		SF(S);
+	else
+		CF(S);
+
+	if (GSU.vOverflow >= 0x8000 || GSU.vOverflow < -0x8000)
+		SF(OV);
+	else
+		CF(OV);
+
+	if (GSU.vCarry)
+		SF(CY);
+	else
+		CF(CY);
+
+	p = GSU.pvRegisters;
+	WRITE_WORD(&p[GSU_SFR], GSU.vStatusReg);
+	p[GSU_PBR]     = (uint8_t)  GSU.vPrgBankReg;
+	p[GSU_ROMBR]   = (uint8_t)  GSU.vRomBankReg;
+	p[GSU_RAMBR]   = (uint8_t)  GSU.vRamBankReg;
+	WRITE_WORD(&p[GSU_CBR], GSU.vCacheBaseReg);
+}
+
+/* NOTE: no use to return anything here*/
+
+/* --- Optional per-opcode GSU cycle-cost model (experimental) -------------------
+ * When fx_cycle_accuracy is 0 the executor is bit-identical to the historical
+ * instruction-count model.  When 1, each opcode is charged an approximate GSU
+ * cycle cost so that multiplies (incl. the MS0 fast/slow bit), RAM/ROM access
+ * and plots consume the per-line budget at hardware-like relative rates.
+ *
+ * The per-line budget is scaled by FX_CYC_AVG_NUM/FX_CYC_AVG_DEN (~2.4), which
+ * un-bakes the legacy 0.417 average-instructions-per-cycle factor so the *average*
+ * throughput (and therefore the overclock scaling, which multiplies speedPerLine)
+ * is preserved; only the per-op distribution changes.  Integer only -> the model
+ * stays deterministic for netplay/savestates/runahead. */
+#define FX_CYC_BASE	2
+#define FX_CYC_MEM	3
+#define FX_CYC_PLOT	3
+#define FX_CYC_MULT	2
+#define FX_CYC_FMULT	3
+#define FX_CYC_AVG_NUM	12	/* budget scale numerator   (12/5 == 2.4 ~= 1/0.417) */
+#define FX_CYC_AVG_DEN	5	/* budget scale denominator */
+
+int		fx_cycle_accuracy = 1;	/* set from the core option (default on) */
+static uint8_t	fx_OpcodeCycles[1024];	/* indexed by (vStatusReg & 0x300) | opcode, i.e. 0..0x3ff */
+static uint32_t	fx_multWait;
+static int	fx_cycleTableReady = 0;
+
+static void fx_initCycleTable (void)
+{
+	int alt, op;
+	for (op = 0; op < 1024; op++) fx_OpcodeCycles[op] = FX_CYC_BASE;
+	for (alt = 0; alt < 4; alt++)
+	{
+		int b = alt << 8;
+		for (op = 0x30; op <= 0x3b; op++) fx_OpcodeCycles[b | op] = FX_CYC_MEM;	/* stw/stb  */
+		for (op = 0x40; op <= 0x4b; op++) fx_OpcodeCycles[b | op] = FX_CYC_MEM;	/* ldw/ldb  */
+		fx_OpcodeCycles[b | 0x4c] = FX_CYC_PLOT;				/* plot/rpix*/
+		for (op = 0x80; op <= 0x8f; op++) fx_OpcodeCycles[b | op] = FX_CYC_MULT;	/* mult/umult */
+		fx_OpcodeCycles[b | 0x9f] = FX_CYC_FMULT;				/* fmult/lmult */
+		fx_OpcodeCycles[b | 0xef] = FX_CYC_MEM;					/* getb*    */
+	}
+	fx_OpcodeCycles[0x90] = FX_CYC_MEM;	/* sbk  */
+	fx_OpcodeCycles[0xdf] = FX_CYC_MEM;	/* getc */
+	for (op = 0xa0; op <= 0xaf; op++) { fx_OpcodeCycles[(1<<8)|op] = FX_CYC_MEM; fx_OpcodeCycles[(2<<8)|op] = FX_CYC_MEM; } /* lms/sms */
+	for (op = 0xf0; op <= 0xff; op++) { fx_OpcodeCycles[(1<<8)|op] = FX_CYC_MEM; fx_OpcodeCycles[(2<<8)|op] = FX_CYC_MEM; } /* lm/sm   */
+	fx_cycleTableReady = 1;
+}
+
+void S9xSuperFXExec (void)
+{
+	uint8_t address_valid;
+	uint16_t GSUStatus;
+	/* EMULATE FX CHIP*/
+	/* Execute until the next stop instruction*/
+	uint32_t nInstructions = (SFXFillRAM[0x3000 + GSU_CLSR] & 1) ? SuperFX.speedPerLine * 2 : SuperFX.speedPerLine;
+
+	/* Read registers and initialize GSU session*/
+	fx_readRegisterSpace();
+
+	if (fx_cycle_accuracy && !fx_cycleTableReady) fx_initCycleTable();
+	fx_multWait = (GSU.pvRegisters[GSU_CFGR] & 0x20) ? 0 : 1;
+   
+	/* Check if we start inside the cache*/
+	if (GSU.bCacheActive && R15 >= GSU.vCacheBaseReg && R15 < (GSU.vCacheBaseReg + 512))
+      address_valid = TRUE;
+   else
+	/* Check if the start address is valid*/
+      address_valid = fx_checkStartAddress();
+
+	if (address_valid)
+	{
+		/* Execute GSU session*/
+		CF(IRQ);
+      
+		/* GSU executions functions*/
+		if (!fx_cycle_accuracy)
+		{
+			GSU.vCounter = nInstructions;
+			while (TF(G) && GSU.vCounter-- > 0)
+			{
+				/* Execute instruction from the pipe, and fetch next byte to the pipe*/
+				uint32_t	vOpcode = (uint32_t) PIPE;
+				FETCHPIPE;
+				(*fx_OpcodeTable[(GSU.vStatusReg & 0x300) | vOpcode])();
+			}
+		}
+		else
+		{
+			/* Per-opcode cycle budget (see fx_initCycleTable above). */
+			GSU.vCounter = (uint32_t)((uint64_t)nInstructions * FX_CYC_AVG_NUM / FX_CYC_AVG_DEN);
+			while (TF(G) && GSU.vCounter > 0)
+			{
+				uint32_t	vOpcode = (uint32_t) PIPE;
+				uint32_t	idx, cost;
+				FETCHPIPE;
+				idx = (GSU.vStatusReg & 0x300) | vOpcode;
+				(*fx_OpcodeTable[idx])();
+				cost = fx_OpcodeCycles[idx];
+				if ((vOpcode & 0xf0) == 0x80) cost += fx_multWait;	/* MS0=0 slow multiply */
+				GSU.vCounter = (GSU.vCounter > cost) ? (GSU.vCounter - cost) : 0;
+			}
+		}
+	}
+	else
+	{
+		CF(G);
+	}
+
+	/* Store GSU registers*/
+	fx_writeRegisterSpace();
+	/* EOF EMULATE FX CHIP*/
+
+	GSUStatus = SFXFillRAM[0x3000 + GSU_SFR] | (SFXFillRAM[0x3000 + GSU_SFR + 1] << 8);
+	if ((GSUStatus & (FLG_G | FLG_IRQ)) == FLG_IRQ)
+	{
+		S9xSuperFXIRQHook();
+	}
+}
+
+/* GSU MMIO handlers, transplanted from the snes9x2010 port (ppu.c) and the
+   previous C++ implementation. */
+void S9xSetSuperFX (uint8_t byte, uint16_t address)
+{
+   uint8_t old_fill_ram = SFXFillRAM[address];
+   SFXFillRAM[address] = byte;
+
+	switch (address)
+	{
+		case 0x3030:
+			if ((old_fill_ram ^ byte) & FLG_G)
+			{
+				if ((byte & FLG_G) && !SuperFX.oneLineDone)
+				{
+					if(CHECK_EXEC_SUPERFX())
+						S9xSuperFXExec();
+					SuperFX.oneLineDone = TRUE;
+				}
+				else
+				{
+					/* FX Flush cache */
+					GSU.vCacheFlags = 0;
+					GSU.vCacheBaseReg = 0;
+					GSU.bCacheActive = FALSE;
+				}
+			}
+
+			break;
+
+		case 0x3031:
+		case 0x3033:
+		case 0x303f:
+		case 0x3039:
+		case 0x303a:
+		case 0x303b:
+		case 0x3037:
+			break;
+		case 0x3034:
+		case 0x3036:
+			SFXFillRAM[address] &= 0x7f;
+			break;
+		case 0x3038:
+			/* SCBR write seen. We need to update our cached screen pointers */
+			GSU.vSCBRDirty = TRUE;
+			break;
+		case 0x303c:
+			/* Update BankReg and Bank pointer */
+			GSU.vRamBankReg = (uint32_t) byte & (FX_RAM_BANKS - 1);
+			GSU.pvRamBank = GSU.apvRamBank[byte & 0x3];
+			break;
+
+
+		case 0x301f:
+			SFXFillRAM[0x3000 + GSU_SFR] |= FLG_G;
+			if (!SuperFX.oneLineDone)
+			{
+				if(CHECK_EXEC_SUPERFX())
+					S9xSuperFXExec();
+				SuperFX.oneLineDone = TRUE;
+			}
+
+			break;
+
+		default:
+			if (address >= 0x3100)
+			{
+				/* Write access to the cache*/
+				if ((address & 0x00f) == 0x00f)
+					GSU.vCacheFlags |= 1 << ((address & 0x1f0) >> 4);
+			}
+
+			break;
+	}
+}
+
+uint8_t S9xGetSuperFX (uint16_t address)
+{
+	uint8_t byte;
+
+	byte = SFXFillRAM[address];
+
+	if (address == 0x3031)
+	{
+		S9xSuperFXIRQClearHook();
+		SFXFillRAM[0x3031] = byte & 0x7f;
+	}
+
+	return (byte);
+}
+
+void S9xInitSuperFX (void)
+{
+	memset((uint8_t *) &GSU, 0, sizeof(struct FxRegs_s));
+}

@@ -1731,8 +1731,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 
 		if (local_superfx)
 		{
-			GSU.pfPlot = fx_PlotTable[GSU.vMode];
-			GSU.pfRpix = fx_PlotTable[GSU.vMode + 5];
+			// Opcode/plot dispatch rebinds from vMode inside
+			// fx_readRegisterSpace() on the next S9xSuperFXExec; only the
+			// register-window pointer needs reseating here.
+			GSU.avRegAddr = (uint8 *) &GSU.avReg;
 		}
 
 		if (local_sa1 && local_sa1_registers)

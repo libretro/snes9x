@@ -257,7 +257,10 @@ void S9xDoHEventProcessing (void)
 		case HC_HCOUNTER_MAX_EVENT:
 			if (Settings.SuperFX)
 			{
-				if (!SuperFX.oneLineDone)
+				// The ported GSU core does not gate internally; run only
+				// with GO set and a bus grant, as the snes9x2010 call
+				// sites do (see CHECK_EXEC_SUPERFX).
+				if (!SuperFX.oneLineDone && CHECK_EXEC_SUPERFX())
 					S9xSuperFXExec();
 				SuperFX.oneLineDone = FALSE;
 			}
