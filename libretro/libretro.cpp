@@ -337,8 +337,23 @@ void update_geometry(void)
     g_geometry_update = false;
 }
 
+static bool setting_turbo_buttons = false;
+static bool turbo_buttons_mapped   = false;
+static void map_turbo_buttons(void);
+
 static void update_variables(void)
 {
+    {
+        struct retro_variable tvar = { "snes9x_turbo_buttons", NULL };
+        bool want = false;
+        if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &tvar) && tvar.value)
+            want = !strcmp(tvar.value, "enabled");
+        if (want != setting_turbo_buttons)
+        {
+            setting_turbo_buttons = want;
+            map_turbo_buttons();
+        }
+    }
     char key[256];
     struct retro_variable var;
 
@@ -1578,8 +1593,49 @@ static int scope_button_count = sizeof( scope_buttons ) / sizeof( int );
 #define BTN_POINTER2 (BTN_POINTER + 1)
 
 
+/* L2/R2/L3/R3 turbo mappings, gated by the snes9x_turbo_buttons core
+   option. They were previously hardwired, which made accidental analog
+   trigger presses and stick clicks engage rapid-fire with no way to turn
+   it off: hold-sensitive games (Mega Man X2 charge shots, jump height,
+   dashing) then appear to have broken controls. */
+static void map_turbo_buttons(void)
+{
+    static const int  btns[4]  = { BTN_L2, BTN_R2, BTN_L3, BTN_R3 };
+    static const char *cmds[4] = { "Turbo B", "Turbo A", "Turbo Y", "Turbo X" };
+    char name[32];
+    int pad, b;
+
+    if (setting_turbo_buttons == turbo_buttons_mapped)
+        return;
+
+    for (pad = 1; pad <= 8; pad++)
+    {
+        for (b = 0; b < 4; b++)
+        {
+            uint32 id = MAKE_BUTTON(pad, btns[b]);
+            /* Release through the old mapping first so an engaged turbo
+               bit cannot stick when the mapping goes away. */
+            if (turbo_buttons_mapped)
+                S9xReportButton(id, false);
+            if (setting_turbo_buttons)
+            {
+                snprintf(name, sizeof(name), "Joypad%d %s", pad, cmds[b]);
+                S9xMapButton(id, S9xGetCommandT(name), false);
+            }
+            else
+                S9xMapButton(id, S9xGetCommandT("None"), false);
+        }
+    }
+
+    turbo_buttons_mapped = setting_turbo_buttons;
+}
+
 static void map_buttons()
 {
+    /* Fresh keymap: force map_turbo_buttons to (re)apply the current
+       option state. */
+    turbo_buttons_mapped = !setting_turbo_buttons;
+    map_turbo_buttons();
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_A), "Joypad1 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_B), "Joypad1 B");
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_X), "Joypad1 X");
@@ -1592,10 +1648,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_RIGHT), "Joypad1 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_UP), "Joypad1 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_DOWN), "Joypad1 Down");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L2), "Joypad1 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R2), "Joypad1 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L3), "Joypad1 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R3), "Joypad1 Turbo X");
     S9xMapPointer((BTN_POINTER), S9xGetCommandT("Pointer Mouse1+Superscope+Justifier1+MacsRifle"), false);
     S9xMapPointer((BTN_POINTER2), S9xGetCommandT("Pointer Mouse2+Justifier2"), false);
 
@@ -1611,10 +1663,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_X), "Joypad2 X");
     MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L), "Joypad2 L");
     MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R), "Joypad2 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L2), "Joypad2 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R2), "Joypad2 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L3), "Joypad2 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R3), "Joypad2 Turbo X");
 
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_B), "Joypad3 B");
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_Y), "Joypad3 Y");
@@ -1628,10 +1676,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_X), "Joypad3 X");
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L), "Joypad3 L");
     MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R), "Joypad3 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L2), "Joypad3 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R2), "Joypad3 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L3), "Joypad3 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R3), "Joypad3 Turbo X");
 
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_A), "Joypad4 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_B), "Joypad4 B");
@@ -1645,10 +1689,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_RIGHT), "Joypad4 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_UP), "Joypad4 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_DOWN), "Joypad4 Down");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_L2), "Joypad4 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_R2), "Joypad4 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_L3), "Joypad4 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_R3), "Joypad4 Turbo X");
 
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_A), "Joypad5 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_B), "Joypad5 B");
@@ -1662,10 +1702,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_RIGHT), "Joypad5 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_UP), "Joypad5 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_DOWN), "Joypad5 Down");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_L2), "Joypad5 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_R2), "Joypad5 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_L3), "Joypad5 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_R3), "Joypad5 Turbo X");
     
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_A), "Joypad6 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_B), "Joypad6 B");
@@ -1679,10 +1715,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_RIGHT), "Joypad6 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_UP), "Joypad6 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_DOWN), "Joypad6 Down");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_L2), "Joypad6 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_R2), "Joypad6 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_L3), "Joypad6 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_R3), "Joypad6 Turbo X");
     
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_A), "Joypad7 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_B), "Joypad7 B");
@@ -1696,10 +1728,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_RIGHT), "Joypad7 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_UP), "Joypad7 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_DOWN), "Joypad7 Down");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_L2), "Joypad7 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_R2), "Joypad7 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_L3), "Joypad7 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_R3), "Joypad7 Turbo X");
 
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_A), "Joypad8 A");
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_B), "Joypad8 B");
@@ -1713,10 +1741,6 @@ static void map_buttons()
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_RIGHT), "Joypad8 Right");
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_UP), "Joypad8 Up");
     MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_DOWN), "Joypad8 Down");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_L2), "Joypad8 Turbo B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_R2), "Joypad8 Turbo A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_L3), "Joypad8 Turbo Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_R3), "Joypad8 Turbo X");
 }
 
 static int16_t snes_mouse_state[2][2] = {{0}, {0}};
