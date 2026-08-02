@@ -9,6 +9,8 @@ INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
 endif
 
 SOURCES_C   := $(CORE_DIR)/c4emu.c \
+				$(CORE_DIR)/sdd1.c \
+				$(CORE_DIR)/seta.c \
 				$(CORE_DIR)/sa1hw.c \
 				$(CORE_DIR)/dsp.c \
 				$(CORE_DIR)/filter/snes_ntsc.c
@@ -39,12 +41,6 @@ SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 				 $(CORE_DIR)/stream.cpp \
 				 $(CORE_DIR)/sa1.cpp \
 				 $(CORE_DIR)/sa1cpu.cpp \
-				 $(CORE_DIR)/sdd1.cpp \
-				 $(CORE_DIR)/sdd1emu.cpp \
-				 $(CORE_DIR)/seta.cpp \
-				 $(CORE_DIR)/seta010.cpp \
-				 $(CORE_DIR)/seta011.cpp \
-				 $(CORE_DIR)/seta018.cpp \
 				 $(CORE_DIR)/snapshot.cpp \
 				 $(CORE_DIR)/snes9x.cpp \
 				 $(CORE_DIR)/spc7110.cpp \

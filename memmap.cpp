@@ -27,6 +27,14 @@
 #include <sys/stat.h>
 
 #include "memmap.h"
+#include "s9xbridge.h"
+
+uint8_t  *BridgeSRAM = 0;
+uint8_t  *BridgeROM = 0;
+uint8_t  *BridgeFillRAM = 0;
+uint8_t **BridgeMap = 0;
+uint32_t  BridgeSRAMMask = 0;
+uint32_t  BridgeCalculatedSize = 0;
 #include "apu/apu.h"
 #include "fxemu.h"
 #include "sdd1.h"
@@ -967,6 +975,10 @@ bool8 CMemory::Init (void)
 	C4RAM   = ROM + 0x400000 + 8192 * 8; // C4
 	C4RAMBase = C4RAM;
 	C4ROMBase = ROM;
+	BridgeSRAM = SRAM;
+	BridgeROM = ROM;
+	BridgeFillRAM = FillRAM;
+	BridgeMap = Map;
 	OBC1RAM = ROM + 0x400000; // OBC1
 	BIOSROM = ROM + 0x300000; // BS
 	BSRAM   = ROM + 0x400000; // BS
@@ -2381,6 +2393,8 @@ void CMemory::InitROM (void)
 
 	// SRAM size
 	SRAMMask = SRAMSize ? ((1 << (SRAMSize + 3)) * 128) - 1 : 0;
+	BridgeSRAMMask = SRAMMask;
+	BridgeCalculatedSize = CalculatedSize;
 
 	// checksum
 	if (!isChecksumOK || ((uint32) CalculatedSize > (uint32) (((1 << (ROMSize - 7)) * 128) * 1024)))
@@ -3501,6 +3515,7 @@ void CMemory::ApplyROMFixes (void)
 	{
 		SRAMSize = 1;
 		SRAMMask = ((1 << (SRAMSize + 3)) * 128) - 1;
+		BridgeSRAMMask = SRAMMask;
 	}
 
 	// SRAM value fixes

@@ -8,7 +8,7 @@
 #include "memmap.h"
 #include "dma.h"
 #include "apu/apu.h"
-#include "sdd1emu.h"
+#include "sdd1.h"
 #include "spc7110emu.h"
 #ifdef DEBUGGER
 #include "missing.h"
