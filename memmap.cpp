@@ -4008,6 +4008,7 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
 
             int close_ret = unzClose(file);
             assert(close_ret == UNZ_OK);
+            (void) close_ret;
 
             if (flag)
                 return;
