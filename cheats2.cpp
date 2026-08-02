@@ -228,7 +228,7 @@ void S9xUpdateCheatInMemory(SCheat &c)
                 /* Condition is now false, let the byte stand */
                 c.cond_true = false;
             }
-            else if (c.saved_byte == c.cond_byte && !c.cond_true)
+            else if (c.saved_byte == c.cond_byte)
             {
                 c.cond_true = true;
                 S9xSetByteFree(c.byte, c.address);
@@ -627,6 +627,9 @@ static void S9xLoadCheatsFromBMLNode(bml_node &n)
             continue;
 
         auto index = S9xAddCheatGroup(name, code);
+        if (index == -1)
+            continue;
+
         if (enable)
             S9xEnableCheatGroup(index);
     }

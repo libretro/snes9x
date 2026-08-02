@@ -10,6 +10,7 @@
 #include <numeric>
 #include <assert.h>
 
+#include "snes9x.h"
 #ifdef UNZIP_SUPPORT
 #  ifdef SYSTEM_ZIP
 #    include <minizip/unzip.h>
@@ -25,7 +26,6 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-#include "snes9x.h"
 #include "memmap.h"
 #include "apu/apu.h"
 #include "fxemu.h"
@@ -1160,7 +1160,9 @@ int CMemory::ScoreLoROM (bool8 skip_header, int32 romoff)
 	if (CalculatedSize <= 1024 * 1024 * 16)
 		score += 2;
 
-	if ((1 << (buf[0xd7] - 7)) > 48)
+	/* buf[0xd7] < 7 claims a ROM smaller than 16KB: bogus header, penalize.
+	   Also avoids a negative shift count (UB, arch-dependent result). */
+	if (buf[0xd7] < 7 || (1 << (buf[0xd7] - 7)) > 48)
 		score -= 1;
 
 	if (!allASCII(&buf[0xb0], 6))
@@ -3644,7 +3646,7 @@ static bool8 ReadUPSPatch (Stream *r, long, int32 &rom_size)
 	uint32 relative = 0;
 	while(addr < size - 12) {
 		relative += XPSdecode(data, addr, size);
-		while(addr < size - 12) {
+		while(addr < size - 12 && relative < CMemory::MAX_ROM_SIZE) {
 			uint8 x = data[addr++];
 			Memory.ROM[relative++] ^= x;
 			if(!x) break;
