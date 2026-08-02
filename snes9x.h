@@ -253,7 +253,6 @@ struct SSettings
 	bool8	DisplayFrameRate;
 	bool8	DisplayWatchedAddresses;
 	bool8	DisplayPressedKeys;
-	bool8	DisplayMovieFrame;
 	bool	DisplayIndicators;
 	bool8	AutoDisplayMessages;
 	uint32	InitialInfoStringTimeout;
@@ -282,14 +281,7 @@ struct SSettings
 	bool8	FrameAdvance;
 	bool8	Rewinding;
 
-	bool8	NetPlay;
-	bool8	NetPlayServer;
-	char	ServerName[128];
-	int		Port;
 
-	bool8	MovieTruncate;
-	bool8	MovieNotifyIgnored;
-	bool8	WrongMovieStateProtection;
 	bool8	DumpStreams;
 	int		DumpStreamsMaxFrames;
 

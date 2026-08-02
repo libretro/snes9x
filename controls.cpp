@@ -18,10 +18,8 @@
 #include "snapshot.h"
 #include "controls.h"
 #include "crosshairs.h"
-#include "movie.h"
 #include "display.h"
 #ifdef NETPLAY_SUPPORT
-#include "netplay.h"
 #endif
 
 using namespace	std;
@@ -205,7 +203,6 @@ static const int	ptrspeeds[4] = { 1, 1, 4, 8 };
 
 // Note: these should be in asciibetical order!
 #define THE_COMMANDS \
-	S(BeginRecordingMovie), \
 	S(ClipWindows), \
 	S(Debugger), \
 	S(DecEmuTurbo), \
@@ -213,14 +210,12 @@ static const int	ptrspeeds[4] = { 1, 1, 4, 8 };
 	S(DecFrameTime), \
 	S(DecTurboSpeed), \
 	S(EmuTurbo), \
-	S(EndRecordingMovie), \
 	S(ExitEmu), \
 	S(IncEmuTurbo), \
 	S(IncFrameRate), \
 	S(IncFrameTime), \
 	S(IncTurboSpeed), \
 	S(LoadFreezeFile), \
-	S(LoadMovie), \
 	S(LoadOopsFile), \
 	S(Pause), \
 	S(QuickLoad000), \
@@ -249,7 +244,6 @@ static const int	ptrspeeds[4] = { 1, 1, 4, 8 };
 	S(SaveFreezeFile), \
 	S(SaveSPC), \
 	S(Screenshot), \
-	S(SeekToFrame), \
 	S(SoftReset), \
 	S(SoundChannel0), \
 	S(SoundChannel1), \
@@ -2006,7 +2000,7 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 				if (data1)
 				{
-					if (!Settings.UpAndDown && !S9xMoviePlaying()) // if up+down isn't allowed AND we are NOT playing a movie,
+					if (!Settings.UpAndDown) // if up+down isn't allowed,
 					{
 						if (cmd.button.joypad.buttons & (SNES_LEFT_MASK | SNES_RIGHT_MASK))
 						{
@@ -2077,7 +2071,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 				superscope.next_buttons |= i & (SUPERSCOPE_FIRE | SUPERSCOPE_CURSOR | SUPERSCOPE_PAUSE);
 
-				if (!S9xMovieActive()) // PPU modification during non-recordable command screws up movie synchronization
 					if ((superscope.next_buttons & (SUPERSCOPE_FIRE | SUPERSCOPE_CURSOR)) && curcontrollers[1] == SUPERSCOPE && !(superscope.phys_buttons & SUPERSCOPE_OFFSCREEN))
 						DoGunLatch(superscope.x, superscope.y);
 			}
@@ -2143,9 +2136,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						break;
 
 					case SoftReset:
-						S9xMovieUpdateOnReset();
-						if (S9xMoviePlaying())
-							S9xMovieStop(TRUE);
 						S9xSoftReset();
 						break;
 
@@ -2410,23 +2400,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						DisplayStateChange("Transparency effects", Settings.Transparency);
 						break;
 
-					case BeginRecordingMovie:
-						// if (S9xMovieActive())
-						// 	S9xMovieStop(FALSE);
-						// S9xMovieCreate(S9xChooseMovieFilename(FALSE), 0xFF, MOVIE_OPT_FROM_RESET, NULL, 0);
-						break;
-
-					case LoadMovie:
-						// if (S9xMovieActive())
-						// 	S9xMovieStop(FALSE);
-						// S9xMovieOpen(S9xChooseMovieFilename(TRUE), FALSE);
-						break;
-
-					case EndRecordingMovie:
-						if (S9xMovieActive())
-							S9xMovieStop(FALSE);
-						break;
-
 					case SwapJoypads:
 						if ((curcontrollers[0] != NONE && !(curcontrollers[0] >= JOYPAD0 && curcontrollers[0] <= JOYPAD7)))
 						{
@@ -2439,17 +2412,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 							S9xSetInfoString("Cannot swap pads: port 2 is not a joypad");
 							break;
 						}
-
-#ifdef NETPLAY_SUPPORT
-						if (Settings.NetPlay && data2 != 1) { //data2 == 1 means it's sent by the netplay code
-							if (Settings.NetPlayServer) {
-								S9xNPSendJoypadSwap();
-							} else {
-								S9xSetInfoString("Netplay Client cannot swap pads.");
-								break;
-							}
-						}
-#endif
 
 						newcontrollers[1] = curcontrollers[0];
 						newcontrollers[0] = curcontrollers[1];
@@ -2475,24 +2437,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 							sprintf(buf + i, "Joypad%d", newcontrollers[1] - JOYPAD0 + 1);
 
 						S9xSetInfoString(buf);
-						break;
-
-					case SeekToFrame:
-						if (S9xMovieActive())
-						{
-							sprintf(buf, "Select frame number (current: %d)", S9xMovieGetFrameCounter());
-							const char	*frameno = S9xStringInput(buf);
-							if (!frameno)
-								return;
-
-							int	frameDest = atoi(frameno);
-							if (frameDest > 0 && frameDest > (int) S9xMovieGetFrameCounter())
-							{
-								int	distance = frameDest - S9xMovieGetFrameCounter();
-								Settings.HighSpeedSeek = distance;
-							}
-						}
-
 						break;
 
 					case LAST_COMMAND:
@@ -2719,9 +2663,6 @@ static void do_polling (int mp)
 {
 	set<uint32>::iterator	itr;
 
-	if (S9xMoviePlaying())
-		return;
-
 	if (pollmap[mp].empty())
 		return;
 
@@ -2855,8 +2796,7 @@ void S9xSetJoypadLatch (bool latch)
 				case MOUSE0:
 				case MOUSE1:
 					do_polling(i);
-					if (!S9xMoviePlaying())
-						UpdatePolledMouse(i);
+					UpdatePolledMouse(i);
 					break;
 
 				case SUPERSCOPE:
@@ -3070,8 +3010,6 @@ void S9xDoAutoJoypad (void)
 
 	S9xSetJoypadLatch(1);
 	S9xSetJoypadLatch(0);
-
-	S9xMovieUpdate(false);
 
 	for (int n = 0; n < 2; n++)
 	{

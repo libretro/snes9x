@@ -41,7 +41,6 @@ uint32_t  BridgeCalculatedSize = 0;
 #include "srtc.h"
 #include "controls.h"
 #include "cheats.h"
-#include "movie.h"
 #include "display.h"
 #include "sha256.h"
 #include "snapshot.h"
@@ -58,7 +57,6 @@ uint32_t  BridgeCalculatedSize = 0;
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
-static bool8	stopMovie = TRUE;
 
 // from NSRT
 static const char	*nintendo_licensees[] =
@@ -2488,9 +2486,6 @@ void CMemory::InitROM (void)
 	Settings.ForceNotInterleaved = FALSE;
 	Settings.ForcePAL = FALSE;
 	Settings.ForceNTSC = FALSE;
-
-	if (stopMovie)
-		S9xMovieStop(TRUE);
 
 	if (PostRomInitFunc)
 		PostRomInitFunc();

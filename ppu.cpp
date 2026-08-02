@@ -12,10 +12,8 @@
 #include "sdd1.h"
 #include "srtc.h"
 #include "controls.h"
-#include "movie.h"
 #include "display.h"
 #ifdef NETPLAY_SUPPORT
-#include "netplay.h"
 #endif
 #ifdef DEBUGGER
 #include "debug.h"

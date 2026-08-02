@@ -13,7 +13,6 @@
 #include "srtc.h"
 #include "cheats.h"
 #ifdef NETPLAY_SUPPORT
-#include "netplay.h"
 #endif
 #ifdef DEBUGGER
 #include "debug.h"
@@ -53,7 +52,6 @@ struct SMulti			Multi;
 struct SSettings		Settings;
 struct SSNESGameFixes	SNESGameFixes;
 #ifdef NETPLAY_SUPPORT
-struct SNetPlay			NetPlay;
 #endif
 #ifdef DEBUGGER
 struct Missing			missing;

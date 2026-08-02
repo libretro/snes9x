@@ -18,7 +18,6 @@
 #include "display.h"
 #include "conffile.h"
 #ifdef NETPLAY_SUPPORT
-#include "netplay.h"
 #endif
 
 #ifdef DEBUGGER
@@ -241,7 +240,6 @@ void S9xLoadConfigFiles (char **argv, int argc)
 	Settings.DisplayFrameRate           =  conf.GetBool("Display::DisplayFrameRate",           false);
 	Settings.DisplayWatchedAddresses    =  conf.GetBool("Display::DisplayWatchedAddresses",    false);
 	Settings.DisplayPressedKeys         =  conf.GetBool("Display::DisplayInput",               false);
-	Settings.DisplayMovieFrame          =  conf.GetBool("Display::DisplayFrameCount",          false);
 	Settings.AutoDisplayMessages        =  conf.GetBool("Display::MessagesInImage",            true);
 	Settings.InitialInfoStringTimeout   =  conf.GetInt ("Display::MessageDisplayTime",         120);
 	Settings.BilinearFilter             =  conf.GetBool("Display::BilinearFilter",             false);
@@ -251,9 +249,6 @@ void S9xLoadConfigFiles (char **argv, int argc)
 	Settings.BSXBootup                  =  conf.GetBool("Settings::BSXBootup",                 false);
 	Settings.TurboMode                  =  conf.GetBool("Settings::TurboMode",                 false);
 	Settings.TurboSkipFrames            =  conf.GetUInt("Settings::TurboFrameSkip",            15);
-	Settings.MovieTruncate              =  conf.GetBool("Settings::MovieTruncateAtEnd",        false);
-	Settings.MovieNotifyIgnored         =  conf.GetBool("Settings::MovieNotifyIgnored",        false);
-	Settings.WrongMovieStateProtection  =  conf.GetBool("Settings::WrongMovieStateProtection", true);
 	Settings.SnapshotScreenshots        =  conf.GetBool("Settings::SnapshotScreenshots",       true);
 	Settings.DontSaveOopsSnapshot       =  conf.GetBool("Settings::DontSaveOopsSnapshot",      false);
 	Settings.AutoSaveDelay              =  conf.GetUInt("Settings::AutoSaveDelay",             0);
@@ -305,11 +300,9 @@ void S9xLoadConfigFiles (char **argv, int argc)
 	// Netplay
 
 #ifdef NETPLAY_SUPPORT
-	Settings.NetPlay = conf.GetBool("Netplay::Enable");
 
 	Settings.Port = NP_DEFAULT_PORT;
 	if (conf.Exists("Netplay::Port"))
-		Settings.Port = -(int) conf.GetUInt("Netplay::Port");
 
 	Settings.ServerName[0] = '\0';
 	if (conf.Exists("Netplay::Server"))
@@ -407,9 +400,6 @@ void S9xUsage (void)
 
 #ifdef NETPLAY_SUPPORT
 	// NETPLAY OPTIONS
-	S9xMessage(S9X_INFO, S9X_USAGE, "-net                            Enable netplay");
-	S9xMessage(S9X_INFO, S9X_USAGE, "-port <num>                     Use port <num> for netplay (use with -net)");
-	S9xMessage(S9X_INFO, S9X_USAGE, "-server <string>                Use the specified server for netplay");
 	S9xMessage(S9X_INFO, S9X_USAGE, "                                (use with -net)");
 	S9xMessage(S9X_INFO, S9X_USAGE, "");
 #endif
@@ -648,32 +638,6 @@ char * S9xParseArgs (char **argv, int argc)
 					S9xUsage();
 			}
 			else
-			// NETPLAY OPTIONS
-
-		#ifdef NETPLAY_SUPPORT
-			if (!strcasecmp(argv[i], "-net"))
-				Settings.NetPlay = TRUE;
-			else
-			if (!strcasecmp(argv[i], "-port"))
-			{
-				if (i + 1 < argc)
-					Settings.Port = -atoi(argv[++i]);
-				else
-					S9xUsage();
-			}
-			else
-			if (!strcasecmp(argv[i], "-server"))
-			{
-				if (i + 1 < argc)
-				{
-					strncpy(Settings.ServerName, argv[++i], 127);
-					Settings.ServerName[127] = 0;
-				}
-				else
-					S9xUsage();
-			}
-			else
-		#endif
 
 			// HACKING OR DEBUGGING OPTIONS
 

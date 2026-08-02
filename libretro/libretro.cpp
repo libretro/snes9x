@@ -11,7 +11,6 @@
 #include "snapshot.h"
 #include "controls.h"
 #include "cheats.h"
-#include "movie.h"
 #include "display.h"
 #include "conffile.h"
 #include "crosshairs.h"

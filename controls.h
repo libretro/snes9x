@@ -288,4 +288,24 @@ struct SControlSnapshot
 void S9xControlPreSaveState (struct SControlSnapshot *s);
 void S9xControlPostLoadState (struct SControlSnapshot *s);
 
+/* Current-controller-state accessors, implemented in controls.cpp. These
+   were declared in movie.h; they are not movie-specific -- the on-screen
+   input display uses them. */
+#define CONTROLLER_DATA_SIZE		2
+#define MOUSE_DATA_SIZE				5
+#define SCOPE_DATA_SIZE				6
+#define JUSTIFIER_DATA_SIZE			11
+#define MACSRIFLE_DATA_SIZE			5
+
+uint16 MovieGetJoypad (int);
+void MovieSetJoypad (int, uint16);
+bool MovieGetMouse (int, uint8 d[MOUSE_DATA_SIZE]);
+void MovieSetMouse (int, uint8 d[MOUSE_DATA_SIZE], bool);
+bool MovieGetScope (int, uint8 d[SCOPE_DATA_SIZE]);
+void MovieSetScope (int, uint8 d[SCOPE_DATA_SIZE]);
+bool MovieGetJustifier (int, uint8 d[JUSTIFIER_DATA_SIZE]);
+void MovieSetJustifier (int, uint8 d[JUSTIFIER_DATA_SIZE]);
+bool MovieGetMacsRifle (int, uint8 d[MACSRIFLE_DATA_SIZE]);
+void MovieSetMacsRifle (int, uint8 d[MACSRIFLE_DATA_SIZE]);
+
 #endif
