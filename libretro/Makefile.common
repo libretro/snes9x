@@ -9,6 +9,9 @@ INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
 endif
 
 SOURCES_C   := $(CORE_DIR)/c4emu.c \
+				$(CORE_DIR)/srtc.c \
+				$(CORE_DIR)/obc1.c \
+				$(CORE_DIR)/spc7110.c \
 				$(CORE_DIR)/fxemu.c \
 				$(CORE_DIR)/sdd1.c \
 				$(CORE_DIR)/seta.c \
@@ -34,7 +37,6 @@ SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 				 $(CORE_DIR)/globals.cpp \
 				 $(CORE_DIR)/loadzip.cpp \
 				 $(CORE_DIR)/memmap.cpp \
-				 $(CORE_DIR)/obc1.cpp \
 				 $(CORE_DIR)/msu1.cpp \
 				 $(CORE_DIR)/ppu.cpp \
 				 $(CORE_DIR)/stream.cpp \
@@ -42,8 +44,6 @@ SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 				 $(CORE_DIR)/sa1cpu.cpp \
 				 $(CORE_DIR)/snapshot.cpp \
 				 $(CORE_DIR)/snes9x.cpp \
-				 $(CORE_DIR)/spc7110.cpp \
-				 $(CORE_DIR)/srtc.cpp \
 				 $(CORE_DIR)/tile.cpp \
 				 $(CORE_DIR)/tileimpl-n1x1.cpp \
 				 $(CORE_DIR)/tileimpl-n2x1.cpp \

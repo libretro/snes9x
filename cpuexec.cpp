@@ -10,6 +10,8 @@
 #include "dma.h"
 #include "apu/apu.h"
 #include "fxemu.h"
+#include "srtc.h"
+#include "spc7110.h"
 #include "snapshot.h"
 #include "movie.h"
 #ifdef DEBUGGER
@@ -255,6 +257,11 @@ void S9xDoHEventProcessing (void)
 			break;
 
 		case HC_HCOUNTER_MAX_EVENT:
+			if (Settings.SRTC)
+				S9xSRTCTick();
+			if (Settings.SPC7110RTC)
+				S9xSPC7110RTCTick();
+
 			if (Settings.SuperFX)
 			{
 				// The ported GSU core does not gate internally; run only

@@ -980,10 +980,13 @@ bool8 CMemory::Init (void)
 	BridgeFillRAM = FillRAM;
 	BridgeMap = Map;
 	OBC1RAM = ROM + 0x400000; // OBC1
+	OBC1RAMBase = OBC1RAM;
 	BIOSROM = ROM + 0x300000; // BS
 	BSRAM   = ROM + 0x400000; // BS
 
 	SuperFX.pvRegisters = FillRAM + 0x3000;
+	SPC7110Map = Map;
+	SPC7110ROM = ROM;
 	SFXFillRAM = FillRAM;
 	SuperFX.nRamBanks   = 2; // Most only use 1.  1=64KB=512Mb, 2=128KB=1024Mb
 	SuperFX.pvRam       = SRAM;
@@ -2077,11 +2080,12 @@ void CMemory::InitROM (void)
 	Settings.SPC7110RTC = FALSE;
 	Settings.OBC1 = FALSE;
 	Settings.SETA = 0;
-	Settings.SRTC = FALSE;
+	Settings.SRTC = FALSE, SRTCEnabled = 0;
 	Settings.BS = FALSE;
 	Settings.MSU1 = FALSE;
 
 	SuperFX.nRomBanks = CalculatedSize >> 15;
+	SPC7110ROMSize = CalculatedSize;
 
 	//// Parse ROM header and read ROM informatoin
 
@@ -2175,13 +2179,13 @@ void CMemory::InitROM (void)
 	{
 	    // SRTC
 		case 0x5535:
-			Settings.SRTC = TRUE;
+			Settings.SRTC = TRUE, SRTCEnabled = 1;
 			S9xInitSRTC();
 			break;
 
 		// SPC7110
 		case 0xF93A:
-			Settings.SPC7110RTC = TRUE;
+			Settings.SPC7110RTC = TRUE, SPC7110RTCEnabled = 1;
 			// Fall through
 		case 0xF53A:
 			Settings.SPC7110 = TRUE;
@@ -2361,9 +2365,9 @@ void CMemory::InitROM (void)
 
 	// NTSC/PAL
 	if (Settings.ForceNTSC)
-		Settings.PAL = FALSE, SuperFXPalFlag = 0;
+		Settings.PAL = FALSE, SuperFXPalFlag = 0, SRTCPalFlag = 0;
 	else if (Settings.ForcePAL)
-		Settings.PAL = TRUE, SuperFXPalFlag = 1;
+		Settings.PAL = TRUE, SuperFXPalFlag = 1, SRTCPalFlag = 1;
 	else if (!Settings.BS && (((ROMRegion >= 2) && (ROMRegion <= 12)) || ROMRegion == 18)) // 18 is used by "Tintin in Tibet (Europe) (En,Es,Sv)"
 		Settings.PAL = TRUE;
 	else

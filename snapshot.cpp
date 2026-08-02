@@ -1747,10 +1747,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 			S9xSDD1PostLoadState();
 
 		if (local_spc7110)
-			S9xSPC7110PostLoadState(version);
+			S9xSPC7110PostLoadState();
 
 		if (local_srtc)
-			S9xSRTCPostLoadState(version);
+			S9xSRTCPostLoadState();
 
 		if (local_bsx_data)
 			S9xBSXPostLoadState();
