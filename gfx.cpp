@@ -11,7 +11,6 @@
 #include "crosshairs.h"
 #include "cheats.h"
 #include "movie.h"
-#include "screenshot.h"
 #include "display.h"
 
 extern struct SCheatData		Cheat;
@@ -214,9 +213,6 @@ void S9xEndScreenRefresh (void)
 			}
 
 			S9xControlEOF();
-
-			if (Settings.TakeScreenshot)
-				S9xDoScreenshot(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 
 			if (Settings.AutoDisplayMessages)
 				S9xDisplayMessages(GFX.Screen, GFX.RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);

@@ -2340,7 +2340,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						break;
 
 					case Screenshot:
-						Settings.TakeScreenshot = TRUE;
 						break;
 
 					case SoundChannel0:
