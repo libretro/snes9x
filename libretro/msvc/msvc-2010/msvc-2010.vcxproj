@@ -153,8 +153,6 @@
     <ClCompile Include="..\..\..\apu\bapu\smp\smp_state.cpp" />
     <ClCompile Include="..\..\..\bml.cpp" />
     <ClCompile Include="..\..\..\bsx.cpp" />
-    <ClCompile Include="..\..\..\c4.cpp" />
-    <ClCompile Include="..\..\..\c4emu.cpp" />
     <ClCompile Include="..\..\..\cheats.cpp" />
     <ClCompile Include="..\..\..\cheats2.cpp" />
     <ClCompile Include="..\..\..\clip.cpp" />
@@ -166,11 +164,9 @@
     <ClCompile Include="..\..\..\crosshairs.cpp" />
     <ClCompile Include="..\..\..\debug.cpp" />
     <ClCompile Include="..\..\..\dma.cpp" />
-    <ClCompile Include="..\..\..\dsp.cpp" />
-    <ClCompile Include="..\..\..\dsp1.cpp" />
-    <ClCompile Include="..\..\..\dsp2.cpp" />
-    <ClCompile Include="..\..\..\dsp3.cpp" />
-    <ClCompile Include="..\..\..\dsp4.cpp" />
+    <ClCompile Include="..\..\..\dsp.c" />
+    <ClCompile Include="..\..\..\c4emu.c" />
+    <ClCompile Include="..\..\..\sa1hw.c" />
     <ClCompile Include="..\..\..\filter\snes_ntsc.c" />
     <ClCompile Include="..\..\..\fxdbg.cpp" />
     <ClCompile Include="..\..\..\fxemu.cpp" />

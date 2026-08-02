@@ -8,14 +8,15 @@ ifneq (,$(findstring msvc2003,$(platform)))
 INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
 endif
 
-SOURCES_C   := $(CORE_DIR)/filter/snes_ntsc.c
+SOURCES_C   := $(CORE_DIR)/c4emu.c \
+				$(CORE_DIR)/sa1hw.c \
+				$(CORE_DIR)/dsp.c \
+				$(CORE_DIR)/filter/snes_ntsc.c
 SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 				 $(CORE_DIR)/apu/bapu/dsp/sdsp.cpp \
 				 $(CORE_DIR)/apu/bapu/smp/smp.cpp \
 				 $(CORE_DIR)/apu/bapu/smp/smp_state.cpp \
 				 $(CORE_DIR)/bsx.cpp \
-				 $(CORE_DIR)/c4.cpp \
-				 $(CORE_DIR)/c4emu.cpp \
 				 $(CORE_DIR)/cheats.cpp \
 				 $(CORE_DIR)/cheats2.cpp \
 				 $(CORE_DIR)/clip.cpp \
@@ -26,11 +27,6 @@ SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 				 $(CORE_DIR)/cpuops.cpp \
 				 $(CORE_DIR)/crosshairs.cpp \
 				 $(CORE_DIR)/dma.cpp \
-				 $(CORE_DIR)/dsp.cpp \
-				 $(CORE_DIR)/dsp1.cpp \
-				 $(CORE_DIR)/dsp2.cpp \
-				 $(CORE_DIR)/dsp3.cpp \
-				 $(CORE_DIR)/dsp4.cpp \
 				 $(CORE_DIR)/fxinst.cpp \
 				 $(CORE_DIR)/fxemu.cpp \
 				 $(CORE_DIR)/gfx.cpp \

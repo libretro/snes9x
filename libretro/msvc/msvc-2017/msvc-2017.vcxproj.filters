@@ -39,12 +39,6 @@
     <ClCompile Include="..\..\..\bsx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\c4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\c4emu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\cheats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -76,21 +70,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\dma.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\dsp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\dsp1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\dsp2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\dsp3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\dsp4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\fxdbg.cpp">
@@ -200,6 +179,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\apu\bapu\smp\smp_state.cpp">
       <Filter>Source Files\apu\bapu\smp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\dsp.c">
+      <Filter>Source Files\filter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\c4emu.c">
+      <Filter>Source Files\filter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\sa1hw.c">
+      <Filter>Source Files\filter</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\filter\snes_ntsc.c">
       <Filter>Source Files\filter</Filter>
