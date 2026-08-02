@@ -12,6 +12,7 @@
 #include "snes9x.h"
 #include "memmap.h"
 #include "display.h"
+#include "bsflash.h"
 #include <math.h>
 
 //#define BSX_DEBUG
@@ -61,14 +62,17 @@ static const uint8	flashcard[20] =
 #if 0
 static const uint8	init2192[32] =	// FIXME
 {
-	00, 00, 00, 00, 00,		// unknown
-	01, 01, 00, 00, 00,
-	00,						// seconds (?)
-	00,						// minutes
-	00,						// hours
-	10, 10, 10, 10, 10,		// unknown
-	10, 10, 10, 10, 10,		// dummy
-	00, 00, 00, 00, 00, 00, 00, 00, 00
+	// Layout follows the MiSTer BSX RTL channel-0 data stream:
+	// [4]=0x10, [5]=[6]=0x01 fixed; [10..12]=sec/min/hour;
+	// [13]=weekday, [14]=day, [15]=month, [16..17]=year (LE), seeded later.
+	0x00, 0x00, 0x00, 0x00, 0x10,
+	0x01, 0x01, 0x00, 0x00, 0x00,
+	0x00,					// seconds
+	0x00,					// minutes
+	0x00,					// hours
+	0x00, 0x00, 0x00, 0x00, 0x00,	// weekday, day, month, year lo/hi
+	0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 #endif
 
@@ -554,6 +558,15 @@ uint8 S9xGetBSX (uint32 address)
 	// default: read-through mode
 	t = BSX_Get_Bypass_FlashIO(address);
 
+	// When the ares-accurate flash chip is in one of the command modes it
+	// owns (chip-id, page buffer, compatible/extended status), its response
+	// is authoritative: these are position-independent register reads the
+	// BS-X BIOS performs after a Sharp command. In plain flash-read mode
+	// the chip is not consulted and the legacy status flags below apply.
+	if (BSFlashChip.memory && BSFlashChip.size && !BSFlashChip.is_rom &&
+		BSFlashChip.mode != BSF_MODE_FLASH)
+		return (S9xBSFlashRead(offset));
+
 	// note: may be more registers, purposes unknown
 	switch (offset)
 	{
@@ -606,8 +619,10 @@ void S9xSetBSX (uint8 byte, uint32 address)
 	// MMC
 	if ((bank >= 0x01 && bank <= 0x0E) && ((address & 0xF000) == 0x5000))
 	{
-		//Avoid updating the memory map when it is not needed
-		if (bank == 0x0E && BSX.dirty)
+		//Avoid updating the memory map when it is not needed.
+		// ares MCC: register 14 commits the latched registers only when
+		// written with bit 7 set; a write with bit 7 clear must not commit.
+		if (bank == 0x0E && (byte & 0x80) && BSX.dirty)
 		{
 			BSX_Map();
 			BSX.dirty = FALSE;
@@ -621,7 +636,17 @@ void S9xSetBSX (uint8 byte, uint32 address)
 	}
 
 	// Flash IO
-	
+
+	// Feed every $C0-bank write to the ares-accurate flash chip first so its
+	// mode, page buffers and status registers track the real Sharp command
+	// sequence (program data bytes after 0x10/0x40 arrive this way too). The
+	// legacy state machine below is kept in lock-step so the verified boot
+	// path is unchanged; reads consult the chip only for the command modes
+	// it owns (see BSX_Get_FlashIO above).
+	if (bank == 0xC0 && BSFlashChip.memory && BSFlashChip.size &&
+		!BSFlashChip.is_rom)
+		S9xBSFlashWrite(address & 0xFFFF, byte);
+
 	// Write to Flash
 	if (BSX.write_enable)
 	{
@@ -825,7 +850,8 @@ uint8 S9xBSXGetRTC (void)
 
 	t = BSX.test2192[BSX.out_index++];
 
-	if (BSX.out_index > 22)
+	// Full 32-byte channel-0 cycle per the MiSTer BSX RTL capture.
+	if (BSX.out_index > 31)
 		BSX.out_index = 0;
 
 	return t;
@@ -1334,6 +1360,13 @@ void S9xInitBSX (void)
 
 void S9xResetBSX (void)
 {
+	// Initialise the ares-accurate BS Memory flash chip over the same image
+	// the legacy mapping uses. The BS-X base unit hosts a writable Flash
+	// cassette; dumped BS-game ROM cassettes are read-only MaskROM and read
+	// straight through the chip untouched.
+	S9xBSFlashInit(FlashROM, FlashSize,
+		(Settings.BSXItself || FlashMode) ? FALSE : TRUE);
+
 	if (Settings.BSXItself)
 		memset(Memory.ROM, 0, FLASH_SIZE);
 

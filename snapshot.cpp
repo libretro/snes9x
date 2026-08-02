@@ -13,6 +13,7 @@
 #include "fxemu.h"
 #include "sdd1.h"
 #include "srtc.h"
+#include "bsflash.h"
 #include "snapshot.h"
 #include "controls.h"
 #include "movie.h"
@@ -1753,7 +1754,12 @@ int S9xUnfreezeFromStream (STREAM stream)
 			S9xSRTCPostLoadState();
 
 		if (local_bsx_data)
+		{
 			S9xBSXPostLoadState();
+			// The flash chip's transient command state is not serialized;
+			// return it to array-read mode, as a real chip after power-up.
+			S9xBSFlashReset();
+		}
 
 		if (local_msu1_data)
 			S9xMSU1PostLoadState();

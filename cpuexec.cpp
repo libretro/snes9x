@@ -12,6 +12,7 @@
 #include "fxemu.h"
 #include "srtc.h"
 #include "spc7110.h"
+#include "bsflash.h"
 #include "snapshot.h"
 #include "movie.h"
 #ifdef DEBUGGER
@@ -261,6 +262,8 @@ void S9xDoHEventProcessing (void)
 				S9xSRTCTick();
 			if (Settings.SPC7110RTC)
 				S9xSPC7110RTCTick();
+			if (Settings.BS)
+				S9xBSFlashTick();
 
 			if (Settings.SuperFX)
 			{

@@ -11,6 +11,7 @@ endif
 SOURCES_C   := $(CORE_DIR)/c4emu.c \
 				$(CORE_DIR)/srtc.c \
 				$(CORE_DIR)/obc1.c \
+				$(CORE_DIR)/bsflash.c \
 				$(CORE_DIR)/spc7110.c \
 				$(CORE_DIR)/fxemu.c \
 				$(CORE_DIR)/sdd1.c \
