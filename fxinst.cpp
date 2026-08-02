@@ -763,6 +763,10 @@ static void fx_rpix_2bit (void)
 	DREG = 0;
 	DREG |= ((uint32) ((a[0] & v) != 0)) << 0;
 	DREG |= ((uint32) ((a[1] & v) != 0)) << 1;
+	// RPIX sets S and Z from the read colour in every depth
+	// (ares GSU::instructionPLOT_RPIX; fix from snes9x2010).
+	GSU.vSign = DREG;
+	GSU.vZero = DREG;
 	TESTR14;
 	CLRFLAGS;
 }
@@ -839,6 +843,10 @@ static void fx_rpix_4bit (void)
 	DREG |= ((uint32) ((a[0x01] & v) != 0)) << 1;
 	DREG |= ((uint32) ((a[0x10] & v) != 0)) << 2;
 	DREG |= ((uint32) ((a[0x11] & v) != 0)) << 3;
+	// RPIX sets S and Z from the read colour in every depth
+	// (ares GSU::instructionPLOT_RPIX; fix from snes9x2010).
+	GSU.vSign = DREG;
+	GSU.vZero = DREG;
 	TESTR14;
 	CLRFLAGS;
 }
@@ -941,6 +949,9 @@ static void fx_rpix_8bit (void)
 	DREG |= ((uint32) ((a[0x21] & v) != 0)) << 5;
 	DREG |= ((uint32) ((a[0x30] & v) != 0)) << 6;
 	DREG |= ((uint32) ((a[0x31] & v) != 0)) << 7;
+	// RPIX sets S and Z from the read colour in every depth
+	// (ares GSU::instructionPLOT_RPIX; fix from snes9x2010).
+	GSU.vSign = DREG;
 	GSU.vZero = DREG;
 	TESTR14;
 	CLRFLAGS;
