@@ -12,6 +12,7 @@
 #include "sa1.h"
 #include "spc7110.h"
 #include "c4.h"
+#include "sa1hw.h"
 #include "obc1.h"
 #include "seta.h"
 #include "bsx.h"
@@ -84,12 +85,22 @@ inline uint8 S9xGetByte (uint32 Address)
 			return (byte);
 
 		case CMemory::MAP_LOROM_SRAM:
-		case CMemory::MAP_SA1RAM:
 			// Address & 0x7fff   : offset into bank
 			// Address & 0xff0000 : bank
 			// bank >> 1 | offset : SRAM address, unbound
 			// unbound & SRAMMask : SRAM offset
 			byte = *(Memory.SRAM + ((((Address & 0xff0000) >> 1) | (Address & 0x7fff)) & Memory.SRAMMask));
+			addCyclesInMemoryAccess;
+			return (byte);
+
+		case CMemory::MAP_SA1RAM:
+			// S-CPU view of BW-RAM ($40-$4x): linear. While CC1 is armed,
+			// reads return the on-the-fly bitmap->planar conversion from the
+			// I-RAM buffer (ares SA1::dmaCC1Read; code from snes9x2010).
+			if (SA1.in_char_dma)
+				byte = S9xSA1ReadCC1(((((Address >> 16) & 3) << 16) | (Address & 0xffff)) & Memory.SRAMMask);
+			else
+				byte = *(Memory.SRAM + (((((Address >> 16) & 3) << 16) | (Address & 0xffff)) & Memory.SRAMMask));
 			addCyclesInMemoryAccess;
 			return (byte);
 
@@ -219,8 +230,17 @@ inline uint16 S9xGetWord (uint32 Address, enum s9xwrap_t w = WRAP_NONE)
 			addCyclesInMemoryAccess;
 			return (word);
 
-		case CMemory::MAP_LOROM_SRAM:
 		case CMemory::MAP_SA1RAM:
+			if (SA1.in_char_dma)
+				word = S9xSA1ReadCC1(((((Address >> 16) & 3) << 16) | (Address & 0xffff)) & Memory.SRAMMask) |
+					  (S9xSA1ReadCC1((((((Address >> 16) & 3) << 16) | (Address & 0xffff)) + 1) & Memory.SRAMMask) << 8);
+			else
+				word = *(Memory.SRAM + (((((Address >> 16) & 3) << 16) | (Address & 0xffff)) & Memory.SRAMMask)) |
+					  (*(Memory.SRAM + ((((((Address >> 16) & 3) << 16) | (Address & 0xffff)) + 1) & Memory.SRAMMask)) << 8);
+			addCyclesInMemoryAccess_x2;
+			return (word);
+
+		case CMemory::MAP_LOROM_SRAM:
 			if (Memory.SRAMMask >= MEMMAP_MASK)
 				word = READ_WORD(Memory.SRAM + ((((Address & 0xff0000) >> 1) | (Address & 0x7fff)) & Memory.SRAMMask));
 			else
@@ -376,13 +396,18 @@ inline void S9xSetByte (uint8 Byte, uint32 Address)
 			return;
 
 		case CMemory::MAP_BWRAM:
-			*(Memory.BWRAM + ((Address & 0x7fff) - 0x6000)) = Byte;
+			if (!S9xSA1BWRAMWriteProtected((uint32) (Memory.BWRAM - Memory.SRAM) + ((Address & 0x7fff) - 0x6000)))
+				*(Memory.BWRAM + ((Address & 0x7fff) - 0x6000)) = Byte;
 			CPU.SRAMModified = TRUE;
 			addCyclesInMemoryAccess;
 			return;
 
 		case CMemory::MAP_SA1RAM:
-			*(Memory.SRAM + (Address & 0xffff)) = Byte;
+			// Linear BW-RAM write, honouring $2226-$2228 write protection
+			// (ares SA1::BWRAM::writeCPU; code from snes9x2010).
+			if (!S9xSA1BWRAMWriteProtected(((((Address >> 16) & 3) << 16) | (Address & 0xffff))))
+				*(Memory.SRAM + (((((Address >> 16) & 3) << 16) | (Address & 0xffff)) & Memory.SRAMMask)) = Byte;
+			CPU.SRAMModified = TRUE;
 			addCyclesInMemoryAccess;
 			return;
 
@@ -569,13 +594,20 @@ inline void S9xSetWord (uint16 Word, uint32 Address, enum s9xwrap_t w = WRAP_NON
 			return;
 
 		case CMemory::MAP_BWRAM:
-			WRITE_WORD(Memory.BWRAM + ((Address & 0x7fff) - 0x6000), Word);
+			if (!S9xSA1BWRAMWriteProtected((uint32) (Memory.BWRAM - Memory.SRAM) + ((Address & 0x7fff) - 0x6000)))
+				*(Memory.BWRAM + ((Address & 0x7fff) - 0x6000)) = (uint8) Word;
+			if (!S9xSA1BWRAMWriteProtected((uint32) (Memory.BWRAM - Memory.SRAM) + (((Address + 1) & 0x7fff) - 0x6000)))
+				*(Memory.BWRAM + (((Address + 1) & 0x7fff) - 0x6000)) = (uint8) (Word >> 8);
 			CPU.SRAMModified = TRUE;
 			addCyclesInMemoryAccess_x2;
 			return;
 
 		case CMemory::MAP_SA1RAM:
-			WRITE_WORD(Memory.SRAM + (Address & 0xffff), Word);
+			if (!S9xSA1BWRAMWriteProtected(((((Address >> 16) & 3) << 16) | (Address & 0xffff))))
+				*(Memory.SRAM + (((((Address >> 16) & 3) << 16) | (Address & 0xffff)) & Memory.SRAMMask)) = (uint8) Word;
+			if (!S9xSA1BWRAMWriteProtected(((((Address >> 16) & 3) << 16) | (Address & 0xffff)) + 1))
+				*(Memory.SRAM + ((((((Address >> 16) & 3) << 16) | (Address & 0xffff)) + 1) & Memory.SRAMMask)) = (uint8) (Word >> 8);
+			CPU.SRAMModified = TRUE;
 			addCyclesInMemoryAccess_x2;
 			return;
 
@@ -738,7 +770,7 @@ inline void S9xSetPCBase (uint32 Address)
 			return;
 
 		case CMemory::MAP_SA1RAM:
-			CPU.PCBase = Memory.SRAM;
+			CPU.PCBase = Memory.SRAM + (((Address >> 16) & 3) << 16);
 			return;
 
 		case CMemory::MAP_SPC7110_ROM:
@@ -792,7 +824,9 @@ inline uint8 * S9xGetBasePointer (uint32 Address)
 			return (Memory.BWRAM - 0x6000 - (Address & 0x8000));
 
 		case CMemory::MAP_SA1RAM:
-			return (Memory.SRAM);
+			// No direct pointer: reads must go through the CC1 hook and
+			// writes through BW-RAM protection, including DMA.
+			return (0);
 
 		case CMemory::MAP_SPC7110_ROM:
 			return (S9xGetBasePointerSPC7110(Address));
@@ -837,7 +871,7 @@ inline uint8 * S9xGetMemPointer (uint32 Address)
 			return (Memory.BWRAM - 0x6000 + (Address & 0x7fff));
 
 		case CMemory::MAP_SA1RAM:
-			return (Memory.SRAM + (Address & 0xffff));
+			return (Memory.SRAM + (((((Address >> 16) & 3) << 16) | (Address & 0xffff)) & Memory.SRAMMask));
 
 		case CMemory::MAP_SPC7110_ROM:
 			return (S9xGetBasePointerSPC7110(Address) + (Address & 0xffff));

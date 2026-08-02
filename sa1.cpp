@@ -5,6 +5,7 @@
 \*****************************************************************************/
 
 #include "snes9x.h"
+#include "sa1hw.h"
 #include "memmap.h"
 
 uint8	SA1OpenBus;
@@ -32,6 +33,10 @@ void S9xSA1Init (void)
 	Memory.FillRAM[0x2228] = 0x0f;
 
 	SA1.in_char_dma = FALSE;
+
+	SA1FillRAM   = Memory.FillRAM;
+	SA1BWRAMBase = Memory.SRAM;
+	SA1BWRAMMask = Memory.SRAMMask;
 	SA1.TimerIRQLastState = FALSE;
 	SA1.HTimerIRQPos = 0;
 	SA1.VTimerIRQPos = 0;
@@ -552,7 +557,11 @@ void S9xSetSA1 (uint8 byte, uint32 address)
 			switch (SA1.arithmetic_op)
 			{
 				case 0:	// signed multiplication
-					SA1.sum = (int16) SA1.op1 * (int16) SA1.op2;
+					// The 32-bit product is zero-extended into the 40-bit MR
+					// register (MR[39:32] read back as 0x00); sign-extending
+					// into the uint64 sum exposed 0xff at $230a for negative
+					// products. Matches ares (n32()) and snes9x2010.
+					SA1.sum = (uint32) ((int32) (int16) SA1.op1 * (int32) (int16) SA1.op2);
 					SA1.op2 = 0;
 					break;
 
@@ -851,11 +860,15 @@ void S9xSA1SetByte (uint8 byte, uint32 address)
 		case CMemory::MAP_LOROM_SRAM:
 		case CMemory::MAP_HIROM_SRAM:
 		case CMemory::MAP_SA1RAM:
-			*(Memory.SRAM + (address & 0x3ffff)) = byte;
+			// BW-RAM write protection applies to SA-1 linear writes too
+			// (ares: BWPA also affects SA-1 protection).
+			if (!S9xSA1BWRAMWriteProtected(address & 0x3ffff))
+				*(Memory.SRAM + (address & 0x3ffff)) = byte;
 			return;
 
 		case CMemory::MAP_BWRAM:
-			*(SA1.BWRAM + (address & 0x1fff)) = byte;
+			if (!S9xSA1BWRAMWriteProtected((uint32) (SA1.BWRAM - Memory.SRAM) + (address & 0x1fff)))
+				*(SA1.BWRAM + (address & 0x1fff)) = byte;
 			return;
 
 		case CMemory::MAP_BWRAM_BITMAP:
