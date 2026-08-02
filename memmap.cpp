@@ -965,6 +965,8 @@ bool8 CMemory::Init (void)
 	ROM = &ROMStorage[0x8000];
 
 	C4RAM   = ROM + 0x400000 + 8192 * 8; // C4
+	C4RAMBase = C4RAM;
+	C4ROMBase = ROM;
 	OBC1RAM = ROM + 0x400000; // OBC1
 	BIOSROM = ROM + 0x300000; // BS
 	BSRAM   = ROM + 0x400000; // BS
@@ -2989,8 +2991,12 @@ void CMemory::Map_SA1LoROMMap (void)
 	map_index(0x00, 0x3f, 0x6000, 0x7fff, MAP_BWRAM, MAP_TYPE_I_O);
 	map_index(0x80, 0xbf, 0x6000, 0x7fff, MAP_BWRAM, MAP_TYPE_I_O);
 
+	// Route the S-CPU's linear BW-RAM banks through the MAP_SA1RAM
+	// handler instead of direct pointers, so reads can be intercepted by
+	// the CC1 character-conversion engine and writes honour the
+	// $2226-$2228 BW-RAM protection (both from snes9x2010, per ares).
 	for (int c = 0x40; c < 0x4f; c++)
-		map_space(c, c, 0x0000, 0xffff, SRAM + (c & 3) * 0x10000);
+		map_index(c, c, 0x0000, 0xffff, MAP_SA1RAM, MAP_TYPE_RAM);
 
 	map_WRAM();
 
