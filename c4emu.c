@@ -1328,8 +1328,8 @@ void S9xSetC4 (uint8_t byte, uint16_t Address)
 					int16_t	angle2 = READ_WORD(C4RAMBase + 0x1f8f) & 0x1ff;
 
 
-					int32_t	tan1 = (C4CosTable[angle1] != 0) ? ((((int32_t) C4SinTable[angle1]) << 16) / C4CosTable[angle1]) : 0x80000000;
-					int32_t	tan2 = (C4CosTable[angle2] != 0) ? ((((int32_t) C4SinTable[angle2]) << 16) / C4CosTable[angle2]) : 0x80000000;
+					int32_t	tan1 = (C4CosTable[angle1] != 0) ? ((((int32_t) C4SinTable[angle1]) << 16) / C4CosTable[angle1]) : ((int32_t) -0x7fffffff - 1);
+					int32_t	tan2 = (C4CosTable[angle2] != 0) ? ((((int32_t) C4SinTable[angle2]) << 16) / C4CosTable[angle2]) : ((int32_t) -0x7fffffff - 1);
 
 					int16_t	y = READ_WORD(C4RAMBase + 0x1f83) - READ_WORD(C4RAMBase + 0x1f89);
 					int16_t	left, right;
