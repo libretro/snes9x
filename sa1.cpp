@@ -984,7 +984,10 @@ void S9xSA1SetPCBase (uint32 address)
 			return;
 
 		case CMemory::MAP_SA1RAM:
-			SA1.PCBase = Memory.SRAM;
+			// Keep the bank: BW-RAM at $40-$43 is linear on the SA-1 bus
+			// too (ares SA1::BWRAM::readLinear takes the full address), so
+			// code fetched from banks $41-$43 must not alias bank $40.
+			SA1.PCBase = Memory.SRAM + (((address >> 16) & 3) << 16);
 			return;
 
 		default:
