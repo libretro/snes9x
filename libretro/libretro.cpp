@@ -28,6 +28,8 @@
 #include <fcntl.h>
 #include "filter/snes_ntsc.h"
 
+static void reset_button_cache(void);
+
 #define RETRO_DEVICE_JOYPAD_MULTITAP ((1 << 8) | RETRO_DEVICE_JOYPAD)
 #define RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE ((1 << 8) | RETRO_DEVICE_LIGHTGUN)
 #define RETRO_DEVICE_LIGHTGUN_JUSTIFIER ((2 << 8) | RETRO_DEVICE_LIGHTGUN)
@@ -909,12 +911,14 @@ unsigned retro_api_version()
 
 void retro_reset()
 {
+    reset_button_cache();
     S9xSoftReset();
 }
 
 static unsigned snes_devices[8];
 void retro_set_controller_port_device(unsigned port, unsigned device)
 {
+    reset_button_cache();
     if (port < 8)
     {
         int offset = snes_devices[0] == RETRO_DEVICE_JOYPAD_MULTITAP ? 4 : 1;
@@ -1533,6 +1537,32 @@ void retro_init(void)
 #define MAP_BUTTON(id, name) S9xMapButton((id), S9xGetCommandT((name)), false)
 #define MAKE_BUTTON(pad, btn) (((pad)<<4)|(btn))
 
+/* Report input edges only. S9xReportButton applies non-command mappings
+   unconditionally, and this port re-reports every button every frame; the
+   per-frame release report of an unheld button then clears the very bit
+   that S9xControlEOF's "buttons ^= turbos" turbo toggle set, so turbo
+   pulses are suppressed before every auto-joypad read. (This was latent
+   for as long as the pointer-ID collision kept pad 1's B/Y mappings dead;
+   fixing the collision exposed it.) The standalone ports never see this
+   because they only report key events -- do the same. */
+static uint8 button_state_cache[MAKE_BUTTON(8 + 1, 0) + 16];
+
+static void reset_button_cache(void)
+{
+    memset(button_state_cache, 0, sizeof(button_state_cache));
+}
+
+static void report_button(uint32 id, bool pressed)
+{
+    if (id < sizeof(button_state_cache))
+    {
+        if (button_state_cache[id] == (uint8) pressed)
+            return;
+        button_state_cache[id] = (uint8) pressed;
+    }
+    S9xReportButton(id, pressed);
+}
+
 #define PAD_1 1
 #define PAD_2 2
 #define PAD_3 3
@@ -1589,7 +1619,14 @@ static int scope_button_count = sizeof( scope_buttons ) / sizeof( int );
 
 #define MACS_RIFLE_TRIGGER 2
 
-#define BTN_POINTER (BTN_LAST + 1)
+/* Pointer IDs must live outside the MAKE_BUTTON space: MAKE_BUTTON packs
+   the button into 4 bits, so pads 1-8 occupy IDs 0x10-0x8F. When the
+   turbo buttons extended BTN_LAST from BTN_R (11) to BTN_R3 (15),
+   BTN_LAST + 1 = 16 = MAKE_BUTTON(PAD_1, BTN_B): S9xMapPointer then
+   overwrote the Joypad1 B and Y button mappings with the two pointer
+   mappings ("Remapping ID 0x00000010/0x00000011 from button to pointer"
+   at startup), leaving pad 1's B and Y dead in every game. */
+#define BTN_POINTER (MAKE_BUTTON(PAD_8, BTN_LAST) + 1)
 #define BTN_POINTER2 (BTN_POINTER + 1)
 
 
@@ -1632,6 +1669,7 @@ static void map_turbo_buttons(void)
 
 static void map_buttons()
 {
+    reset_button_cache();
     /* Fresh keymap: force map_turbo_buttons to (re)apply the current
        option state. */
     turbo_buttons_mapped = !setting_turbo_buttons;
@@ -1815,13 +1853,13 @@ static void input_handle_pointer_lightgun( unsigned port, unsigned gun_device, i
         switch (gun_device)
         {
         case RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE:
-            S9xReportButton(MAKE_BUTTON(PAD_2, setting_superscope_reverse_buttons ? SUPER_SCOPE_CURSOR : SUPER_SCOPE_TRIGGER), false);
+            report_button(MAKE_BUTTON(PAD_2, setting_superscope_reverse_buttons ? SUPER_SCOPE_CURSOR : SUPER_SCOPE_TRIGGER), false);
             break;
         case RETRO_DEVICE_LIGHTGUN_JUSTIFIER:
-            S9xReportButton(MAKE_BUTTON(PAD_2, JUSTIFIER_TRIGGER), false);
+            report_button(MAKE_BUTTON(PAD_2, JUSTIFIER_TRIGGER), false);
             break;
         case RETRO_DEVICE_LIGHTGUN_MACS_RIFLE:
-            S9xReportButton(MAKE_BUTTON(PAD_2, MACS_RIFLE_TRIGGER), false);
+            report_button(MAKE_BUTTON(PAD_2, MACS_RIFLE_TRIGGER), false);
             break;
         default:
             break;
@@ -1864,13 +1902,13 @@ static void input_handle_pointer_lightgun( unsigned port, unsigned gun_device, i
                     }
                 }
             }
-            S9xReportButton(MAKE_BUTTON(PAD_2, SUPER_SCOPE_START), start_pressed);
-            S9xReportButton(MAKE_BUTTON(PAD_2, SUPER_SCOPE_TRIGGER), trigger_pressed);
-            S9xReportButton(MAKE_BUTTON(PAD_2, SUPER_SCOPE_CURSOR), cursor_pressed);
+            report_button(MAKE_BUTTON(PAD_2, SUPER_SCOPE_START), start_pressed);
+            report_button(MAKE_BUTTON(PAD_2, SUPER_SCOPE_TRIGGER), trigger_pressed);
+            report_button(MAKE_BUTTON(PAD_2, SUPER_SCOPE_CURSOR), cursor_pressed);
             bool old_turbo = turbo_pressed;
             turbo_pressed = turbo_pressed && !snes_superscope_turbo_latch;
             snes_superscope_turbo_latch = old_turbo;
-            S9xReportButton(MAKE_BUTTON(PAD_2, SUPER_SCOPE_TURBO), turbo_pressed);
+            report_button(MAKE_BUTTON(PAD_2, SUPER_SCOPE_TURBO), turbo_pressed);
             break;
         }
 
@@ -1889,15 +1927,15 @@ static void input_handle_pointer_lightgun( unsigned port, unsigned gun_device, i
                     trigger_pressed = true;
                 }
             }
-            S9xReportButton(MAKE_BUTTON(PAD_2, JUSTIFIER_TRIGGER), trigger_pressed || offscreen);
-            S9xReportButton(MAKE_BUTTON(PAD_2, JUSTIFIER_START), start_pressed ? 1 : 0 );
-            S9xReportButton(MAKE_BUTTON(PAD_2, JUSTIFIER_OFFSCREEN), offscreen);
+            report_button(MAKE_BUTTON(PAD_2, JUSTIFIER_TRIGGER), trigger_pressed || offscreen);
+            report_button(MAKE_BUTTON(PAD_2, JUSTIFIER_START), start_pressed ? 1 : 0 );
+            report_button(MAKE_BUTTON(PAD_2, JUSTIFIER_OFFSCREEN), offscreen);
             break;
         }
         case RETRO_DEVICE_LIGHTGUN_MACS_RIFLE:
         {
             int pressed = input_state_cb(port, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_PRESSED);
-            S9xReportButton(MAKE_BUTTON(PAD_2, MACS_RIFLE_TRIGGER),pressed);
+            report_button(MAKE_BUTTON(PAD_2, MACS_RIFLE_TRIGGER),pressed);
             break;
         }
         case RETRO_DEVICE_NONE:
@@ -1929,7 +1967,7 @@ static void report_buttons()
                 }
 
                 for (int i = BTN_FIRST; i <= BTN_LAST; i++)
-                    S9xReportButton(MAKE_BUTTON(port * offset + 1, i), joy_bits & (1 << i));
+                    report_button(MAKE_BUTTON(port * offset + 1, i), joy_bits & (1 << i));
                 break;
 
             case RETRO_DEVICE_JOYPAD_MULTITAP:
@@ -1945,7 +1983,7 @@ static void report_buttons()
                     }
 
                     for (int i = BTN_FIRST; i <= BTN_LAST; i++)
-                        S9xReportButton(MAKE_BUTTON(port * offset + j + 1, i), joy_bits & (1 << i));
+                        report_button(MAKE_BUTTON(port * offset + j + 1, i), joy_bits & (1 << i));
 				}
                 break;
 
@@ -1956,7 +1994,7 @@ static void report_buttons()
                 snes_mouse_state[port][1] += _y;
                 S9xReportPointer(BTN_POINTER + port, snes_mouse_state[port][0], snes_mouse_state[port][1]);
                 for (int i = MOUSE_LEFT; i <= MOUSE_LAST; i++)
-                    S9xReportButton(MAKE_BUTTON(port + 1, i), input_state_cb(port, RETRO_DEVICE_MOUSE, 0, i));
+                    report_button(MAKE_BUTTON(port + 1, i), input_state_cb(port, RETRO_DEVICE_MOUSE, 0, i));
                 break;
 
             case RETRO_DEVICE_LIGHTGUN_SUPER_SCOPE:
@@ -1988,7 +2026,7 @@ static void report_buttons()
                                 super_scope_button_id = SUPER_SCOPE_TRIGGER;
                             }
                         }
-                        S9xReportButton(MAKE_BUTTON(PAD_2, super_scope_button_id), btn);
+                        report_button(MAKE_BUTTON(PAD_2, super_scope_button_id), btn);
                     }
                 }
                 break;
@@ -2007,15 +2045,15 @@ static void report_buttons()
 
                         /* Trigger ? */
                         int btn_trigger = input_state_cb( port, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_TRIGGER );
-                        S9xReportButton(MAKE_BUTTON(PAD_2, JUSTIFIER_TRIGGER), btn_trigger || btn_offscreen_shot);
+                        report_button(MAKE_BUTTON(PAD_2, JUSTIFIER_TRIGGER), btn_trigger || btn_offscreen_shot);
 
                         /* Start Button ? */
                         int btn_start = input_state_cb( port, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_START );
-                        S9xReportButton(MAKE_BUTTON(PAD_2, JUSTIFIER_START), btn_start ? 1 : 0 );
+                        report_button(MAKE_BUTTON(PAD_2, JUSTIFIER_START), btn_start ? 1 : 0 );
 
                         /* Aiming off-screen ? */
                         int btn_offscreen = input_state_cb( port, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN );
-                        S9xReportButton(MAKE_BUTTON(PAD_2, JUSTIFIER_OFFSCREEN), btn_offscreen || btn_offscreen_shot);
+                        report_button(MAKE_BUTTON(PAD_2, JUSTIFIER_OFFSCREEN), btn_offscreen || btn_offscreen_shot);
                     }
 
                     /* Second Gun? */
@@ -2030,15 +2068,15 @@ static void report_buttons()
 
                         /* Trigger ? */
                         int btn_trigger = input_state_cb( second, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_TRIGGER );
-                        S9xReportButton(MAKE_BUTTON(PAD_3, JUSTIFIER_TRIGGER), btn_trigger || btn_offscreen_shot);
+                        report_button(MAKE_BUTTON(PAD_3, JUSTIFIER_TRIGGER), btn_trigger || btn_offscreen_shot);
 
                         /* Start Button ? */
                         int btn_start = input_state_cb( second, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_START );
-                        S9xReportButton(MAKE_BUTTON(PAD_3, JUSTIFIER_START), btn_start ? 1 : 0 );
+                        report_button(MAKE_BUTTON(PAD_3, JUSTIFIER_START), btn_start ? 1 : 0 );
 
                         /* Aiming off-screen ? */
                         int btn_offscreen = input_state_cb( second, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN );
-                        S9xReportButton(MAKE_BUTTON(PAD_3, JUSTIFIER_OFFSCREEN), btn_offscreen || btn_offscreen_shot);
+                        report_button(MAKE_BUTTON(PAD_3, JUSTIFIER_OFFSCREEN), btn_offscreen || btn_offscreen_shot);
                     }
                 }
                 break;
@@ -2053,7 +2091,7 @@ static void report_buttons()
                     {
                         /* Trigger ? */
                         int btn_trigger = input_state_cb( port, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_TRIGGER );
-                        S9xReportButton(MAKE_BUTTON(PAD_2, MACS_RIFLE_TRIGGER), btn_trigger);
+                        report_button(MAKE_BUTTON(PAD_2, MACS_RIFLE_TRIGGER), btn_trigger);
                     }
                 }
                 break;
@@ -2210,6 +2248,7 @@ bool retro_serialize(void *data, size_t size)
 
 bool retro_unserialize(const void* data, size_t size)
 {
+    reset_button_cache();
     int result = -1;
     bool okay = false;
     okay = environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
