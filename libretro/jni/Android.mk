@@ -4,7 +4,7 @@ CORE_DIR := $(LOCAL_PATH)/../..
 
 include $(CORE_DIR)/libretro/Makefile.common
 
-COREFLAGS := -DANDROID -D__LIBRETRO__ -DHAVE_STRINGS_H -DRIGHTSHIFT_IS_SAR $(INCFLAGS)
+COREFLAGS := -DANDROID -D__LIBRETRO__ $(INCFLAGS)
 
 GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
 ifneq ($(GIT_VERSION)," unknown")

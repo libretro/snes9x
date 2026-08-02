@@ -11,33 +11,13 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <limits.h>
-#ifndef __LIBRETRO__
-#include <memory.h>
-#endif
 #include <time.h>
 #include <string.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #include <sys/types.h>
 
 #ifdef __WIN32__
 #define NOMINMAX 1
 #include <windows.h>
-#endif
-
-#ifdef __WIN32__
-//#define RIGHTSHIFT_IS_SAR
-#define RIGHTSHIFT_int8_IS_SAR
-#define RIGHTSHIFT_int16_IS_SAR
-#define RIGHTSHIFT_int32_IS_SAR
-#ifndef __LIBRETRO__
-
-#endif //__LIBRETRO__
-#endif
-
-#ifdef __MACOSX__
-#define PIXEL_FORMAT RGB555
 #endif
 
 #ifndef PIXEL_FORMAT
@@ -124,11 +104,8 @@ typedef size_t				pint;
 #include "fscompat.h"
 
 #define S9xDisplayString	DisplayStringFromBottom
+
 #ifdef __WIN32__
-#if !defined(SNES9X_QT) && !defined(__LIBRETRO__)
-void SetInfoDlgColor(unsigned char, unsigned char, unsigned char);
-#define SET_UI_COLOR(r,g,b) SetInfoDlgColor(r,g,b)
-#endif
 #ifndef snprintf
    #define snprintf _snprintf
 #endif
