@@ -285,7 +285,6 @@ struct SSettings
 	bool8	DumpStreams;
 	int		DumpStreamsMaxFrames;
 
-	bool8	SnapshotScreenshots;
 	char    InitialSnapshotFilename[PATH_MAX + 1];
 	bool8	FastSavestates;
 

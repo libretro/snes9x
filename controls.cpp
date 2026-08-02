@@ -243,7 +243,6 @@ static const int	ptrspeeds[4] = { 1, 1, 4, 8 };
 	S(Reset), \
 	S(SaveFreezeFile), \
 	S(SaveSPC), \
-	S(Screenshot), \
 	S(SoftReset), \
 	S(SoundChannel0), \
 	S(SoundChannel1), \
@@ -2327,9 +2326,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 					case SaveSPC:
 						S9xDumpSPCSnapshot();
-						break;
-
-					case Screenshot:
 						break;
 
 					case SoundChannel0:

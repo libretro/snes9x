@@ -157,14 +157,6 @@ struct SDMASnapshot
 	struct SDMA	dma[8];
 };
 
-struct SnapshotScreenshotInfo
-{
-	uint16	Width;
-	uint16	Height;
-	uint8	Interlaced;
-	uint8	Data[MAX_SNES_WIDTH * MAX_SNES_HEIGHT * 3];
-};
-
 static struct Obsolete
 {
 	uint8	CPU_IRQActive;
@@ -969,18 +961,6 @@ static FreezeData	SnapMSU1[] =
 };
 
 #undef STRUCT
-#define STRUCT	struct SnapshotScreenshotInfo
-
-static FreezeData	SnapScreenshot[] =
-{
-	INT_ENTRY(6, Width),
-	INT_ENTRY(6, Height),
-	INT_ENTRY(6, Interlaced),
-	ARRAY_ENTRY(6, Data, MAX_SNES_WIDTH * MAX_SNES_HEIGHT * 3, uint8_ARRAY_V)
-};
-
-#undef STRUCT
-
 static int UnfreezeBlock (STREAM, const char *, uint8 *, int);
 static int UnfreezeBlockCopy (STREAM, const char *, uint8 **, int);
 static int UnfreezeStructCopy (STREAM, const char *, uint8 **, FreezeData *, int, int);
@@ -1104,34 +1084,6 @@ bool8 S9xUnfreezeGame (const char *filename)
 	return (FALSE);
 }
 
-bool8 S9xUnfreezeScreenshot(const char *filename, uint16 **image_buffer, int &width, int &height)
-{
-    STREAM	stream = NULL;
-
-    auto base = S9xBasename(filename);
-
-    if(S9xOpenSnapshotFile(filename, TRUE, &stream))
-    {
-        int	result;
-
-        result = S9xUnfreezeScreenshotFromStream(stream, image_buffer, width, height);
-        S9xCloseSnapshotFile(stream);
-
-        if(result != SUCCESS)
-        {
-            S9xMessageFromResult(result, base.c_str());
-            return (FALSE);
-        }
-
-        return (TRUE);
-    }
-
-    sprintf(String, SAVE_ERR_SAVE_NOT_FOUND, base.c_str());
-    S9xMessage(S9X_INFO, S9X_FREEZE_FILE_INFO, String);
-
-    return (FALSE);
-}
-
 void S9xFreezeToStream (STREAM stream)
 {
 	char	buffer[8192];
@@ -1227,37 +1179,6 @@ void S9xFreezeToStream (STREAM stream)
 	if (Settings.MSU1)
 		FreezeStruct(stream, "MSU", &MSU1, SnapMSU1, COUNT(SnapMSU1));
 
-	if (Settings.SnapshotScreenshots)
-	{
-		SnapshotScreenshotInfo	*ssi = new SnapshotScreenshotInfo;
-
-		ssi->Width  = min(IPPU.RenderedScreenWidth,  MAX_SNES_WIDTH);
-		ssi->Height = min(IPPU.RenderedScreenHeight, MAX_SNES_HEIGHT);
-		ssi->Interlaced = GFX.DoInterlace;
-
-		uint8	*rowpix = ssi->Data;
-		uint16	*screen = GFX.Screen;
-
-		for (int y = 0; y < ssi->Height; y++, screen += GFX.RealPPL)
-		{
-			for (int x = 0; x < ssi->Width; x++)
-			{
-				uint32	r, g, b;
-
-				DECOMPOSE_PIXEL(screen[x], r, g, b);
-				*(rowpix++) = r;
-				*(rowpix++) = g;
-				*(rowpix++) = b;
-			}
-		}
-
-		memset(rowpix, 0, sizeof(ssi->Data) + ssi->Data - rowpix);
-
-		FreezeStruct(stream, "SHO", ssi, SnapScreenshot, COUNT(SnapScreenshot));
-
-		delete ssi;
-	}
-
 	delete [] soundsnapshot;
 }
 
@@ -1310,7 +1231,6 @@ int S9xUnfreezeFromStream (STREAM stream)
 	uint8	*local_rtc_data      = NULL;
 	uint8	*local_bsx_data      = NULL;
 	uint8	*local_msu1_data     = NULL;
-	uint8	*local_screenshot    = NULL;
 
 	do
 	{
@@ -1449,8 +1369,6 @@ int S9xUnfreezeFromStream (STREAM stream)
 		result = UnfreezeStructCopy(stream, "MSU", &local_msu1_data, SnapMSU1, COUNT(SnapMSU1), version);
 		if (result != SUCCESS && Settings.MSU1)
 			break;
-
-		result = UnfreezeStructCopy(stream, "SHO", &local_screenshot, SnapScreenshot, COUNT(SnapScreenshot), version);
 
 		result = SUCCESS;
 	} while (false);
@@ -1678,58 +1596,6 @@ int S9xUnfreezeFromStream (STREAM stream)
 		if (local_msu1_data)
 			S9xMSU1PostLoadState();
 
-		if (local_screenshot)
-		{
-			SnapshotScreenshotInfo	*ssi = new SnapshotScreenshotInfo;
-
-			UnfreezeStructFromCopy(ssi, SnapScreenshot, COUNT(SnapScreenshot), local_screenshot, version);
-
-			IPPU.RenderedScreenWidth  = min(ssi->Width,  MAX_SNES_WIDTH);
-			IPPU.RenderedScreenHeight = min(ssi->Height, MAX_SNES_HEIGHT);
-			const bool8 scaleDownX = IPPU.RenderedScreenWidth  < ssi->Width;
-			const bool8 scaleDownY = IPPU.RenderedScreenHeight < ssi->Height && ssi->Height > SNES_HEIGHT_EXTENDED;
-			GFX.DoInterlace = ssi->Interlaced;
-
-			uint8	*rowpix = ssi->Data;
-			uint16	*screen = GFX.Screen;
-
-			for (int y = 0; y < IPPU.RenderedScreenHeight; y++, screen += GFX.RealPPL)
-			{
-				for (int x = 0; x < IPPU.RenderedScreenWidth; x++)
-				{
-					uint32	r, g, b;
-
-					r = *(rowpix++);
-					g = *(rowpix++);
-					b = *(rowpix++);
-
-					if (scaleDownX)
-					{
-						r = (r + *(rowpix++)) >> 1;
-						g = (g + *(rowpix++)) >> 1;
-						b = (b + *(rowpix++)) >> 1;
-
-						if (x + x + 1 >= ssi->Width)
-							break;
-					}
-
-					screen[x] = BUILD_PIXEL(r, g, b);
-				}
-
-				if (scaleDownY)
-				{
-					rowpix += 3 * ssi->Width;
-					if (y + y + 1 >= ssi->Height)
-						break;
-				}
-			}
-
-			// black out what we might have missed
-			for (uint32 y = IPPU.RenderedScreenHeight; y < (uint32) (MAX_SNES_HEIGHT); y++)
-				memset(GFX.Screen + y * GFX.RealPPL, 0, GFX.RealPPL * 2);
-
-			delete ssi;
-		}
 	}
 
 	if (local_cpu)				delete [] local_cpu;
@@ -1757,98 +1623,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 	if (local_srtc)				delete [] local_srtc;
 	if (local_rtc_data)			delete [] local_rtc_data;
 	if (local_bsx_data)			delete [] local_bsx_data;
-	if (local_screenshot)		delete [] local_screenshot;
 	return (result);
-}
-
-// load screenshot from file, allocating memory for it
-int S9xUnfreezeScreenshotFromStream(STREAM stream, uint16 **image_buffer, int &width, int &height)
-{
-    int		result = SUCCESS;
-    int		version, len;
-    char	buffer[PATH_MAX + 1];
-
-    len = strlen(SNAPSHOT_MAGIC) + 1 + 4 + 1;
-    if(READ_STREAM(buffer, len, stream) != (unsigned int)len)
-        return (WRONG_FORMAT);
-
-    if(strncmp(buffer, SNAPSHOT_MAGIC, strlen(SNAPSHOT_MAGIC)) != 0)
-        return (WRONG_FORMAT);
-
-    version = atoi(&buffer[strlen(SNAPSHOT_MAGIC) + 1]);
-    if(version > SNAPSHOT_VERSION)
-        return (WRONG_VERSION);
-
-    result = UnfreezeBlock(stream, "NAM", (uint8 *)buffer, PATH_MAX);
-    if(result != SUCCESS)
-        return (result);
-
-    uint8	*local_screenshot = NULL;
-
-    // skip all blocks until screenshot
-    SkipBlockWithName(stream, "CPU");
-    SkipBlockWithName(stream, "REG");
-    SkipBlockWithName(stream, "PPU");
-    SkipBlockWithName(stream, "DMA");
-    SkipBlockWithName(stream, "VRA");
-    SkipBlockWithName(stream, "RAM");
-    SkipBlockWithName(stream, "SRA");
-    SkipBlockWithName(stream, "FIL");
-    SkipBlockWithName(stream, "SND");
-    SkipBlockWithName(stream, "CTL");
-    SkipBlockWithName(stream, "TIM");
-    SkipBlockWithName(stream, "SFX");
-    SkipBlockWithName(stream, "SA1");
-    SkipBlockWithName(stream, "SAR");
-    SkipBlockWithName(stream, "DP1");
-    SkipBlockWithName(stream, "DP2");
-    SkipBlockWithName(stream, "DP4");
-    SkipBlockWithName(stream, "CX4");
-    SkipBlockWithName(stream, "ST0");
-    SkipBlockWithName(stream, "OBC");
-    SkipBlockWithName(stream, "OBM");
-    SkipBlockWithName(stream, "S71");
-    SkipBlockWithName(stream, "SRT");
-    SkipBlockWithName(stream, "CLK");
-    SkipBlockWithName(stream, "BSX");
-    SkipBlockWithName(stream, "MSU");
-    result = UnfreezeStructCopy(stream, "SHO", &local_screenshot, SnapScreenshot, COUNT(SnapScreenshot), version);
-
-
-    if(result == SUCCESS && local_screenshot)
-    {
-        SnapshotScreenshotInfo	*ssi = new SnapshotScreenshotInfo;
-
-        UnfreezeStructFromCopy(ssi, SnapScreenshot, COUNT(SnapScreenshot), local_screenshot, version);
-
-        width = min(ssi->Width, MAX_SNES_WIDTH);
-        height = min(ssi->Height, MAX_SNES_HEIGHT);
-
-        *image_buffer = (uint16 *)malloc(width * height * sizeof(uint16));
-
-        uint8	*rowpix = ssi->Data;
-        uint16	*screen = (*image_buffer);
-
-        for(int y = 0; y < height; y++, screen += width)
-        {
-            for(int x = 0; x < width; x++)
-            {
-                uint32	r, g, b;
-
-                r = *(rowpix++);
-                g = *(rowpix++);
-                b = *(rowpix++);
-
-                screen[x] = BUILD_PIXEL(r, g, b);
-            }
-        }
-
-        delete ssi;
-    }
-
-    if(local_screenshot)		delete[] local_screenshot;
-
-    return (result);
 }
 
 static int FreezeSize (int size, int type)

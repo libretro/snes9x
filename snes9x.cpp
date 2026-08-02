@@ -249,7 +249,6 @@ void S9xLoadConfigFiles (char **argv, int argc)
 	Settings.BSXBootup                  =  conf.GetBool("Settings::BSXBootup",                 false);
 	Settings.TurboMode                  =  conf.GetBool("Settings::TurboMode",                 false);
 	Settings.TurboSkipFrames            =  conf.GetUInt("Settings::TurboFrameSkip",            15);
-	Settings.SnapshotScreenshots        =  conf.GetBool("Settings::SnapshotScreenshots",       true);
 	Settings.DontSaveOopsSnapshot       =  conf.GetBool("Settings::DontSaveOopsSnapshot",      false);
 	Settings.AutoSaveDelay              =  conf.GetUInt("Settings::AutoSaveDelay",             0);
 
