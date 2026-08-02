@@ -63,8 +63,8 @@
 
 #define CONCAT(X, Y) X##Y
 
-// C pre-processor needs a two stage macro define to enable it to concat
-// to macro names together to form the name of another macro.
+/* C pre-processor needs a two stage macro define to enable it to concat */
+/* to macro names together to form the name of another macro. */
 #define BUILD_PIXEL_D(F, R, G, B)          CONCAT(BUILD_PIXEL_, F) (R, G, B)
 #define BUILD_PIXEL2_D(F, R, G, B)         CONCAT(BUILD_PIXEL2_, F) (R, G, B)
 #define DECOMPOSE_PIXEL_D(F, PIX, R, G, B) CONCAT(DECOMPOSE_PIXEL_, F) (PIX, R, G, B)
@@ -114,4 +114,4 @@
 #define TWO_LOW_BITS_MASK          (RGB_LOW_BITS_MASK | (RGB_LOW_BITS_MASK << 1))
 #define HIGH_BITS_SHIFTED_TWO_MASK (((FIRST_COLOR_MASK | SECOND_COLOR_MASK | THIRD_COLOR_MASK) & ~TWO_LOW_BITS_MASK) >> 2)
 
-#endif // _PIXFORM_H_
+#endif /* _PIXFORM_H_ */

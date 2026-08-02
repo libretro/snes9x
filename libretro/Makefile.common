@@ -12,6 +12,7 @@ SOURCES_C   := $(CORE_DIR)/c4emu.c \
 				$(CORE_DIR)/srtc.c \
 				$(CORE_DIR)/obc1.c \
 				$(CORE_DIR)/bsflash.c \
+				$(CORE_DIR)/bsx.c \
 				$(CORE_DIR)/spc7110.c \
 				$(CORE_DIR)/fxemu.c \
 				$(CORE_DIR)/sdd1.c \
@@ -23,7 +24,6 @@ SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 				 $(CORE_DIR)/apu/bapu/dsp/sdsp.cpp \
 				 $(CORE_DIR)/apu/bapu/smp/smp.cpp \
 				 $(CORE_DIR)/apu/bapu/smp/smp_state.cpp \
-				 $(CORE_DIR)/bsx.cpp \
 				 $(CORE_DIR)/cheats.cpp \
 				 $(CORE_DIR)/cheats2.cpp \
 				 $(CORE_DIR)/clip.cpp \

@@ -4,34 +4,82 @@
    For further information, consult the LICENSE file in the root directory.
 \*****************************************************************************/
 
-// Dreamer Nom wrote:
-// Large thanks to John Weidman for all his initial research
-// Thanks to Seph3 for his modem notes
+/* Dreamer Nom wrote: */
+/* Large thanks to John Weidman for all his initial research */
+/* Thanks to Seph3 for his modem notes */
 
 
-#include "snes9x.h"
-#include "memmap.h"
-#include "display.h"
-#include "bsflash.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 #include <math.h>
+#include "port.h"
+#include "bsx.h"
+#include "bsflash.h"
 
-//#define BSX_DEBUG
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
+static int bsx_stream_get (FILE *f)
+{
+	int c = getc(f);
+	return (c == EOF) ? 0xFF : c;
+}
+
+/* Bridges to the C++ side, set from memmap.cpp. */
+uint8_t  **BSXMemMap        = 0;   /* = Memory.Map */
+uint8_t   *BSXBlockIsRAM    = 0;   /* = Memory.BlockIsRAM */
+uint8_t   *BSXBlockIsROM    = 0;   /* = Memory.BlockIsROM */
+uint8_t   *BSXRAMBase       = 0;   /* = Memory.RAM */
+uint8_t   *BSXSRAMBase      = 0;   /* = Memory.SRAM */
+uint8_t   *BSXPSRAMBase     = 0;   /* = Memory.BSRAM */
+uint8_t   *BSXBIOSROMBase   = 0;   /* = Memory.BIOSROM */
+uint8_t   *BSXROMBase       = 0;   /* = BSXROMBase */
+
+/* Implemented extern "C" in memmap.cpp. */
+extern void        BSXMapWriteProtectROM (void);
+extern void        BSXSetLoHiROM (uint8_t lorom, uint8_t hirom);
+extern uint8_t     BSXGetSettingBS (void);
+extern void        BSXSetSettingBS (uint8_t on);
+extern uint8_t     BSXGetSettingBSXItself (void);
+extern void        BSXSetSettingBSXItself (uint8_t on);
+extern uint8_t     BSXGetSettingBSXBootup (void);
+extern const char *BSXGetSatDirectory (void);
+extern const char *BSXGetBIOSDirectory (void);
+extern const char *BSXGetSlashStr (void);
+extern uint32_t    BSXGetCalculatedSize (void);
+extern uint32_t    BSXGetCartOffsetB (void);
+extern void        BSXSetSRAMInitialValue (uint8_t v);
+extern uint8_t     OpenBus;
+
+/*#define BSX_DEBUG */
 
 #define BIOS_SIZE	0x100000
 #define FLASH_SIZE	0x100000
 #define PSRAM_SIZE	0x80000
 
-#define Map			Memory.Map
-#define BlockIsRAM	Memory.BlockIsRAM
-#define BlockIsROM	Memory.BlockIsROM
-#define RAM			Memory.RAM
-#define SRAM		Memory.SRAM
-#define PSRAM		Memory.BSRAM
-#define BIOSROM		Memory.BIOSROM
-#define MAP_BSX		Memory.MAP_BSX
-#define MAP_CPU		Memory.MAP_CPU
-#define MAP_PPU		Memory.MAP_PPU
-#define MAP_NONE	Memory.MAP_NONE
+#define Map			BSXMemMap
+#define BlockIsRAM	BSXBlockIsRAM
+#define BlockIsROM	BSXBlockIsROM
+#define RAM			BSXRAMBase
+#define SRAM		BSXSRAMBase
+#define PSRAM		BSXPSRAMBase
+#define BIOSROM		BSXBIOSROMBase
+
+/* Sentinel values written into Map[]; must match the CMemory map enum in
+   memmap.h (MAP_CPU = 0 base): CPU 0, PPU 1, BSX 17th, NONE 18th entry. */
+#define MAP_CPU		0
+#define MAP_PPU		1
+#define MAP_BSX		17
+#define MAP_NONE	18
 
 #define BSXPPUBASE	0x2180
 
@@ -49,28 +97,28 @@ struct SBSX_RTC
 
 static struct SBSX_RTC	BSX_RTC;
 
-// flash card vendor information
+/* flash card vendor information */
 static const uint8	flashcard[20] =
 {
-	0x4D, 0x00, 0x50, 0x00,	// vendor id
-	0x00, 0x00,				// ?
-	0x1A, 0x00,				// 2MB Flash (1MB = 0x2A)
+	0x4D, 0x00, 0x50, 0x00,	/* vendor id */
+	0x00, 0x00,				/* ? */
+	0x1A, 0x00,				/* 2MB Flash (1MB = 0x2A) */
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 #if 0
-static const uint8	init2192[32] =	// FIXME
+static const uint8	init2192[32] =	/* FIXME */
 {
-	// Layout follows the MiSTer BSX RTL channel-0 data stream:
-	// [4]=0x10, [5]=[6]=0x01 fixed; [10..12]=sec/min/hour;
-	// [13]=weekday, [14]=day, [15]=month, [16..17]=year (LE), seeded later.
+	/* Layout follows the MiSTer BSX RTL channel-0 data stream: */
+	/* [4]=0x10, [5]=[6]=0x01 fixed; [10..12]=sec/min/hour; */
+	/* [13]=weekday, [14]=day, [15]=month, [16..17]=year (LE), seeded later. */
 	0x00, 0x00, 0x00, 0x00, 0x10,
 	0x01, 0x01, 0x00, 0x00, 0x00,
-	0x00,					// seconds
-	0x00,					// minutes
-	0x00,					// hours
-	0x00, 0x00, 0x00, 0x00, 0x00,	// weekday, day, month, year lo/hi
+	0x00,					/* seconds */
+	0x00,					/* minutes */
+	0x00,					/* hours */
+	0x00, 0x00, 0x00, 0x00, 0x00,	/* weekday, day, month, year lo/hi */
 	0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
@@ -90,6 +138,9 @@ static void BSX_Map_PSRAM (void);
 static void BSX_Map_BIOS (void);
 static void BSX_Map_RAM (void);
 static void BSX_Map (void);
+static void S9xBSXSetStream1 (uint8 count);
+static void S9xBSXSetStream2 (uint8 count);
+static uint8 S9xBSXGetRTC (void);
 static bool8 BSX_LoadBIOS (void);
 static void map_psram_mirror_sub (uint32);
 static int is_bsx (unsigned char *);
@@ -97,11 +148,11 @@ static int is_bsx (unsigned char *);
 
 static void BSX_Map_SNES (void)
 {
-	// These maps will be partially overwritten
+	/* These maps will be partially overwritten */
 
 	int	c;
 
-	// Banks 00->3F and 80->BF
+	/* Banks 00->3F and 80->BF */
 	for (c = 0; c < 0x400; c += 16)
 	{
 		Map[c + 0] = Map[c + 0x800] = RAM;
@@ -120,11 +171,11 @@ static void BSX_Map_SNES (void)
 
 static void BSX_Map_LoROM (void)
 {
-	// These maps will be partially overwritten
+	/* These maps will be partially overwritten */
 
 	int	i, c;
 
-	// Banks 00->3F and 80->BF
+	/* Banks 00->3F and 80->BF */
 	for (c = 0; c < 0x400; c += 16)
 	{
 		for (i = c + 8; i < c + 16; i++)
@@ -135,7 +186,7 @@ static void BSX_Map_LoROM (void)
 		}
 	}
 
-	// Banks 40->7F and C0->FF
+	/* Banks 40->7F and C0->FF */
 	for (c = 0; c < 0x400; c += 16)
 	{
 		for (i = c; i < c + 8; i++)
@@ -154,11 +205,11 @@ static void BSX_Map_LoROM (void)
 
 static void BSX_Map_HiROM (void)
 {
-	// These maps will be partially overwritten
+	/* These maps will be partially overwritten */
 
 	int	i, c;
 
-	// Banks 00->3F and 80->BF
+	/* Banks 00->3F and 80->BF */
 	for (c = 0; c < 0x400; c += 16)
 	{
 		for (i = c + 8; i < c + 16; i++)
@@ -169,7 +220,7 @@ static void BSX_Map_HiROM (void)
 		}
 	}
 
-	// Banks 40->7F and C0->FF
+	/* Banks 40->7F and C0->FF */
 	for (c = 0; c < 0x400; c += 16)
 	{
 		for (i = c; i < c + 16; i++)
@@ -185,7 +236,7 @@ static void BSX_Map_MMC (void)
 {
 	int	c;
 
-	// Banks 01->0E:5000-5FFF
+	/* Banks 01->0E:5000-5FFF */
 	for (c = 0x010; c < 0x0F0; c += 16)
 	{
 		Map[c + 5] = (uint8 *) MAP_BSX;
@@ -199,7 +250,7 @@ static void BSX_Map_FlashIO (void)
 
 	if (BSX.prevMMC[0x0C])
 	{
-		// Banks 00->3F and 80->BF
+		/* Banks 00->3F and 80->BF */
 		for (c = 0; c < 0x400; c += 16)
 		{
 			for (i = c + 8; i < c + 16; i++)
@@ -210,7 +261,7 @@ static void BSX_Map_FlashIO (void)
 			}
 		}
 
-		// Banks 40->7F and C0->FF
+		/* Banks 40->7F and C0->FF */
 		for (c = 0; c < 0x400; c += 16)
 		{
 			for (i = c; i < c + 16; i++)
@@ -227,7 +278,7 @@ static void BSX_Map_SRAM (void)
 {
 	int	c;
 
-	// Banks 10->17:5000-5FFF
+	/* Banks 10->17:5000-5FFF */
 	for (c = 0x100; c < 0x180; c += 16)
 	{
 		Map[c + 5] = (uint8 *) SRAM + ((c & 0x70) << 8) - 0x5000;
@@ -244,7 +295,7 @@ static void map_psram_mirror_sub (uint32 bank)
 
 	if (BSX.prevMMC[0x02])
 	{
-		//HiROM
+		/*HiROM */
 		for (c = 0; c < 0x80; c += 16)
 		{
 			if ((bank & 0x7F0) >= 0x400)
@@ -269,7 +320,7 @@ static void map_psram_mirror_sub (uint32 bank)
 	}
 	else
 	{
-		//LoROM
+		/*LoROM */
 		for (c = 0; c < 0x100; c += 16)
 		{
 			if ((bank & 0x7F0) >= 0x400)
@@ -298,10 +349,10 @@ static void BSX_Map_PSRAM(void)
 
 	if (!BSX.prevMMC[0x02])
 	{
-		//LoROM Mode
+		/*LoROM Mode */
 		if (!BSX.prevMMC[0x05] && !BSX.prevMMC[0x06])
 		{
-			//Map PSRAM to 00-0F/80-8F
+			/*Map PSRAM to 00-0F/80-8F */
 			if (BSX.prevMMC[0x03])
 				map_psram_mirror_sub(0x00);
 
@@ -310,7 +361,7 @@ static void BSX_Map_PSRAM(void)
 		}
 		else if (BSX.prevMMC[0x05] && !BSX.prevMMC[0x06])
 		{
-			//Map PSRAM to 20-2F/A0-AF
+			/*Map PSRAM to 20-2F/A0-AF */
 			if (BSX.prevMMC[0x03])
 				map_psram_mirror_sub(0x20);
 
@@ -319,7 +370,7 @@ static void BSX_Map_PSRAM(void)
 		}
 		else if (!BSX.prevMMC[0x05] && BSX.prevMMC[0x06])
 		{
-			//Map PSRAM to 40-4F/C0-CF
+			/*Map PSRAM to 40-4F/C0-CF */
 			if (BSX.prevMMC[0x03])
 				map_psram_mirror_sub(0x40);
 
@@ -328,7 +379,7 @@ static void BSX_Map_PSRAM(void)
 		}
 		else
 		{
-			//Map PSRAM to 60-6F/E0-EF
+			/*Map PSRAM to 60-6F/E0-EF */
 			if (BSX.prevMMC[0x03])
 				map_psram_mirror_sub(0x60);
 
@@ -336,7 +387,7 @@ static void BSX_Map_PSRAM(void)
 				map_psram_mirror_sub(0xE0);
 		}
 
-		//Map PSRAM to 70-7D/F0-FF
+		/*Map PSRAM to 70-7D/F0-FF */
 		if (BSX.prevMMC[0x03])
 			map_psram_mirror_sub(0x70);
 
@@ -345,10 +396,10 @@ static void BSX_Map_PSRAM(void)
 	}
 	else
 	{
-		//HiROM Mode
+		/*HiROM Mode */
 		if (!BSX.prevMMC[0x05] && !BSX.prevMMC[0x06])
 		{
-			//Map PSRAM to 00-07/40-47 / 80-87/C0-C7
+			/*Map PSRAM to 00-07/40-47 / 80-87/C0-C7 */
 			if (BSX.prevMMC[0x03])
 			{
 				map_psram_mirror_sub(0x00);
@@ -363,7 +414,7 @@ static void BSX_Map_PSRAM(void)
 		}
 		else if (BSX.prevMMC[0x05] && !BSX.prevMMC[0x06])
 		{
-			//Map PSRAM to 10-17/50-57 / 90-97-D0-D7
+			/*Map PSRAM to 10-17/50-57 / 90-97-D0-D7 */
 			if (BSX.prevMMC[0x03])
 			{
 				map_psram_mirror_sub(0x10);
@@ -378,7 +429,7 @@ static void BSX_Map_PSRAM(void)
 		}
 		else if (!BSX.prevMMC[0x05] && BSX.prevMMC[0x06])
 		{
-			//Map PSRAM to 20-27/60-67 / A0-A7/E0-E7
+			/*Map PSRAM to 20-27/60-67 / A0-A7/E0-E7 */
 			if (BSX.prevMMC[0x03])
 			{
 				map_psram_mirror_sub(0x20);
@@ -393,7 +444,7 @@ static void BSX_Map_PSRAM(void)
 		}
 		else
 		{
-			//Map PSRAM to 30-37/70-77 / B0-B7/F0-F7
+			/*Map PSRAM to 30-37/70-77 / B0-B7/F0-F7 */
 			if (BSX.prevMMC[0x03])
 			{
 				map_psram_mirror_sub(0x30);
@@ -409,7 +460,7 @@ static void BSX_Map_PSRAM(void)
 
 		if (BSX.prevMMC[0x03])
 		{
-			//Map PSRAM to 20->3F:6000-7FFF
+			/*Map PSRAM to 20->3F:6000-7FFF */
 			for (c = 0x200; c < 0x400; c += 16)
 			{
 				Map[c + 6] = &PSRAM[((c & 0x70) << 12) % PSRAM_SIZE];
@@ -423,7 +474,7 @@ static void BSX_Map_PSRAM(void)
 
 		if (BSX.prevMMC[0x04])
 		{
-			//Map PSRAM to A0->BF:6000-7FFF
+			/*Map PSRAM to A0->BF:6000-7FFF */
 			for (c = 0xA00; c < 0xC00; c += 16)
 			{
 				Map[c + 6] = &PSRAM[((c & 0x70) << 12) % PSRAM_SIZE];
@@ -441,7 +492,7 @@ static void BSX_Map_BIOS (void)
 {
 	int	i,c;
 
-	// Banks 00->1F:8000-FFFF
+	/* Banks 00->1F:8000-FFFF */
 	if (BSX.prevMMC[0x07])
 	{
 		for (c = 0; c < 0x200; c += 16)
@@ -455,7 +506,7 @@ static void BSX_Map_BIOS (void)
 		}
 	}
 
-	// Banks 80->9F:8000-FFFF
+	/* Banks 80->9F:8000-FFFF */
 	if (BSX.prevMMC[0x08])
 	{
 		for (c = 0; c < 0x200; c += 16)
@@ -474,7 +525,7 @@ static void BSX_Map_RAM (void)
 {
 	int	c;
 
-	// Banks 7E->7F
+	/* Banks 7E->7F */
 	for (c = 0; c < 16; c++)
 	{
 		Map[c + 0x7E0] = RAM;
@@ -489,8 +540,10 @@ static void BSX_Map_RAM (void)
 static void BSX_Map (void)
 {
 #ifdef BSX_DEBUG
+	int i;
+
 	printf("BS: Remapping\n");
-	for (int i = 0; i < 32; i++)
+	for (i = 0; i < 32; i++)
 		printf("BS: MMC %02X: %d\n", i, BSX.MMC[i]);
 #endif
 
@@ -514,17 +567,17 @@ static void BSX_Map (void)
 	BSX_Map_BIOS();
 	BSX_Map_MMC();
 
-	// Monitor new register changes
+	/* Monitor new register changes */
 	BSX.dirty  = FALSE;
 	BSX.dirty2 = FALSE;
 
-	Memory.map_WriteProtectROM();
+	BSXMapWriteProtectROM();
 }
 
 static uint8 BSX_Get_Bypass_FlashIO (uint32 offset)
 {
-	//For games other than BS-X
-	FlashROM = Memory.ROM + Multi.cartOffsetB;
+	/*For games other than BS-X */
+	FlashROM = BSXROMBase + BSXGetCartOffsetB();
 
 	if (BSX.prevMMC[0x02])
 		return (FlashROM[offset & 0x0FFFFF]);
@@ -534,8 +587,8 @@ static uint8 BSX_Get_Bypass_FlashIO (uint32 offset)
 
 static void BSX_Set_Bypass_FlashIO (uint32 offset, uint8 byte)
 {
-	//For games other than BS-X
-	FlashROM = Memory.ROM + Multi.cartOffsetB;
+	/*For games other than BS-X */
+	FlashROM = BSXROMBase + BSXGetCartOffsetB();
 
 	if (BSX.prevMMC[0x02])
 		FlashROM[offset & 0x0FFFFF] = FlashROM[offset & 0x0FFFFF] & byte;
@@ -549,42 +602,42 @@ uint8 S9xGetBSX (uint32 address)
 	uint16	offset = address & 0xFFFF;
 	uint8	t = 0;
 
-	// MMC
+	/* MMC */
 	if ((bank >= 0x01 && bank <= 0x0E) && ((address & 0xF000) == 0x5000))
 		return (BSX.MMC[bank]);
 
-	// Flash Mapping
+	/* Flash Mapping */
 
-	// default: read-through mode
+	/* default: read-through mode */
 	t = BSX_Get_Bypass_FlashIO(address);
 
-	// When the ares-accurate flash chip is in one of the command modes it
-	// owns (chip-id, page buffer, compatible/extended status), its response
-	// is authoritative: these are position-independent register reads the
-	// BS-X BIOS performs after a Sharp command. In plain flash-read mode
-	// the chip is not consulted and the legacy status flags below apply.
+	/* When the ares-accurate flash chip is in one of the command modes it */
+	/* owns (chip-id, page buffer, compatible/extended status), its response */
+	/* is authoritative: these are position-independent register reads the */
+	/* BS-X BIOS performs after a Sharp command. In plain flash-read mode */
+	/* the chip is not consulted and the legacy status flags below apply. */
 	if (BSFlashChip.memory && BSFlashChip.size && !BSFlashChip.is_rom &&
 		BSFlashChip.mode != BSF_MODE_FLASH)
 		return (S9xBSFlashRead(offset));
 
-	// note: may be more registers, purposes unknown
+	/* note: may be more registers, purposes unknown */
 	switch (offset)
 	{
 		case 0x0002:
 		case 0x8002:
 			if (BSX.flash_bsr)
-				t = 0xC0; // Page Status Register
+				t = 0xC0; /* Page Status Register */
 			break;
 
 		case 0x0004:
 		case 0x8004:
 			if (BSX.flash_gsr)
-				t = 0x82; // Global Status Register
+				t = 0x82; /* Global Status Register */
 			break;
 
 		case 0x5555:
 			if (BSX.flash_enable)
-				t = 0x80; // ???
+				t = 0x80; /* ??? */
 			break;
 
 		case 0xFF00:
@@ -597,7 +650,7 @@ uint8 S9xGetBSX (uint32 address)
 		case 0xFF0E:
 		case 0xFF10:
 		case 0xFF12:
-			// return flash vendor information
+			/* return flash vendor information */
 			if (BSX.read_enable)
 				t = flashcard[offset - 0xFF00];
 			break;
@@ -605,8 +658,8 @@ uint8 S9xGetBSX (uint32 address)
 
 	if (BSX.flash_csr)
 	{
-		t = 0x80; // Compatible Status Register
-		BSX.flash_csr = false;
+		t = 0x80; /* Compatible Status Register */
+		BSX.flash_csr = FALSE;
 	}
 
 	return (t);
@@ -616,12 +669,12 @@ void S9xSetBSX (uint8 byte, uint32 address)
 {
 	uint8	bank = (address >> 16) & 0xFF;
 
-	// MMC
+	/* MMC */
 	if ((bank >= 0x01 && bank <= 0x0E) && ((address & 0xF000) == 0x5000))
 	{
-		//Avoid updating the memory map when it is not needed.
-		// ares MCC: register 14 commits the latched registers only when
-		// written with bit 7 set; a write with bit 7 clear must not commit.
+		/*Avoid updating the memory map when it is not needed. */
+		/* ares MCC: register 14 commits the latched registers only when */
+		/* written with bit 7 set; a write with bit 7 clear must not commit. */
 		if (bank == 0x0E && (byte & 0x80) && BSX.dirty)
 		{
 			BSX_Map();
@@ -635,29 +688,29 @@ void S9xSetBSX (uint8 byte, uint32 address)
 		BSX.MMC[bank] = byte;
 	}
 
-	// Flash IO
+	/* Flash IO */
 
-	// Feed every $C0-bank write to the ares-accurate flash chip first so its
-	// mode, page buffers and status registers track the real Sharp command
-	// sequence (program data bytes after 0x10/0x40 arrive this way too). The
-	// legacy state machine below is kept in lock-step so the verified boot
-	// path is unchanged; reads consult the chip only for the command modes
-	// it owns (see BSX_Get_FlashIO above).
+	/* Feed every $C0-bank write to the ares-accurate flash chip first so its */
+	/* mode, page buffers and status registers track the real Sharp command */
+	/* sequence (program data bytes after 0x10/0x40 arrive this way too). The */
+	/* legacy state machine below is kept in lock-step so the verified boot */
+	/* path is unchanged; reads consult the chip only for the command modes */
+	/* it owns (see BSX_Get_FlashIO above). */
 	if (bank == 0xC0 && BSFlashChip.memory && BSFlashChip.size &&
 		!BSFlashChip.is_rom)
 		S9xBSFlashWrite(address & 0xFFFF, byte);
 
-	// Write to Flash
+	/* Write to Flash */
 	if (BSX.write_enable)
 	{
 		BSX_Set_Bypass_FlashIO(address, byte);
-		BSX.write_enable = false;
+		BSX.write_enable = FALSE;
 		return;
 	}
 
-	// Flash Command Handling
+	/* Flash Command Handling */
 	
-	//Memory Pack Type 1 & 3 & 4
+	/*Memory Pack Type 1 & 3 & 4 */
 	BSX.flash_command <<= 8;
 	BSX.flash_command |= byte;
 
@@ -665,118 +718,121 @@ void S9xSetBSX (uint8 byte, uint32 address)
 	{
 		case 0x00:
 		case 0xFF:
-			//Reset to normal
-			BSX.flash_enable = false;
-			BSX.flash_bsr = false;
-			BSX.flash_csr = false;
-			BSX.flash_gsr = false;
-			BSX.read_enable = false;
-			BSX.write_enable = false;
-			BSX.flash_cmd_done = true;
+			/*Reset to normal */
+			BSX.flash_enable = FALSE;
+			BSX.flash_bsr = FALSE;
+			BSX.flash_csr = FALSE;
+			BSX.flash_gsr = FALSE;
+			BSX.read_enable = FALSE;
+			BSX.write_enable = FALSE;
+			BSX.flash_cmd_done = TRUE;
 			break;
 
 		case 0x10:
 		case 0x40:
-			//Write Byte
-			BSX.flash_enable = false;
-			BSX.flash_bsr = false;
-			BSX.flash_csr = true;
-			BSX.flash_gsr = false;
-			BSX.read_enable = false;
-			BSX.write_enable = true;
-			BSX.flash_cmd_done = true;
+			/*Write Byte */
+			BSX.flash_enable = FALSE;
+			BSX.flash_bsr = FALSE;
+			BSX.flash_csr = TRUE;
+			BSX.flash_gsr = FALSE;
+			BSX.read_enable = FALSE;
+			BSX.write_enable = TRUE;
+			BSX.flash_cmd_done = TRUE;
 			break;
 
 		case 0x50:
-			//Clear Status Register
-			BSX.flash_enable = false;
-			BSX.flash_bsr = false;
-			BSX.flash_csr = false;
-			BSX.flash_gsr = false;
-			BSX.flash_cmd_done = true;
+			/*Clear Status Register */
+			BSX.flash_enable = FALSE;
+			BSX.flash_bsr = FALSE;
+			BSX.flash_csr = FALSE;
+			BSX.flash_gsr = FALSE;
+			BSX.flash_cmd_done = TRUE;
 			break;
 
 		case 0x70:
-			//Read CSR
-			BSX.flash_enable = false;
-			BSX.flash_bsr = false;
-			BSX.flash_csr = true;
-			BSX.flash_gsr = false;
-			BSX.read_enable = false;
-			BSX.write_enable = false;
-			BSX.flash_cmd_done = true;
+			/*Read CSR */
+			BSX.flash_enable = FALSE;
+			BSX.flash_bsr = FALSE;
+			BSX.flash_csr = TRUE;
+			BSX.flash_gsr = FALSE;
+			BSX.read_enable = FALSE;
+			BSX.write_enable = FALSE;
+			BSX.flash_cmd_done = TRUE;
 			break;
 
 		case 0x71:
-			//Read Extended Status Registers (Page and Global)
-			BSX.flash_enable = false;
-			BSX.flash_bsr = true;
-			BSX.flash_csr = false;
-			BSX.flash_gsr = true;
-			BSX.read_enable = false;
-			BSX.write_enable = false;
-			BSX.flash_cmd_done = true;
+			/*Read Extended Status Registers (Page and Global) */
+			BSX.flash_enable = FALSE;
+			BSX.flash_bsr = TRUE;
+			BSX.flash_csr = FALSE;
+			BSX.flash_gsr = TRUE;
+			BSX.read_enable = FALSE;
+			BSX.write_enable = FALSE;
+			BSX.flash_cmd_done = TRUE;
 			break;
 
 		case 0x75:
-			//Show Page Buffer / Vendor Info
-			BSX.flash_csr = false;
-			BSX.read_enable = true;
-			BSX.flash_cmd_done = true;
+			/*Show Page Buffer / Vendor Info */
+			BSX.flash_csr = FALSE;
+			BSX.read_enable = TRUE;
+			BSX.flash_cmd_done = TRUE;
 			break;
 
 		case 0xD0:
-			//DO COMMAND
+			/*DO COMMAND */
 			switch (BSX.flash_command & 0xFFFF)
 			{
-				case 0x20D0: //Block Erase
+				case 0x20D0: /*Block Erase */
+				{
 					uint32 x;
 					for (x = 0; x < 0x10000; x++) {
-						//BSX_Set_Bypass_FlashIO(((address & 0xFF0000) + x), 0xFF);
+						/*BSX_Set_Bypass_FlashIO(((address & 0xFF0000) + x), 0xFF); */
 						if (BSX.MMC[0x02])
 							FlashROM[(address & 0x0F0000) + x] = 0xFF;
 						else
 							FlashROM[((address & 0x1E0000) >> 1) + x] = 0xFF;
 					}
 					break;
+				}
 
-				case 0xA7D0: //Chip Erase (ONLY IN TYPE 1 AND 4)
+				case 0xA7D0: /*Chip Erase (ONLY IN TYPE 1 AND 4) */
 					if ((flashcard[6] & 0xF0) == 0x10 || (flashcard[6] & 0xF0) == 0x40)
 					{
 						uint32 x;
 						for (x = 0; x < FLASH_SIZE; x++) {
-							//BSX_Set_Bypass_FlashIO(x, 0xFF);
+							/*BSX_Set_Bypass_FlashIO(x, 0xFF); */
 							FlashROM[x] = 0xFF;
 						}
 					}
 					break;
 
-				case 0x38D0: //Flashcart Reset
+				case 0x38D0: /*Flashcart Reset */
 					break;
 			}
 			break;
 	}
 }
 
-void S9xBSXSetStream1 (uint8 count)
+static void S9xBSXSetStream1 (uint8 count)
 {
-	if (BSX.sat_stream1.is_open())
-		BSX.sat_stream1.close(); //If Stream already opened for one file: Close it.
+	char path[PATH_MAX + 32];
+	long str1size;
+	float QueueSize;
 
-	std::string path = S9xGetDirectory(SAT_DIR) + SLASH_STR;
+	if ((BSX.sat_stream1 != NULL))
+		{ fclose(BSX.sat_stream1); BSX.sat_stream1 = NULL; } /* already open: close it */
 
-	char name[PATH_MAX];
-	snprintf(name, PATH_MAX, "BSX%04X-%d.bin", (BSX.PPU[0x2188 - BSXPPUBASE] | (BSX.PPU[0x2189 - BSXPPUBASE] * 256)), count); //BSXHHHH-DDD.bin
-	path += name;
 
-	BSX.sat_stream1.clear();
-	BSX.sat_stream1.open(path.c_str(), std::ios::in | std::ios::binary);
-	if (BSX.sat_stream1.good())
+	sprintf(path, "%s%sBSX%04X-%d.bin", BSXGetSatDirectory(), BSXGetSlashStr(),
+		(BSX.PPU[0x2188 - BSXPPUBASE] | (BSX.PPU[0x2189 - BSXPPUBASE] * 256)), count); /* BSXHHHH-DDD.bin */
+
+	BSX.sat_stream1 = fopen(path, "rb");
+	if (BSX.sat_stream1 != NULL)
 	{
-		BSX.sat_stream1.seekg(0, BSX.sat_stream1.end);
-		long str1size = BSX.sat_stream1.tellg();
-		BSX.sat_stream1.seekg(0, BSX.sat_stream1.beg);
-		float QueueSize = str1size / 22.;
+		fseek(BSX.sat_stream1, 0, SEEK_END);
+		str1size = ftell(BSX.sat_stream1);
+		fseek(BSX.sat_stream1, 0, SEEK_SET);
+		QueueSize = str1size / 22.;
 		BSX.sat_stream1_queue = (uint16)(ceil(QueueSize));
 		BSX.PPU[0x218D - BSXPPUBASE] = 0;
 		BSX.sat_stream1_first = TRUE;
@@ -788,26 +844,27 @@ void S9xBSXSetStream1 (uint8 count)
 	}
 }
 
-void S9xBSXSetStream2 (uint8 count)
+static void S9xBSXSetStream2 (uint8 count)
 {
-	if (BSX.sat_stream2.is_open())
-		BSX.sat_stream2.close(); //If Stream already opened for one file: Close it.
+	char path[PATH_MAX + 32];
+	long str2size;
+	float QueueSize;
+
+	if ((BSX.sat_stream2 != NULL))
+		{ fclose(BSX.sat_stream2); BSX.sat_stream2 = NULL; } /* already open: close it */
 
 
-	std::string path = S9xGetDirectory(SAT_DIR) + SLASH_STR;
 
-	char name[PATH_MAX];
-	snprintf(name, PATH_MAX, "BSX%04X-%d.bin", (BSX.PPU[0x218E - BSXPPUBASE] | (BSX.PPU[0x218F - BSXPPUBASE] * 256)), count); //BSXHHHH-DDD.bin
-	path += name;
+	sprintf(path, "%s%sBSX%04X-%d.bin", BSXGetSatDirectory(), BSXGetSlashStr(),
+		(BSX.PPU[0x218E - BSXPPUBASE] | (BSX.PPU[0x218F - BSXPPUBASE] * 256)), count); /* BSXHHHH-DDD.bin */
 
-	BSX.sat_stream2.clear();
-	BSX.sat_stream2.open(path.c_str(), std::ios::in | std::ios::binary);
-	if (BSX.sat_stream2.good())
+	BSX.sat_stream2 = fopen(path, "rb");
+	if (BSX.sat_stream2 != NULL)
 	{
-		BSX.sat_stream2.seekg(0, BSX.sat_stream2.end);
-		long str2size = BSX.sat_stream2.tellg();
-		BSX.sat_stream2.seekg(0, BSX.sat_stream2.beg);
-		float QueueSize = str2size / 22.;
+		fseek(BSX.sat_stream2, 0, SEEK_END);
+		str2size = ftell(BSX.sat_stream2);
+		fseek(BSX.sat_stream2, 0, SEEK_SET);
+		QueueSize = str2size / 22.;
 		BSX.sat_stream2_queue = (uint16)(ceil(QueueSize));
 		BSX.PPU[0x2193 - BSXPPUBASE] = 0;
 		BSX.sat_stream2_first = TRUE;
@@ -819,9 +876,9 @@ void S9xBSXSetStream2 (uint8 count)
 	}
 }
 
-uint8 S9xBSXGetRTC (void)
+static uint8 S9xBSXGetRTC (void)
 {
-	//Get Time
+	/*Get Time */
 	time_t		t;
 	struct tm	*tmr;
 
@@ -850,7 +907,7 @@ uint8 S9xBSXGetRTC (void)
 
 	t = BSX.test2192[BSX.out_index++];
 
-	// Full 32-byte channel-0 cycle per the MiSTer BSX RTL capture.
+	/* Full 32-byte channel-0 cycle per the MiSTer BSX RTL capture. */
 	if (BSX.out_index > 31)
 		BSX.out_index = 0;
 
@@ -861,21 +918,21 @@ uint8 S9xGetBSXPPU (uint16 address)
 {
 	uint8	t;
 
-	// known read registers
+	/* known read registers */
 	switch (address)
 	{
-		//Stream 1
-		// Logical Channel 1 + Data Structure (R/W)
+		/*Stream 1 */
+		/* Logical Channel 1 + Data Structure (R/W) */
 		case 0x2188:
 			t = BSX.PPU[0x2188 - BSXPPUBASE];
 			break;
 
-		// Logical Channel 2 (R/W) [6bit]
+		/* Logical Channel 2 (R/W) [6bit] */
 		case 0x2189:
 			t = BSX.PPU[0x2189 - BSXPPUBASE];
 			break;
 
-		// Prefix Count (R)
+		/* Prefix Count (R) */
 		case 0x218A:
 			if (!BSX.sat_pf_latch1_enable || !BSX.sat_dt_latch1_enable)
 			{
@@ -903,7 +960,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 
 			if (BSX.sat_stream1_loaded)
 			{
-				//Lock at 0x7F for bigger packets
+				/*Lock at 0x7F for bigger packets */
 				if (BSX.sat_stream1_queue >= 128)
 					BSX.PPU[0x218A - BSXPPUBASE] = 0x7F;
 				else
@@ -914,7 +971,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 				t = 0;
 			break;
 
-		// Prefix Latch (R/W)
+		/* Prefix Latch (R/W) */
 		case 0x218B:
 			if (BSX.sat_pf_latch1_enable)
 			{
@@ -928,7 +985,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 					uint8 temp = 0;
 					if (BSX.sat_stream1_first)
 					{
-						// First packet
+						/* First packet */
 						temp |= 0x10;
 						BSX.sat_stream1_first = FALSE;
 					}
@@ -937,7 +994,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 
 					if (BSX.sat_stream1_queue == 0)
 					{
-						//Last packet
+						/*Last packet */
 						temp |= 0x80;
 					}
 
@@ -953,7 +1010,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 			}
 			break;
 
-		// Data Latch (R/W)
+		/* Data Latch (R/W) */
 		case 0x218C:
 			if (BSX.sat_dt_latch1_enable)
 			{
@@ -963,10 +1020,10 @@ uint8 S9xGetBSXPPU (uint16 address)
 				}
 				else if (BSX.sat_stream1_loaded)
 				{
-					if (BSX.sat_stream1.eof())
+					if (feof(BSX.sat_stream1))
 						BSX.PPU[0x218C - BSXPPUBASE] = 0xFF;
 					else
-						BSX.PPU[0x218C - BSXPPUBASE] = BSX.sat_stream1.get();
+						BSX.PPU[0x218C - BSXPPUBASE] = bsx_stream_get(BSX.sat_stream1);
 				}
 				t = BSX.PPU[0x218C - BSXPPUBASE];
 			}
@@ -976,24 +1033,24 @@ uint8 S9xGetBSXPPU (uint16 address)
 			}
 			break;
 
-		// OR gate (R)
+		/* OR gate (R) */
 		case 0x218D:
 			t = BSX.PPU[0x218D - BSXPPUBASE];
 			BSX.PPU[0x218D - BSXPPUBASE] = 0;
 			break;
 
-		//Stream 2
-		// Logical Channel 1 + Data Structure (R/W)
+		/*Stream 2 */
+		/* Logical Channel 1 + Data Structure (R/W) */
 		case 0x218E:
 			t = BSX.PPU[0x218E - BSXPPUBASE];
 			break;
 
-		// Logical Channel 2 (R/W) [6bit]
+		/* Logical Channel 2 (R/W) [6bit] */
 		case 0x218F:
 			t = BSX.PPU[0x218F - BSXPPUBASE];
 			break;
 
-		// Prefix Count (R)
+		/* Prefix Count (R) */
 		case 0x2190:
 			if (!BSX.sat_pf_latch2_enable || !BSX.sat_dt_latch2_enable)
 			{
@@ -1031,7 +1088,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 				t = 0;
 			break;
 
-		// Prefix Latch (R/W)
+		/* Prefix Latch (R/W) */
 		case 0x2191:
 			if (BSX.sat_pf_latch2_enable)
 			{
@@ -1045,7 +1102,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 					uint8 temp = 0;
 					if (BSX.sat_stream2_first)
 					{
-						// First packet
+						/* First packet */
 						temp |= 0x10;
 						BSX.sat_stream2_first = FALSE;
 					}
@@ -1054,7 +1111,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 
 					if (BSX.sat_stream2_queue == 0)
 					{
-						//Last packet
+						/*Last packet */
 						temp |= 0x80;
 					}
 
@@ -1070,7 +1127,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 			}
 			break;
 
-		// Data Latch (R/W)
+		/* Data Latch (R/W) */
 		case 0x2192:
 			if (BSX.sat_dt_latch2_enable)
 			{
@@ -1080,10 +1137,10 @@ uint8 S9xGetBSXPPU (uint16 address)
 				}
 				else if (BSX.sat_stream2_loaded)
 				{
-					if (BSX.sat_stream2.eof())
+					if (feof(BSX.sat_stream2))
 						BSX.PPU[0x2192 - BSXPPUBASE] = 0xFF;
 					else
-						BSX.PPU[0x2192 - BSXPPUBASE] = BSX.sat_stream2.get();
+						BSX.PPU[0x2192 - BSXPPUBASE] = bsx_stream_get(BSX.sat_stream2);
 				}
 				t = BSX.PPU[0x2192 - BSXPPUBASE];
 			}
@@ -1093,39 +1150,39 @@ uint8 S9xGetBSXPPU (uint16 address)
 			}
 			break;
 
-		// OR gate (R)
+		/* OR gate (R) */
 		case 0x2193:
 			t = BSX.PPU[0x2193 - BSXPPUBASE];
 			BSX.PPU[0x2193 - BSXPPUBASE] = 0;
 			break;
 
-		//Other
-		// Satellaview LED / Stream Enable (R/W) [4bit]
+		/*Other */
+		/* Satellaview LED / Stream Enable (R/W) [4bit] */
 		case 0x2194:
 			t = BSX.PPU[0x2194 - BSXPPUBASE];
 			break;
 
-		// Unknown
+		/* Unknown */
 		case 0x2195:
 			t = BSX.PPU[0x2195 - BSXPPUBASE];
 			break;
 
-		// Satellaview Status (R)
+		/* Satellaview Status (R) */
 		case 0x2196:
 			t = BSX.PPU[0x2196 - BSXPPUBASE];
 			break;
 
-		// Soundlink Settings (R/W)
+		/* Soundlink Settings (R/W) */
 		case 0x2197:
 			t = BSX.PPU[0x2197 - BSXPPUBASE];
 			break;
 
-		// Serial I/O - Serial Number (R/W)
+		/* Serial I/O - Serial Number (R/W) */
 		case 0x2198:
 			t = BSX.PPU[0x2198 - BSXPPUBASE];
 			break;
 
-		// Serial I/O - Unknown (R/W)
+		/* Serial I/O - Unknown (R/W) */
 		case 0x2199:
 			t = BSX.PPU[0x2199 - BSXPPUBASE];
 			break;
@@ -1140,11 +1197,11 @@ uint8 S9xGetBSXPPU (uint16 address)
 
 void S9xSetBSXPPU (uint8 byte, uint16 address)
 {
-	// known write registers
+	/* known write registers */
 	switch (address)
 	{
-		//Stream 1
-		// Logical Channel 1 + Data Structure (R/W)
+		/*Stream 1 */
+		/* Logical Channel 1 + Data Structure (R/W) */
 		case 0x2188:
 			if (BSX.PPU[0x2188 - BSXPPUBASE] == byte)
 			{
@@ -1153,7 +1210,7 @@ void S9xSetBSXPPU (uint8 byte, uint16 address)
 			BSX.PPU[0x2188 - BSXPPUBASE] = byte;
 			break;
 
-		// Logical Channel 2 (R/W) [6bit]
+		/* Logical Channel 2 (R/W) [6bit] */
 		case 0x2189:
 			if (BSX.PPU[0x2188 - BSXPPUBASE] == (byte & 0x3F))
 			{
@@ -1162,12 +1219,12 @@ void S9xSetBSXPPU (uint8 byte, uint16 address)
 			BSX.PPU[0x2189 - BSXPPUBASE] = byte & 0x3F;
 			break;
 
-		// Prefix Latch (R/W)
+		/* Prefix Latch (R/W) */
 		case 0x218B:
 			BSX.sat_pf_latch1_enable = (byte != 0);
 			break;
 
-		// Data Latch (R/W)
+		/* Data Latch (R/W) */
 		case 0x218C:
 			if (BSX.PPU[0x2188 - BSXPPUBASE] == 0 && BSX.PPU[0x2189 - BSXPPUBASE] == 0)
 			{
@@ -1176,8 +1233,8 @@ void S9xSetBSXPPU (uint8 byte, uint16 address)
 			BSX.sat_dt_latch1_enable = (byte != 0);
 			break;
 
-		//Stream 2
-		// Logical Channel 1 + Data Structure (R/W)
+		/*Stream 2 */
+		/* Logical Channel 1 + Data Structure (R/W) */
 		case 0x218E:
 			if (BSX.PPU[0x218E - BSXPPUBASE] == byte)
 			{
@@ -1186,7 +1243,7 @@ void S9xSetBSXPPU (uint8 byte, uint16 address)
 			BSX.PPU[0x218E - BSXPPUBASE] = byte;
 			break;
 
-		// Logical Channel 2 (R/W) [6bit]
+		/* Logical Channel 2 (R/W) [6bit] */
 		case 0x218F:
 			if (BSX.PPU[0x218F - BSXPPUBASE] == (byte & 0x3F))
 			{
@@ -1195,12 +1252,12 @@ void S9xSetBSXPPU (uint8 byte, uint16 address)
 			BSX.PPU[0x218F - BSXPPUBASE] = byte & 0x3F;
 			break;
 
-		// Prefix Latch (R/W)
+		/* Prefix Latch (R/W) */
 		case 0x2191:
 			BSX.sat_pf_latch2_enable = (byte != 0);
 			break;
 
-		// Data Latch (R/W)
+		/* Data Latch (R/W) */
 		case 0x2192:
 			if (BSX.PPU[0x218E - BSXPPUBASE] == 0 && BSX.PPU[0x218F - BSXPPUBASE] == 0)
 			{
@@ -1209,13 +1266,13 @@ void S9xSetBSXPPU (uint8 byte, uint16 address)
 			BSX.sat_dt_latch2_enable = (byte != 0);
 			break;
 
-		//Other
-		// Satellaview LED / Stream Enable (R/W) [4bit]
+		/*Other */
+		/* Satellaview LED / Stream Enable (R/W) [4bit] */
 		case 0x2194:
 			BSX.PPU[0x2194 - BSXPPUBASE] = byte & 0x0F;
 			break;
 
-		// Soundlink Settings (R/W)
+		/* Soundlink Settings (R/W) */
 		case 0x2197:
 			BSX.PPU[0x2197 - BSXPPUBASE] = byte;
 			break;
@@ -1224,6 +1281,7 @@ void S9xSetBSXPPU (uint8 byte, uint16 address)
 
 uint8 * S9xGetBasePointerBSX (uint32 address)
 {
+	(void) address;
 	return (MapROM);
 }
 
@@ -1232,13 +1290,14 @@ static bool8 BSX_LoadBIOS (void)
 	FILE	*fp;
 	bool8	r = FALSE;
 
-	std::string name = S9xGetDirectory(BIOS_DIR) + SLASH_STR + "BS-X.bin";
+	char name[PATH_MAX + 16];
 
-	fp = fopen(name.c_str(), "rb");
+	sprintf(name, "%s%sBS-X.bin", BSXGetBIOSDirectory(), BSXGetSlashStr());
+	fp = fopen(name, "rb");
 	if (!fp)
 	{
-		name = S9xGetDirectory(BIOS_DIR) + SLASH_STR + "BS-X.bios";
-		fp = fopen(name.c_str(), "rb");
+		sprintf(name, "%s%sBS-X.bios", BSXGetBIOSDirectory(), BSXGetSlashStr());
+		fp = fopen(name, "rb");
 	}
 
 	if (fp)
@@ -1271,19 +1330,23 @@ static bool8 is_BSX_BIOS (const uint8 *data, uint32 size)
 
 void S9xInitBSX (void)
 {
-	Settings.BS = FALSE;
+	int r1, r2;
+	uint8 *header;
+#ifdef BSX_DEBUG
+	int dbg_i;
+#endif
+	BSXSetSettingBS(FALSE);
 
-	if (is_BSX_BIOS(Memory.ROM,Memory.CalculatedSize))
+	if (is_BSX_BIOS(BSXROMBase,BSXGetCalculatedSize()))
 	{
-		// BS-X itself
+		/* BS-X itself */
 
-		Settings.BS = TRUE;
-		Settings.BSXItself = TRUE;
+		BSXSetSettingBS(TRUE);
+		BSXSetSettingBSXItself(TRUE);
 
-		Memory.LoROM = TRUE;
-		Memory.HiROM = FALSE;
+		BSXSetLoHiROM(TRUE, FALSE);
 
-		memmove(BIOSROM, Memory.ROM, BIOS_SIZE);
+		memmove(BIOSROM, BSXROMBase, BIOS_SIZE);
 
 		FlashMode = FALSE;
 		FlashSize = FLASH_SIZE;
@@ -1292,39 +1355,36 @@ void S9xInitBSX (void)
 	}
 	else
 	{
-		Settings.BSXItself = FALSE;
+		BSXSetSettingBSXItself(FALSE);
 
-		int	r1, r2;
+		r1 = (is_bsx(BSXROMBase + 0x7FC0) == 1);
+		r2 = (is_bsx(BSXROMBase + 0xFFC0) == 1);
+		BSXSetSettingBS((r1 | r2) ? TRUE : FALSE);
 
-		r1 = (is_bsx(Memory.ROM + 0x7FC0) == 1);
-		r2 = (is_bsx(Memory.ROM + 0xFFC0) == 1);
-		Settings.BS = (r1 | r2) ? TRUE : FALSE;
-
-		if (Settings.BS)
+		if (BSXGetSettingBS())
 		{
-			// BS games
+			/* BS games */
 
-			Memory.LoROM = r1 ? TRUE : FALSE;
-			Memory.HiROM = r2 ? TRUE : FALSE;
+			BSXSetLoHiROM(r1 ? TRUE : FALSE, r2 ? TRUE : FALSE);
 
-			uint8	*header = r1 ? Memory.ROM + 0x7FC0 : Memory.ROM + 0xFFC0;
+			header = r1 ? BSXROMBase + 0x7FC0 : BSXROMBase + 0xFFC0;
 
 			FlashMode = (header[0x18] & 0xEF) == 0x20 ? FALSE : TRUE;
 			FlashSize = FLASH_SIZE;
 
-			// Fix Block Allocation Flags
-			// (for games that don't have it setup properly,
-			// for exemple when taken seperately from the upper memory of the Memory Pack,
-			// else the game will error out on BS-X)
+			/* Fix Block Allocation Flags */
+			/* (for games that don't have it setup properly, */
+			/* for exemple when taken seperately from the upper memory of the Memory Pack, */
+			/* else the game will error out on BS-X) */
 			for (; (((header[0x10] & 1) == 0) && header[0x10] != 0); (header[0x10] >>= 1));
 
 #ifdef BSX_DEBUG
-			for (int i = 0; i <= 0x1F; i++)
-				printf("BS: ROM Header %02X: %02X\n", i, header[i]);
+			for (dbg_i = 0; dbg_i <= 0x1F; dbg_i++)
+				printf("BS: ROM Header %02X: %02X\n", dbg_i, header[dbg_i]);
 			printf("BS: FlashMode: %d, FlashSize: %x\n", FlashMode, FlashSize);
 #endif
 
-			BSX.bootup = Settings.BSXBootup;
+			BSX.bootup = BSXGetSettingBSXBootup();
 
 			if (!BSX_LoadBIOS() && !is_BSX_BIOS(BIOSROM,BIOS_SIZE))
 			{
@@ -1334,10 +1394,10 @@ void S9xInitBSX (void)
 		}
 	}
 
-	if (Settings.BS)
+	if (BSXGetSettingBS())
 	{
 		MapROM = NULL;
-		FlashROM = Memory.ROM;
+		FlashROM = BSXROMBase;
 		/*
 		time_t		t;
 		struct tm	*tmr;
@@ -1354,21 +1414,21 @@ void S9xInitBSX (void)
 		printf("BS: Current Time: %02d:%02d:%02d\n",  BSX_RTC.hours, BSX_RTC.minutes, BSX_RTC.seconds);
 #endif
 		*/
-		SNESGameFixes.SRAMInitialValue = 0x00;
+		BSXSetSRAMInitialValue(0x00);
 	}
 }
 
 void S9xResetBSX (void)
 {
-	// Initialise the ares-accurate BS Memory flash chip over the same image
-	// the legacy mapping uses. The BS-X base unit hosts a writable Flash
-	// cassette; dumped BS-game ROM cassettes are read-only MaskROM and read
-	// straight through the chip untouched.
+	/* Initialise the ares-accurate BS Memory flash chip over the same image */
+	/* the legacy mapping uses. The BS-X base unit hosts a writable Flash */
+	/* cassette; dumped BS-game ROM cassettes are read-only MaskROM and read */
+	/* straight through the chip untouched. */
 	S9xBSFlashInit(FlashROM, FlashSize,
-		(Settings.BSXItself || FlashMode) ? FALSE : TRUE);
+		(BSXGetSettingBSXItself() || FlashMode) ? FALSE : TRUE);
 
-	if (Settings.BSXItself)
-		memset(Memory.ROM, 0, FLASH_SIZE);
+	if (BSXGetSettingBSXItself())
+		memset(BSXROMBase, 0, FLASH_SIZE);
 
 	memset(BSX.PPU, 0, sizeof(BSX.PPU));
 	memset(BSX.MMC, 0, sizeof(BSX.MMC));
@@ -1386,18 +1446,18 @@ void S9xResetBSX (void)
 	BSX.out_index = 0;
 	memset(BSX.output, 0, sizeof(BSX.output));
 
-	// starting from the bios
+	/* starting from the bios */
 	BSX.MMC[0x02] = BSX.MMC[0x03] = BSX.MMC[0x05] = BSX.MMC[0x06] = 0x80;
 	BSX.MMC[0x09] = BSX.MMC[0x0B] = 0x80;
 
 	BSX.MMC[0x07] = BSX.MMC[0x08] = 0x80;
 	BSX.MMC[0x0E] = 0x80;
 
-	// default register values
+	/* default register values */
 	BSX.PPU[0x2196 - BSXPPUBASE] = 0x10;
 	BSX.PPU[0x2197 - BSXPPUBASE] = 0x80;
 
-	// stream reset
+	/* stream reset */
 	BSX.sat_pf_latch1_enable = BSX.sat_dt_latch1_enable = FALSE;
 	BSX.sat_pf_latch2_enable = BSX.sat_dt_latch2_enable = FALSE;
 
@@ -1405,13 +1465,18 @@ void S9xResetBSX (void)
 	BSX.sat_stream1_first = BSX.sat_stream2_first = FALSE;
 	BSX.sat_stream1_count = BSX.sat_stream2_count = 0;
 
-    if (BSX.sat_stream1.is_open())
-        BSX.sat_stream1.close();
+    if (BSX.sat_stream1 != NULL)
+    {
+        fclose(BSX.sat_stream1);
+        BSX.sat_stream1 = NULL;
+    }
+    if (BSX.sat_stream2 != NULL)
+    {
+        fclose(BSX.sat_stream2);
+        BSX.sat_stream2 = NULL;
+    }
 
-    if (BSX.sat_stream2.is_open())
-        BSX.sat_stream2.close();
-
-    if (Settings.BS)
+    if (BSXGetSettingBS())
 	    BSX_Map();
 }
 
@@ -1432,16 +1497,16 @@ void S9xBSXPostLoadState (void)
 	BSX.dirty2 = pd2;
 }
 
-static bool valid_normal_bank (unsigned char bankbyte)
+static uint8_t valid_normal_bank (unsigned char bankbyte)
 {
 	switch (bankbyte)
 	{
 		case 32: case 33: case 48: case 49:
-			return (true);
+			return (TRUE);
 			break;
 	}
 
-	return (false);
+	return (FALSE);
 }
 
 static int is_bsx (unsigned char *p)

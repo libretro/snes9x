@@ -46,7 +46,7 @@ typedef int32_t				int32;
 typedef uint32_t			uint32;
 typedef int64_t				int64;
 typedef uint64_t			uint64;
-#else	// HAVE_STDINT_H
+#else	/* HAVE_STDINT_H */
 #ifdef __WIN32__
 typedef intptr_t			pint;
 typedef signed char			int8;
@@ -66,7 +66,7 @@ typedef uint32      		uint32_t;
 typedef int64               int64_t;
 typedef uint64              uint64_t;
 typedef int					socklen_t;
-#else	// __WIN32__
+#else	/* __WIN32__ */
 typedef signed char			int8;
 typedef unsigned char		uint8;
 typedef signed short		int16;
@@ -74,15 +74,15 @@ typedef unsigned short		uint16;
 typedef signed int			int32;
 typedef unsigned int		uint32;
 #ifdef __GNUC__
-// long long is not part of ISO C++ 
+/* long long is not part of ISO C++ */
 __extension__
 #endif
 typedef long long			int64;
 typedef unsigned long long	uint64;
 typedef size_t				pint;
-#endif	//  __WIN32__
-#endif	// HAVE_STDINT_H
-#endif	// snes9x_types_defined
+#endif	/*  __WIN32__ */
+#endif	/* HAVE_STDINT_H */
+#endif	/* snes9x_types_defined */
 
 #ifndef TRUE
 #define TRUE	1
@@ -115,7 +115,7 @@ typedef size_t				pint;
 #ifndef strncasecmp
    #define strncasecmp	strnicmp
 #endif
-#endif  // __WIN32__
+#endif  /* __WIN32__ */
 
 #if defined(__DJGPP) || defined(__WIN32__)
 #define SLASH_STR	"\\"

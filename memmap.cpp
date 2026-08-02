@@ -987,6 +987,14 @@ bool8 CMemory::Init (void)
 	SuperFX.pvRegisters = FillRAM + 0x3000;
 	SPC7110Map = Map;
 	SPC7110ROM = ROM;
+	BSXMemMap      = Map;
+	BSXBlockIsRAM  = BlockIsRAM;
+	BSXBlockIsROM  = BlockIsROM;
+	BSXRAMBase     = RAM;
+	BSXSRAMBase    = SRAM;
+	BSXPSRAMBase   = BSRAM;
+	BSXBIOSROMBase = BIOSROM;
+	BSXROMBase     = ROM;
 	SFXFillRAM = FillRAM;
 	SuperFX.nRamBanks   = 2; // Most only use 1.  1=64KB=512Mb, 2=128KB=1024Mb
 	SuperFX.pvRam       = SRAM;
@@ -4061,4 +4069,58 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
 
     if (try_patch_type_sequence(PATCH_DIR))
         return;
+}
+
+// ---- C bridges for bsx.c ----
+extern "C" void BSXMapWriteProtectROM (void)
+{
+	Memory.map_WriteProtectROM();
+}
+
+extern "C" void BSXSetLoHiROM (uint8_t lorom, uint8_t hirom)
+{
+	Memory.LoROM = lorom;
+	Memory.HiROM = hirom;
+}
+
+extern "C" uint8_t BSXGetSettingBS (void)          { return Settings.BS; }
+extern "C" void    BSXSetSettingBS (uint8_t on)    { Settings.BS = on; }
+extern "C" uint8_t BSXGetSettingBSXItself (void)   { return Settings.BSXItself; }
+extern "C" void    BSXSetSettingBSXItself (uint8_t on) { Settings.BSXItself = on; }
+extern "C" uint8_t BSXGetSettingBSXBootup (void)   { return Settings.BSXBootup; }
+
+extern "C" const char *BSXGetSatDirectory (void)
+{
+	static char buf[PATH_MAX + 1];
+	strncpy(buf, S9xGetDirectory(SAT_DIR).c_str(), PATH_MAX);
+	buf[PATH_MAX] = 0;
+	return buf;
+}
+
+extern "C" const char *BSXGetBIOSDirectory (void)
+{
+	static char buf[PATH_MAX + 1];
+	strncpy(buf, S9xGetDirectory(BIOS_DIR).c_str(), PATH_MAX);
+	buf[PATH_MAX] = 0;
+	return buf;
+}
+
+extern "C" const char *BSXGetSlashStr (void)
+{
+	return SLASH_STR;
+}
+
+extern "C" uint32_t BSXGetCalculatedSize (void)
+{
+	return Memory.CalculatedSize;
+}
+
+extern "C" uint32_t BSXGetCartOffsetB (void)
+{
+	return Multi.cartOffsetB;
+}
+
+extern "C" void BSXSetSRAMInitialValue (uint8_t v)
+{
+	SNESGameFixes.SRAMInitialValue = v;
 }
