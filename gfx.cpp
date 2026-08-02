@@ -1720,66 +1720,18 @@ void S9xSetInfoString (const char *string)
 	}
 }
 
-#include "var8x10font.h"
-static const int font_width = 8;
-static const int font_height = 10;
-
-static inline int CharWidth(uint8 c)
-{
-	return font_width - var8x10font_kern[c - 32][0] - var8x10font_kern[c - 32][1];
-}
-
-static int StringWidth(const char* str)
-{
-	int length = strlen(str);
-	int pixcount = 0;
-
-	if (length > 0)
-		pixcount++;
-
-	for (int i = 0; i < length; i++)
-	{
-		pixcount += (CharWidth(str[i]) - 1);
-	}
-
-	return pixcount;
-}
-
-static void VariableDisplayChar(int x, int y, uint8 c, bool monospace = false, int overlap = 0)
-{
-	int cindex = c - 32;
-	int crow = cindex >> 4;
-	int ccol = cindex & 15;
-	int cwidth = font_width - (monospace ? 0 : (var8x10font_kern[cindex][0] + var8x10font_kern[cindex][1]));
-
-	int	line = crow * font_height;
-	int	offset = ccol * font_width + (monospace ? 0 : var8x10font_kern[cindex][0]);
-	int scale = IPPU.RenderedScreenWidth / SNES_WIDTH;
-
-	uint16* s = GFX.Screen + y * GFX.RealPPL + x * scale;
-
-	for (int h = 0; h < font_height; h++, line++, s += GFX.RealPPL - cwidth * scale)
-	{
-		for (int w = 0; w < cwidth; w++, s++)
-		{
-			if (var8x10font[line][offset + w] == '#')
-				*s = Settings.DisplayColor;
-			else if (var8x10font[line][offset + w] == '.')
-				*s = 0x0000;
-
-			if (scale > 1)
-			{
-				s[1] = s[0];
-				s++;
-			}
-		}
-	}
-}
-
 void S9xDisplayMessages (uint16 *screen, int ppl, int width, int height, int scale)
 {
-	if (!GFX.InfoString.empty())
-		S9xDisplayString(GFX.InfoString.c_str(), 5, 1, true);
+	/* The text renderer this used (DisplayStringFromBottom) was removed as
+	   unused; it was only ever reached through the S9xDisplayString macro in
+	   port.h, so the grep missed it. Messages set via S9xSetInfoString are
+	   still tracked and time out normally, they are simply not drawn onto
+	   the SNES framebuffer: a libretro frontend renders its own OSD. */
+	(void) screen;
+	(void) ppl;
+	(void) width;
+	(void) height;
+	(void) scale;
 }
 
 static uint16 get_crosshair_color (uint8 color)
