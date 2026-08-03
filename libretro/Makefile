@@ -650,11 +650,19 @@ endif
 # warning. Clang and older GCC reject the value, so probe the final
 # toolchain and keep plain -flto on failure. Only an unmodified
 # default is upgraded; LTO set on the command line is left alone.
+#
+# The probe compiles only. It must not link: mingw's ld cannot write an
+# executable to /dev/null ("final link failed: file truncated"), so a
+# linking probe fails on every Windows build regardless of whether the
+# compiler supports the flag, which left those builds on plain -flto.
+# -flto= arguments are validated during compilation, so -c is enough to
+# tell a supported value from an unsupported one.
 ifeq ($(LTO),-flto)
    ifeq (,$(findstring cl.exe,$(CC)))
-      ifeq ($(shell printf 'int main(void){return 0;}' | $(CC) -flto=auto -x c - -o /dev/null 2>/dev/null && echo yes),yes)
+      ifeq ($(shell printf 'int main(void){return 0;}' | $(CC) -flto=auto -x c - -c -o ltoprobe.tmp.o 2>/dev/null && echo yes),yes)
          LTO := -flto=auto
       endif
+      $(shell rm -f ltoprobe.tmp.o)
    endif
 endif
 
