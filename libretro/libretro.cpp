@@ -2425,6 +2425,31 @@ bool8 S9xDeinitUpdate(int width, int height)
     {
         burst_phase = (burst_phase + 1) % 3;
 
+        if (width > 512)
+        {
+            /* HD Mode 7 4x frame. The NTSC filter models a composite
+               signal whose output tops out at SNES_NTSC_OUT_WIDTH(256)
+               = 602 px, so input columns beyond 512 add no information
+               -- and the lores blitter, fed 1024-px rows, would write
+               ~2400 px per line into a 604-px-pitch buffer (garbage
+               plus heap overflow). Box-downsample each row 2:1 in
+               place (per-channel floor average via the LSB-exact
+               halving-add identity, as in S9xMode7VertResample) and
+               use the hires path; the 4x sub-pixel detail survives as
+               anti-aliasing. In-place is safe: x ascends, so reads at
+               2x/2x+1 stay ahead of the write at x. */
+            for (int y = 0; y < height; y++)
+            {
+                uint16 *row = GFX.Screen + (size_t) y * (GFX.Pitch >> 1);
+                for (int x = 0; x < 512; x++)
+                {
+                    uint16 a = row[2 * x], b = row[2 * x + 1];
+                    row[x] = ((a & 0xF7DE) >> 1) + ((b & 0xF7DE) >> 1) + (a & b & 0x0821);
+                }
+            }
+            width = 512;
+        }
+
         if (width == 512)
             snes_ntsc_blit_hires(snes_ntsc, GFX.Screen, GFX.Pitch / 2, burst_phase, width, height, snes_ntsc_buffer, MAX_SNES_WIDTH_NTSC * 2);
         else
