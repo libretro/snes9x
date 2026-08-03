@@ -87,6 +87,9 @@ const int MAX_SNES_WIDTH_NTSC = ((SNES_NTSC_OUT_WIDTH(256) + 3) / 4) * 4;
 
 static bool show_lightgun_settings = true;
 static bool show_advanced_av_settings = true;
+/* snes9x_msu1_enhanced_audio core option; latched into the playback rate at
+   content load by msu1_update_playback_rate(). */
+static bool msu1_enhanced_pref = true;
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
@@ -358,6 +361,13 @@ static void update_variables(void)
     }
     char key[256];
     struct retro_variable var;
+
+    var.key = "snes9x_msu1_enhanced_audio";
+    var.value = NULL;
+
+    msu1_enhanced_pref = true;
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+        msu1_enhanced_pref = !strcmp(var.value, "enabled");
 
     var.key = "snes9x_hires_blend";
     var.value = NULL;
@@ -897,7 +907,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
     info->geometry.max_width = MAX_SNES_WIDTH_NTSC;
     info->geometry.max_height = MAX_SNES_HEIGHT;
     info->geometry.aspect_ratio = get_aspect_ratio(width, height);
-    info->timing.sample_rate = 32040;
+    info->timing.sample_rate = Settings.SoundPlaybackRate;
     info->timing.fps = retro_get_region() == RETRO_REGION_NTSC ? 21477272.0 / 357366.0 : 21281370.0 / 425568.0;
 
     g_screen_gun_width = width;
@@ -1233,6 +1243,26 @@ static bool8 is_SufamiTurbo_Cart (const uint8 *data, uint32 size)
         return (FALSE);
 }
 
+/* MSU-1 tracks are 44.1 kHz PCM. At the default 32040 Hz playback rate the
+   MSU resampler runs at ratio 44100/32040 = 1.376 -- a decimation through a
+   hermite interpolator with no anti-alias filtering, folding all
+   16.02-22.05 kHz track content down into the 10-16 kHz band as audible
+   hiss (libretro/snes9x#309; standalone builds don't exhibit it because
+   they default to 48 kHz playback). Raise the pipeline to 44.1 kHz for
+   MSU-1 content: the MSU ratio becomes exactly 1.0 (the resampler's
+   bit-exact pull path) and the SPC side becomes a clean upsample.
+   Non-MSU-1 content keeps the historical 32040 Hz output, as does MSU-1
+   content when the core option is disabled. */
+static void msu1_update_playback_rate(void)
+{
+    int playback_rate = (Settings.MSU1 && msu1_enhanced_pref) ? 44100 : 32040;
+    if (Settings.SoundPlaybackRate != playback_rate)
+    {
+        Settings.SoundPlaybackRate = playback_rate;
+        S9xInitSound(32);
+    }
+}
+
 bool retro_load_game(const struct retro_game_info *game)
 {
     init_descriptors();
@@ -1292,6 +1322,8 @@ bool retro_load_game(const struct retro_game_info *game)
 
     if (!rom_loaded && log_cb)
         log_cb(RETRO_LOG_ERROR, "ROM loading failed...\n");
+
+    msu1_update_playback_rate();
 
     Memory.ClearSRAM();
 
@@ -1426,6 +1458,8 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 
         g_geometry_update = true;
     }
+
+    msu1_update_playback_rate();
 
     return rom_loaded;
 }

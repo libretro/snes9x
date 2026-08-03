@@ -627,6 +627,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "White"
    },
    {
+      "snes9x_msu1_enhanced_audio",
+      "MSU-1 Enhanced Audio",
+      NULL,
+      "Run the audio pipeline at 44.1 kHz when an MSU-1 game is loaded. When disabled, MSU-1's 44.1 kHz PCM stream is decimated to the SNES's native ~32 kHz output with no anti-alias filtering, folding the track's top octave into the audible band as slight hiss. When enabled, the MSU-1 stream passes through bit-exactly and the SPC sound is upsampled cleanly. Has no effect on non-MSU-1 games. Changing this takes effect on the next content load.",
+      NULL,
+      NULL,
+      {
+         { "enabled",  NULL },
+         { "disabled", NULL },
+         { NULL, NULL },
+      },
+      "enabled"
+   },
+   {
       "snes9x_show_advanced_av_settings",
       "Show Advanced Audio/Video Settings",
       NULL,
