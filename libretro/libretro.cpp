@@ -401,7 +401,10 @@ static void update_variables(void)
             Settings.Mode7HiresVertical = 0;
         }
         TileMode7Hires = (uint8) Settings.Mode7Hires;
-        (void) prev;
+        /* Live option switch: refresh frontend geometry (max/base sizes,
+           aspect) the same way the aspect option does. */
+        if (prev != Settings.Mode7Hires)
+            g_geometry_update = true;
     }
 
     var.key = "snes9x_mode7_hires_bilinear";
