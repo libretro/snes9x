@@ -198,35 +198,27 @@ extern struct SGFX	GFX;
 	GFX.ZERO[(((C1) | RGB_HI_BITS_MASKx2) - \
 	((C2) & RGB_REMOVE_LOW_BITS_MASK)) >> 1]
 
-/* Per-channel saturating RGB subtraction (subtractive color-math
- * path). Kept here with its three siblings so all four COLOR_*
- * macros are defined together and visible -- in the right order --
- * to every translation unit that token-pastes them (REGMATH /
- * MATHF1_2 / MATHS1_2 in tile.c expand COLOR_##Op and
- * COLOR_##Op##1_2). It previously lived in tile.c, which made its
- * visibility depend on include/definition ordering and broke some
- * builds with an implicit-declaration error for COLOR_SUB /
- * COLOR_SUB1_2.
- *
- * Plain expression macro: C1 and C2 are each referenced several
- * times, like the ADD siblings above. All call sites pass simple,
- * side-effect-free expressions (variable reads, struct members,
- * ScreenColors lookups), so the repeats are identical
- * sub-expressions the compiler folds. Do NOT pass side-effecting
- * arguments here. (Left as a macro on purpose: it is instantiated
- * across many DrawTile* template variants and must inline at every
- * site.) */
+/* Subtraction, mainline-exact (COLOR_SUB::fn as an expression macro):
+ * borrow-guarded 5-bit lane math with joint saturate, then the RGB565
+ * green-LSB propagation. The per-channel ternary form this replaces
+ * (lifted from snes9x2010) lacked the green fixup, which showed up as
+ * a -0x20 green delta on saturating subtractive math. Same argument
+ * rules as the ADD macros above. */
+#define CSUB_RBMASK  (THIRD_COLOR_MASK | FIRST_COLOR_MASK)
+#define CSUB_RB(C1, C2) \
+	(((int) (((C1) & CSUB_RBMASK) | ((0x20 << 0) | (0x20 << RED_SHIFT_BITS)))) - \
+	 ((int) ((C2) & CSUB_RBMASK)))
+#define CSUB_G(C1, C2) \
+	(((int) (((C1) & SECOND_COLOR_MASK) | (0x20 << GREEN_SHIFT_BITS))) - \
+	 ((int) ((C2) & SECOND_COLOR_MASK)))
+#define CSUB_SAT(C1, C2) \
+	((((CSUB_G((C1), (C2)) & (0x20 << GREEN_SHIFT_BITS)) | \
+	   (CSUB_RB((C1), (C2)) & ((0x20 << RED_SHIFT_BITS) | (0x20 << 0)))) >> 5) * 0x1f)
+#define COLOR_SUB_RAW(C1, C2) \
+	((uint16) (((CSUB_RB((C1), (C2)) & CSUB_RBMASK) | \
+		(CSUB_G((C1), (C2)) & SECOND_COLOR_MASK)) & CSUB_SAT((C1), (C2))))
 #define COLOR_SUB(C1, C2) \
-	((uint16_t) (ALPHA_BITS_MASK \
-		+ ((((C1) & FIRST_COLOR_MASK)  > ((C2) & FIRST_COLOR_MASK))  \
-			? (uint16_t) (((C1) & FIRST_COLOR_MASK)  - ((C2) & FIRST_COLOR_MASK))  \
-			: (uint16_t) 0) \
-		+ ((((C1) & SECOND_COLOR_MASK) > ((C2) & SECOND_COLOR_MASK)) \
-			? (uint16_t) (((C1) & SECOND_COLOR_MASK) - ((C2) & SECOND_COLOR_MASK)) \
-			: (uint16_t) 0) \
-		+ ((((C1) & THIRD_COLOR_MASK)  > ((C2) & THIRD_COLOR_MASK))  \
-			? (uint16_t) (((C1) & THIRD_COLOR_MASK)  - ((C2) & THIRD_COLOR_MASK))  \
-			: (uint16_t) 0)))
+	((uint16) (COLOR_SUB_RAW((C1), (C2)) | ((COLOR_SUB_RAW((C1), (C2)) & 0x0400) >> 5)))
 #endif /* !__cplusplus */
 
 #ifdef __cplusplus

@@ -17,6 +17,7 @@ void S9xInitTileRenderer (void);
 void S9xSelectTileRenderers (int, uint8, uint8);
 void S9xSelectTileConverter (int, uint8, uint8, uint8);
 void S9xSelectTileRenderers_SFXSpeedup (void);
+void S9xMode7DeinterleaveVRAM (void);
 
 #ifdef __cplusplus
 }

@@ -1688,6 +1688,13 @@ static void DrawBackgroundOffsetMosaic (int bg, uint8 Zh, uint8 Zl, int VOffOff)
 
 static inline void DrawBackgroundMode7 (int bg, void (*DrawMath) (uint32, uint32, int), void (*DrawNomath) (uint32, uint32, int), int D)
 {
+	/* The C tile renderer samples Mode 7 through de-interleaved
+	   tilemap/graphics planes (Mode7TileMap/Mode7Gfx in tile.c); refresh
+	   them from current VRAM before sampling, exactly where snes9x2010's
+	   caller does. VRAM is VBlank-stable across a frame's Mode 7
+	   rendering, so one snapshot covers every clip segment below. */
+	S9xMode7DeinterleaveVRAM();
+
 	for (int clip = 0; clip < GFX.Clip[bg].Count; clip++)
 	{
 		GFX.ClipColors = !(GFX.Clip[bg].DrawMode[clip] & 1);
