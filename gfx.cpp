@@ -11,6 +11,17 @@
 #include "crosshairs.h"
 #include "cheats.h"
 #include "display.h"
+#include <vector>
+#include <string>
+
+/* Extracted from SGFX so the struct stays C-visible for tile.c. */
+static std::vector<uint16> GFXScreenBuffer;
+std::string GFXInfoString;
+
+/* tile.c-side bridges (C linkage): VRAM/FillRAM for the C tile renderer
+   without pulling memmap.h into C. Set in S9xGraphicsInit. */
+extern "C" { uint8 *tile_VRAM; uint8 *tile_FillRAM;
+             uint8 TileMode7Hires = 1; uint8 TileMode7HiresBilinear = 0; }
 
 extern struct SCheatData		Cheat;
 extern struct SLineData			LineData[240];
@@ -45,8 +56,13 @@ bool8 S9xGraphicsInit (void)
 	S9xFixColourBrightness();
 	S9xBuildDirectColourMaps();
 
-	GFX.ScreenBuffer.resize(MAX_SNES_WIDTH * (MAX_SNES_HEIGHT + 64));
-	GFX.Screen = &GFX.ScreenBuffer[GFX.RealPPL * 32];
+	GFX.Pitch      = sizeof(uint16) * MAX_SNES_WIDTH;
+	GFX.RealPPL    = MAX_SNES_WIDTH;
+	GFX.ScreenSize = MAX_SNES_WIDTH * MAX_SNES_HEIGHT;
+	tile_VRAM      = Memory.VRAM;
+	tile_FillRAM   = Memory.FillRAM;
+	GFXScreenBuffer.resize(MAX_SNES_WIDTH * (MAX_SNES_HEIGHT + 64));
+	GFX.Screen = &GFXScreenBuffer[GFX.RealPPL * 32];
 	GFX.ZERO = (uint16 *) malloc(sizeof(uint16) * 0x10000);
 	GFX.SubScreen  = (uint16 *) malloc(GFX.ScreenSize * sizeof(uint16));
 	GFX.ZBuffer    = (uint8 *)  malloc(GFX.ScreenSize);
@@ -180,7 +196,7 @@ void S9xStartScreenRefresh (void)
 	}
 
 	if (GFX.InfoStringTimeout > 0 && --GFX.InfoStringTimeout == 0)
-		GFX.InfoString.clear();
+		GFXInfoString.clear();
 
 	IPPU.TotalEmulatedFrames++;
 }
@@ -1686,6 +1702,14 @@ static inline void DrawBackgroundMode7 (int bg, void (*DrawMath) (uint32, uint32
 static inline void DrawBackdrop (void)
 {
 	uint32	Offset = GFX.StartY * GFX.PPL;
+
+	/* The C tile renderer's backdrop functions derive ScreenColors from
+	   RealScreenColors per call (ClipColors ? BlackColourMap :
+	   RealScreenColors), matching snes9x2010's caller contract where the
+	   caller sets RealScreenColors first. The old tileimpl backdrop read
+	   GFX.ScreenColors set by earlier tile draws instead, so on a frame
+	   where the backdrop draws first RealScreenColors was still NULL. */
+	GFX.RealScreenColors = IPPU.ScreenColors;
 
 	for (int clip = 0; clip < GFX.Clip[5].Count; clip++)
 	{

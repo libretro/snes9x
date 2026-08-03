@@ -8,14 +8,36 @@
 #define _GFX_H_
 
 #include "port.h"
+
+/* Dimension constants live in snes9x.h, which is a C++ header (it pulls
+   stream.h). tile.c is C and includes this header only, so mirror them
+   here; the static assert in gfx.cpp keeps the two in sync. */
+#ifndef SNES_WIDTH
+#define SNES_WIDTH				256
+#define SNES_HEIGHT				224
+#define SNES_HEIGHT_EXTENDED	239
+#define MAX_SNES_WIDTH			(SNES_WIDTH * 2)
+#define MAX_SNES_HEIGHT			(SNES_HEIGHT_EXTENDED * 2)
+#endif
+
+#ifdef __cplusplus
 #include <vector>
+#include <string>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct SGFX
 {
-	const uint32 Pitch = sizeof(uint16) * MAX_SNES_WIDTH;
-	const uint32 RealPPL = MAX_SNES_WIDTH; // true PPL of Screen buffer
-	const uint32 ScreenSize =  MAX_SNES_WIDTH * MAX_SNES_HEIGHT;
-	std::vector<uint16> ScreenBuffer;
+	/* Pitch/RealPPL/ScreenSize were C++11 in-class consts and ScreenBuffer
+	   a std::vector; both made this struct invisible to C. Plain fields
+	   now, set in S9xGraphicsInit before anything reads them; the screen
+	   allocation lives in gfx.cpp (GFXScreenBuffer). */
+	uint32	Pitch;
+	uint32	RealPPL;
+	uint32	ScreenSize;
 	uint16	*Screen;
 	uint16	*SubScreen;
 	uint8	*ZBuffer;
@@ -64,7 +86,6 @@ struct SGFX
 	void	(*DrawMode7BG2Math) (uint32, uint32, int);
 	void	(*DrawMode7BG2Nomath) (uint32, uint32, int);
 
-	std::string InfoString;
 	uint32	InfoStringTimeout;
 	char	FrameDisplayString[256];
 };
@@ -128,6 +149,90 @@ extern struct SGFX	GFX;
 #define V_FLIP		0x8000
 #define BLANK_TILE	2
 
+#ifndef __cplusplus
+/* C expression forms of the color math for tile.c, lifted verbatim from
+   snes9x2010 (the C++ side uses the struct forms below instead). */
+#define COLOR_ADD1_2(C1, C2) \
+	((((((C1) & RGB_REMOVE_LOW_BITS_MASK) + \
+	((C2) & RGB_REMOVE_LOW_BITS_MASK)) >> 1) + \
+	((C1) & (C2) & RGB_LOW_BITS_MASK)) | ALPHA_BITS_MASK)
+
+/* Exact per-channel saturating RGB addition, transplanted from mainline
+ * snes9x's COLOR_ADD::fn with its RGB565 constants (5-bit lanes at bit
+ * 11 / 6 / 0, then the green top bit propagated into the extra low
+ * green bit). The previous form approximated the full-strength add
+ * through the X2 half-add table (halve, table-double), which loses the
+ * low bit per channel and saturates through the table instead of per
+ * channel; visible as off-by-one channels in additive color math.
+ * Expression macro with the same argument rules as COLOR_SUB below. */
+#define CADD_RB_MASK   ((0x1F << 11) | 0x1F)
+#define CADD_G_MASK    (0x1F << 6)
+#define CADD_RB_CARRY  ((0x20 << 11) | 0x20)
+#define CADD_G_CARRY   (0x20 << 6)
+#define COLOR_ADD_RAW(C1, C2) \
+	((uint16_t) ((((((C1) & CADD_RB_MASK) + ((C2) & CADD_RB_MASK)) & CADD_RB_MASK) \
+		| ((((C1) & CADD_G_MASK) + ((C2) & CADD_G_MASK)) & CADD_G_MASK)) \
+		| ((uint16_t) ((((((C1) & CADD_G_MASK) + ((C2) & CADD_G_MASK)) & CADD_G_CARRY) \
+			| ((((C1) & CADD_RB_MASK) + ((C2) & CADD_RB_MASK)) & CADD_RB_CARRY)) >> 5) * 0x1f)))
+#define COLOR_ADD(C1, C2) \
+	((uint16_t) (COLOR_ADD_RAW((C1), (C2)) | ((COLOR_ADD_RAW((C1), (C2)) & 0x0400) >> 5)))
+
+/* Brightness-capped additive math, from mainline snes9x. ScreenColors
+ * are pre-scaled by master brightness, so a plain saturating add clamps
+ * at 31 instead of at the brightness-scaled maximum; on hardware the
+ * math runs on raw CGRAM values and brightness is applied at the DAC
+ * (ares packs displayBrightness into the output and scales afterward).
+ * brightness_cap[] clamps each 5-bit channel sum to XB[0x1f]. Selected
+ * by S9xSelectTileRenderers when PPU.Brightness != 0xf. The half-add
+ * form is unaffected (halving cannot exceed the scaled maximum), so
+ * COLOR_ADD_BRIGHTNESS1_2 aliases COLOR_ADD1_2, and the token-pasted
+ * REGMATH/MATHS1_2 selectors work with Op = ADD_BRIGHTNESS unchanged. */
+#define COLOR_ADD_BRIGHTNESS(C1, C2) \
+	((uint16_t) (((uint16_t) brightness_cap[(((C1) >> 11) & 0x1f) + (((C2) >> 11) & 0x1f)] << 11) | \
+		((uint16_t) brightness_cap[(((C1) >>  6) & 0x1f) + (((C2) >>  6) & 0x1f)] <<  6) | \
+		(((uint16_t) brightness_cap[(((C1) >>  6) & 0x1f) + (((C2) >>  6) & 0x1f)] & 0x10) << 1) | \
+		((uint16_t) brightness_cap[ ((C1)        & 0x1f) + ( (C2)        & 0x1f)])))
+#define COLOR_ADD_BRIGHTNESS1_2(C1, C2) COLOR_ADD1_2((C1), (C2))
+
+#define COLOR_SUB1_2(C1, C2) \
+	GFX.ZERO[(((C1) | RGB_HI_BITS_MASKx2) - \
+	((C2) & RGB_REMOVE_LOW_BITS_MASK)) >> 1]
+
+/* Per-channel saturating RGB subtraction (subtractive color-math
+ * path). Kept here with its three siblings so all four COLOR_*
+ * macros are defined together and visible -- in the right order --
+ * to every translation unit that token-pastes them (REGMATH /
+ * MATHF1_2 / MATHS1_2 in tile.c expand COLOR_##Op and
+ * COLOR_##Op##1_2). It previously lived in tile.c, which made its
+ * visibility depend on include/definition ordering and broke some
+ * builds with an implicit-declaration error for COLOR_SUB /
+ * COLOR_SUB1_2.
+ *
+ * Plain expression macro: C1 and C2 are each referenced several
+ * times, like the ADD siblings above. All call sites pass simple,
+ * side-effect-free expressions (variable reads, struct members,
+ * ScreenColors lookups), so the repeats are identical
+ * sub-expressions the compiler folds. Do NOT pass side-effecting
+ * arguments here. (Left as a macro on purpose: it is instantiated
+ * across many DrawTile* template variants and must inline at every
+ * site.) */
+#define COLOR_SUB(C1, C2) \
+	((uint16_t) (ALPHA_BITS_MASK \
+		+ ((((C1) & FIRST_COLOR_MASK)  > ((C2) & FIRST_COLOR_MASK))  \
+			? (uint16_t) (((C1) & FIRST_COLOR_MASK)  - ((C2) & FIRST_COLOR_MASK))  \
+			: (uint16_t) 0) \
+		+ ((((C1) & SECOND_COLOR_MASK) > ((C2) & SECOND_COLOR_MASK)) \
+			? (uint16_t) (((C1) & SECOND_COLOR_MASK) - ((C2) & SECOND_COLOR_MASK)) \
+			: (uint16_t) 0) \
+		+ ((((C1) & THIRD_COLOR_MASK)  > ((C2) & THIRD_COLOR_MASK))  \
+			? (uint16_t) (((C1) & THIRD_COLOR_MASK)  - ((C2) & THIRD_COLOR_MASK))  \
+			: (uint16_t) 0)))
+#endif /* !__cplusplus */
+
+#ifdef __cplusplus
+}	/* extern "C" */
+/* C++ side only (gfx.cpp checkerboard blend); the tile renderer is C
+   and carries its own expression-macro forms of these. */
 struct COLOR_ADD
 {
 	static alwaysinline uint16 fn(uint16 C1, uint16 C2)
@@ -199,6 +304,8 @@ struct COLOR_SUB
 			(C2 & RGB_REMOVE_LOW_BITS_MASK)) >> 1];
 	}
 };
+extern "C" {
+#endif /* __cplusplus */
 
 void S9xStartScreenRefresh (void);
 void S9xEndScreenRefresh (void);
@@ -219,7 +326,11 @@ bool8 S9xContinueUpdate (int, int);
 void S9xReRefresh (void);
 void S9xSyncSpeed (void);
 
+#ifdef __cplusplus
+}	/* extern "C" */
+
 // called instead of S9xDisplayString if set to non-NULL
 extern void (*S9xCustomDisplayString) (const char *, int, int, bool, int type);
+#endif
 
 #endif

@@ -7,6 +7,13 @@
 #ifndef _PPU_H_
 #define _PPU_H_
 
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define FIRST_VISIBLE_LINE	1
 
 #define TILE_2BIT			0
@@ -45,6 +52,10 @@ struct InternalPPU
 	bool8	InterlaceOBJ;
 	bool8	PseudoHires;
 	bool8	DoubleWidthPixels;
+	bool8	QuadWidthPixels;
+	bool8	DirectColourMapsNeedRebuild;	// lazy-rebuild flag used by tile.c's
+										// SELECT_PALETTE; mainline also rebuilds
+										// eagerly, so this stays FALSE-safe		// Mode 7 hires 4x (dormant: option plumbing pending)
 	bool8	DoubleHeightPixels;
 	int		CurrentLine;
 	int		PreviousLine;
@@ -210,8 +221,14 @@ void S9xUpdateIRQPositions (bool initial);
 void S9xFixColourBrightness (void);
 void S9xDoAutoJoypad (void);
 
+#ifdef __cplusplus
+}	/* extern "C" -- gfx.h and memmap.h manage their own linkage */
+#endif
 #include "gfx.h"
+#ifdef __cplusplus
 #include "memmap.h"
+extern "C" {
+#endif
 
 typedef struct
 {
@@ -229,6 +246,9 @@ extern SnesModel	M2SNES;
 #define MAX_5A22_VERSION	0x02
 
 void S9xUpdateScreen (void);
+#ifdef __cplusplus
+}	/* extern "C" */
+/* Inline register helpers below are C++ side only. */
 static inline void FLUSH_REDRAW (void)
 {
 	if (IPPU.PreviousLine != IPPU.CurrentLine)
@@ -589,5 +609,7 @@ static inline uint8 REGISTER_4212 (void)
 
     return (byte);
 }
+
+#endif /* __cplusplus */
 
 #endif
