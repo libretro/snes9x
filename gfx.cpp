@@ -206,10 +206,6 @@ void S9xEndScreenRefresh (void)
 			}
 
 			S9xControlEOF();
-
-			if (Settings.AutoDisplayMessages)
-				S9xDisplayMessages(GFX.Screen, GFX.RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
-
 			S9xDeinitUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 		}
 	}
@@ -1718,20 +1714,6 @@ void S9xSetInfoString (const char *string)
 		GFX.InfoStringTimeout = Settings.InitialInfoStringTimeout;
 		S9xReRefresh();
 	}
-}
-
-void S9xDisplayMessages (uint16 *screen, int ppl, int width, int height, int scale)
-{
-	/* The text renderer this used (DisplayStringFromBottom) was removed as
-	   unused; it was only ever reached through the S9xDisplayString macro in
-	   port.h, so the grep missed it. Messages set via S9xSetInfoString are
-	   still tracked and time out normally, they are simply not drawn onto
-	   the SNES framebuffer: a libretro frontend renders its own OSD. */
-	(void) screen;
-	(void) ppl;
-	(void) width;
-	(void) height;
-	(void) scale;
 }
 
 static uint16 get_crosshair_color (uint8 color)

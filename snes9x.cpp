@@ -240,7 +240,6 @@ void S9xLoadConfigFiles (char **argv, int argc)
 	Settings.DisplayFrameRate           =  conf.GetBool("Display::DisplayFrameRate",           false);
 	Settings.DisplayWatchedAddresses    =  conf.GetBool("Display::DisplayWatchedAddresses",    false);
 	Settings.DisplayPressedKeys         =  conf.GetBool("Display::DisplayInput",               false);
-	Settings.AutoDisplayMessages        =  conf.GetBool("Display::MessagesInImage",            true);
 	Settings.InitialInfoStringTimeout   =  conf.GetInt ("Display::MessageDisplayTime",         120);
 	Settings.BilinearFilter             =  conf.GetBool("Display::BilinearFilter",             false);
 

@@ -1480,7 +1480,6 @@ void retro_init(void)
     Settings.SoundPlaybackRate = 32040;
     Settings.SoundInputRate = 32040;
     Settings.Transparency = TRUE;
-    Settings.AutoDisplayMessages = TRUE;
     Settings.InitialInfoStringTimeout = 120;
     Settings.HDMATimingHack = 100;
     Settings.BlockInvalidVRAMAccessMaster = TRUE;

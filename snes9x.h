@@ -254,7 +254,6 @@ struct SSettings
 	bool8	DisplayWatchedAddresses;
 	bool8	DisplayPressedKeys;
 	bool	DisplayIndicators;
-	bool8	AutoDisplayMessages;
 	uint32	InitialInfoStringTimeout;
 	uint16	DisplayColor;
 	bool8	BilinearFilter;

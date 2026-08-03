@@ -103,8 +103,6 @@ typedef size_t				pint;
 
 #include "fscompat.h"
 
-#define S9xDisplayString	DisplayStringFromBottom
-
 #ifdef __WIN32__
 #ifndef snprintf
    #define snprintf _snprintf
