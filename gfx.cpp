@@ -1706,16 +1706,6 @@ void S9xReRefresh (void)
 		S9xDeinitUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 }
 
-void S9xSetInfoString (const char *string)
-{
-	if (Settings.InitialInfoStringTimeout > 0)
-	{
-		GFX.InfoString = string;
-		GFX.InfoStringTimeout = Settings.InitialInfoStringTimeout;
-		S9xReRefresh();
-	}
-}
-
 static uint16 get_crosshair_color (uint8 color)
 {
 	switch (color & 15)

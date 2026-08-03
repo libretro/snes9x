@@ -249,11 +249,6 @@ struct SSettings
 	bool8	DisableGraphicWindows;
 	uint16  ForcedBackdrop;
 
-	bool8	DisplayTime;
-	bool8	DisplayFrameRate;
-	bool8	DisplayWatchedAddresses;
-	bool8	DisplayPressedKeys;
-	bool	DisplayIndicators;
 	uint32	InitialInfoStringTimeout;
 	uint16	DisplayColor;
 	bool8	BilinearFilter;

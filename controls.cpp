@@ -283,7 +283,6 @@ static const char	*command_names[LAST_COMMAND + 1] =
 #undef S
 #undef THE_COMMANDS
 
-static void DisplayStateChange (const char *, bool8);
 static void DoGunLatch (int, int);
 static void DoMacsRifleLatch (int, int);
 static int maptype (int);
@@ -308,12 +307,6 @@ static string& operator += (string &s, double d)
 	snprintf(buf, sizeof(buf), "%g", d);
 	s.append(buf);
 	return (s);
-}
-
-static void DisplayStateChange (const char *str, bool8 on)
-{
-	snprintf(buf, sizeof(buf), "%s: %s", str, on ? "on":"off");
-	S9xSetInfoString(buf);
 }
 
 static void DoGunLatch (int x, int y)
@@ -2144,12 +2137,10 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 					case ToggleEmuTurbo:
 						Settings.TurboMode = !Settings.TurboMode;
-						DisplayStateChange("Turbo mode", Settings.TurboMode);
 						break;
 
 					case ClipWindows:
 						Settings.DisableGraphicWindows = !Settings.DisableGraphicWindows;
-						DisplayStateChange("Graphic clip windows", !Settings.DisableGraphicWindows);
 						break;
 
 					case Debugger:
@@ -2164,15 +2155,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						else
 						if (Settings.SkipFrames < 10)
 							Settings.SkipFrames++;
-
-						if (Settings.SkipFrames == AUTO_FRAMERATE)
-							S9xSetInfoString("Auto frame skip");
-						else
-						{
-							sprintf(buf, "Frame skip: %d", Settings.SkipFrames - 1);
-							S9xSetInfoString(buf);
-						}
-
 						break;
 
 					case DecFrameRate:
@@ -2181,15 +2163,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						else
 						if (Settings.SkipFrames != AUTO_FRAMERATE)
 							Settings.SkipFrames--;
-
-						if (Settings.SkipFrames == AUTO_FRAMERATE)
-							S9xSetInfoString("Auto frame skip");
-						else
-						{
-							sprintf(buf, "Frame skip: %d", Settings.SkipFrames - 1);
-							S9xSetInfoString(buf);
-						}
-
 						break;
 
 					case IncEmuTurbo:
@@ -2198,8 +2171,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						else
 						if (Settings.TurboSkipFrames < 200)
 							Settings.TurboSkipFrames += 5;
-						sprintf(buf, "Turbo frame skip: %d", Settings.TurboSkipFrames);
-						S9xSetInfoString(buf);
 						break;
 
 					case DecEmuTurbo:
@@ -2208,37 +2179,27 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						else
 						if (Settings.TurboSkipFrames > 0)
 							Settings.TurboSkipFrames -= 1;
-						sprintf(buf, "Turbo frame skip: %d", Settings.TurboSkipFrames);
-						S9xSetInfoString(buf);
 						break;
 
 					case IncFrameTime: // Increase emulated frame time by 1ms
 						Settings.FrameTime += 1000;
-						sprintf(buf, "Emulated frame time: %dms", Settings.FrameTime / 1000);
-						S9xSetInfoString(buf);
 						break;
 
 					case DecFrameTime: // Decrease emulated frame time by 1ms
 						if (Settings.FrameTime >= 1000)
 							Settings.FrameTime -= 1000;
-						sprintf(buf, "Emulated frame time: %dms", Settings.FrameTime / 1000);
-						S9xSetInfoString(buf);
 						break;
 
 					case IncTurboSpeed:
 						if (turbo_time >= 120)
 							break;
 						turbo_time++;
-						sprintf(buf, "Turbo speed: %d", turbo_time);
-						S9xSetInfoString(buf);
 						break;
 
 					case DecTurboSpeed:
 						if (turbo_time <= 1)
 							break;
 						turbo_time--;
-						sprintf(buf, "Turbo speed: %d", turbo_time);
-						S9xSetInfoString(buf);
 						break;
 
 					case LoadFreezeFile:
@@ -2251,11 +2212,7 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 					{
 						std::string filename = S9xGetFilename("oops", SNAPSHOT_DIR);
 
-						if (S9xUnfreezeGame(filename.c_str()))
-						{
-							snprintf(buf, 256, "%.240s.oops loaded", S9xBasename(Memory.ROMFilename).c_str());
-							S9xSetInfoString(buf);
-						}
+						if (S9xUnfreezeGame(filename.c_str())) { }
 						else
 							S9xMessage(S9X_ERROR, S9X_FREEZE_FILE_NOT_FOUND, "Oops file not found");
 
@@ -2264,7 +2221,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 					case Pause:
 						Settings.Paused = !Settings.Paused;
-						DisplayStateChange("Pause", Settings.Paused);
 					#if defined(NETPLAY_SUPPORT) && !defined(__WIN32__)
 						S9xNPSendPause(Settings.Paused);
 					#endif
@@ -2288,12 +2244,7 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 						auto filename = S9xGetFilename(ext, SNAPSHOT_DIR);
 
-						if (S9xUnfreezeGame(filename.c_str()))
-						{
-							snprintf(buf, 256, "%s loaded", S9xBasename(filename).c_str());
-							S9xSetInfoString(buf);
-						}
-						else
+						if (!S9xUnfreezeGame(filename.c_str()))
 							S9xMessage(S9X_ERROR, S9X_FREEZE_FILE_NOT_FOUND, "Freeze file not found");
 
 						break;
@@ -2317,9 +2268,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 						auto filename = S9xGetFilename(ext, SNAPSHOT_DIR);
 
-						snprintf(buf, 256, "%s saved", S9xBasename(filename).c_str());
-						S9xSetInfoString(buf);
-
 						S9xFreezeGame(filename.c_str());
 						break;
 					}
@@ -2337,13 +2285,10 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 					case SoundChannel6:
 					case SoundChannel7:
 						S9xToggleSoundChannel(i - SoundChannel0);
-						sprintf(buf, "Sound channel %d toggled", i - SoundChannel0);
-						S9xSetInfoString(buf);
 						break;
 
 					case SoundChannelsOn:
 						S9xToggleSoundChannel(8);
-						S9xSetInfoString("All sound channels on");
 						break;
 
 					case ToggleBackdrop:
@@ -2362,77 +2307,42 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 							Settings.ForcedBackdrop = 0;
 							break;
 						}
-						sprintf(buf, "Setting backdrop to 0x%04x", Settings.ForcedBackdrop);
-						S9xSetInfoString(buf);
 						break;
 
 					case ToggleBG0:
 						Settings.BG_Forced ^= 1;
-						DisplayStateChange("BG#0", !(Settings.BG_Forced & 1));
 						break;
 
 					case ToggleBG1:
 						Settings.BG_Forced ^= 2;
-						DisplayStateChange("BG#1", !(Settings.BG_Forced & 2));
 						break;
 
 					case ToggleBG2:
 						Settings.BG_Forced ^= 4;
-						DisplayStateChange("BG#2", !(Settings.BG_Forced & 4));
 						break;
 
 					case ToggleBG3:
 						Settings.BG_Forced ^= 8;
-						DisplayStateChange("BG#3", !(Settings.BG_Forced & 8));
 						break;
 
 					case ToggleSprites:
 						Settings.BG_Forced ^= 16;
-						DisplayStateChange("Sprites", !(Settings.BG_Forced & 16));
 						break;
 
 					case ToggleTransparency:
 						Settings.Transparency = !Settings.Transparency;
-						DisplayStateChange("Transparency effects", Settings.Transparency);
 						break;
 
 					case SwapJoypads:
 						if ((curcontrollers[0] != NONE && !(curcontrollers[0] >= JOYPAD0 && curcontrollers[0] <= JOYPAD7)))
-						{
-							S9xSetInfoString("Cannot swap pads: port 1 is not a joypad");
 							break;
-						}
 
 						if ((curcontrollers[1] != NONE && !(curcontrollers[1] >= JOYPAD0 && curcontrollers[1] <= JOYPAD7)))
-						{
-							S9xSetInfoString("Cannot swap pads: port 2 is not a joypad");
 							break;
-						}
 
 						newcontrollers[1] = curcontrollers[0];
 						newcontrollers[0] = curcontrollers[1];
 
-						strcpy(buf, "Swap pads: P1=");
-						i = 14;
-						if (newcontrollers[0] == NONE)
-						{
-							strcpy(buf + i, "<none>");
-							i += 6;
-						}
-						else
-						{
-							sprintf(buf + i, "Joypad%d", newcontrollers[0] - JOYPAD0 + 1);
-							i += 7;
-						}
-
-						strcpy(buf + i, " P2=");
-						i += 4;
-						if (newcontrollers[1] == NONE)
-							strcpy(buf + i, "<none>");
-						else
-							sprintf(buf + i, "Joypad%d", newcontrollers[1] - JOYPAD0 + 1);
-
-						S9xSetInfoString(buf);
 						break;
 
 					case LAST_COMMAND:

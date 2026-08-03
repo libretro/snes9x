@@ -236,11 +236,6 @@ void S9xLoadConfigFiles (char **argv, int argc)
 
 	Settings.Transparency               =  conf.GetBool("Display::Transparency",               true);
 	Settings.DisableGraphicWindows      = !conf.GetBool("Display::GraphicWindows",             true);
-	Settings.DisplayTime				=  conf.GetBool("Display::DisplayTime",                false);
-	Settings.DisplayFrameRate           =  conf.GetBool("Display::DisplayFrameRate",           false);
-	Settings.DisplayWatchedAddresses    =  conf.GetBool("Display::DisplayWatchedAddresses",    false);
-	Settings.DisplayPressedKeys         =  conf.GetBool("Display::DisplayInput",               false);
-	Settings.InitialInfoStringTimeout   =  conf.GetInt ("Display::MessageDisplayTime",         120);
 	Settings.BilinearFilter             =  conf.GetBool("Display::BilinearFilter",             false);
 
 	// Settings
@@ -515,15 +510,6 @@ char * S9xParseArgs (char **argv, int argc)
 
 			// DISPLAY OPTIONS
 
-			if (!strcasecmp(argv[i], "-displaytime"))
-				Settings.DisplayTime = TRUE;
-			else
-			if (!strcasecmp(argv[i], "-displayframerate"))
-				Settings.DisplayFrameRate = TRUE;
-			else
-			if (!strcasecmp(argv[i], "-displaykeypress"))
-				Settings.DisplayPressedKeys = TRUE;
-			else
 			if (!strcasecmp(argv[i], "-notransparency"))
 				Settings.Transparency = FALSE;
 			else
