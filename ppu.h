@@ -53,6 +53,7 @@ struct InternalPPU
 	bool8	PseudoHires;
 	bool8	DoubleWidthPixels;
 	bool8	QuadWidthPixels;
+	int32	M7VertStartY;			// Mode 7 vertical-2x post-pass arm; -1 = off
 	bool8	DirectColourMapsNeedRebuild;	// lazy-rebuild flag used by tile.c's
 										// SELECT_PALETTE; mainline also rebuilds
 										// eagerly, so this stays FALSE-safe		// Mode 7 hires 4x (dormant: option plumbing pending)
@@ -246,6 +247,7 @@ extern SnesModel	M2SNES;
 #define MAX_5A22_VERSION	0x02
 
 void S9xUpdateScreen (void);
+void S9xMode7VertResample (void);
 #ifdef __cplusplus
 }	/* extern "C" */
 /* Inline register helpers below are C++ side only. */

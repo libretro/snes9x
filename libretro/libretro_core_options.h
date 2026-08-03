@@ -125,6 +125,38 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "enabled"
    },
    {
+      "snes9x_mode7_hires",
+      "HD Mode 7 Scale",
+      NULL,
+      "Render Mode 7 backgrounds at a higher horizontal resolution. 2x/4x sample the rotation matrix at sub-pixel steps; the _hv variants additionally resample vertically for square pixels. From snes9x2010.",
+      NULL,
+      NULL,
+      {
+         { "disabled", NULL },
+         { "2x",       "2x" },
+         { "4x",       "4x" },
+         { "2x_hv",    "2x (H+V)" },
+         { "4x_hv",    "4x (H+V)" },
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
+      "snes9x_mode7_hires_bilinear",
+      "HD Mode 7 Filtering",
+      NULL,
+      "Texture sampling filter for HD Mode 7. 'Stable' bilinear snaps to texel centres to avoid shimmer; 'Smooth' is full bilinear.",
+      NULL,
+      NULL,
+      {
+         { "disabled", NULL },
+         { "stable",   "Stable" },
+         { "smooth",   "Smooth" },
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
       "snes9x_hires_blend",
       "Hi-Res Blending",
       NULL,

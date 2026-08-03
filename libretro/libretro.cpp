@@ -2,6 +2,7 @@
 #include "libretro_core_options.h"
 
 #include "snes9x.h"
+extern "C" { extern uint8 TileMode7Hires; extern uint8 TileMode7HiresBilinear; }
 #include "fxemu.h"
 #include "memmap.h"
 #include "srtc.h"
@@ -368,6 +369,53 @@ static void update_variables(void)
     msu1_enhanced_pref = true;
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
         msu1_enhanced_pref = !strcmp(var.value, "enabled");
+
+    var.key = "snes9x_mode7_hires";
+    var.value = NULL;
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        int prev = Settings.Mode7Hires;
+        if (strcmp(var.value, "4x_hv") == 0)
+        {
+            Settings.Mode7Hires = 4;
+            Settings.Mode7HiresVertical = 1;
+        }
+        else if (strcmp(var.value, "2x_hv") == 0)
+        {
+            Settings.Mode7Hires = 2;
+            Settings.Mode7HiresVertical = 1;
+        }
+        else if (strcmp(var.value, "4x") == 0)
+        {
+            Settings.Mode7Hires = 4;
+            Settings.Mode7HiresVertical = 0;
+        }
+        else if (strcmp(var.value, "2x") == 0)
+        {
+            Settings.Mode7Hires = 2;
+            Settings.Mode7HiresVertical = 0;
+        }
+        else
+        {
+            Settings.Mode7Hires = 0;
+            Settings.Mode7HiresVertical = 0;
+        }
+        TileMode7Hires = (uint8) Settings.Mode7Hires;
+        (void) prev;
+    }
+
+    var.key = "snes9x_mode7_hires_bilinear";
+    var.value = NULL;
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        if (strcmp(var.value, "smooth") == 0)
+            Settings.Mode7HiresBilinear = 2;
+        else if (strcmp(var.value, "stable") == 0)
+            Settings.Mode7HiresBilinear = 1;
+        else
+            Settings.Mode7HiresBilinear = 0;
+        TileMode7HiresBilinear = (uint8) Settings.Mode7HiresBilinear;
+    }
 
     var.key = "snes9x_hires_blend";
     var.value = NULL;
@@ -904,7 +952,8 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 
     info->geometry.base_width = width;
     info->geometry.base_height = height;
-    info->geometry.max_width = MAX_SNES_WIDTH_NTSC;
+    info->geometry.max_width = MAX_SNES_WIDTH_NTSC > MAX_SNES_WIDTH_4X
+                                   ? MAX_SNES_WIDTH_NTSC : MAX_SNES_WIDTH_4X;
     info->geometry.max_height = MAX_SNES_HEIGHT;
     info->geometry.aspect_ratio = get_aspect_ratio(width, height);
     info->timing.sample_rate = Settings.SoundPlaybackRate;

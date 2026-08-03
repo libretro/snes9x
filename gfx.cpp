@@ -21,7 +21,7 @@ std::string GFXInfoString;
 /* tile.c-side bridges (C linkage): VRAM/FillRAM for the C tile renderer
    without pulling memmap.h into C. Set in S9xGraphicsInit. */
 extern "C" { uint8 *tile_VRAM; uint8 *tile_FillRAM;
-             uint8 TileMode7Hires = 1; uint8 TileMode7HiresBilinear = 0; }
+             uint8 TileMode7Hires = 0; uint8 TileMode7HiresBilinear = 0; }
 
 extern struct SCheatData		Cheat;
 extern struct SLineData			LineData[240];
@@ -56,12 +56,16 @@ bool8 S9xGraphicsInit (void)
 	S9xFixColourBrightness();
 	S9xBuildDirectColourMaps();
 
-	GFX.Pitch      = sizeof(uint16) * MAX_SNES_WIDTH;
-	GFX.RealPPL    = MAX_SNES_WIDTH;
-	GFX.ScreenSize = MAX_SNES_WIDTH * MAX_SNES_HEIGHT;
+	/* Buffers sized for the widest supported frame (Mode 7 hires 4x,
+	   1024 px), snes9x2010's model: Pitch is the max buffer width and
+	   RealPPL derives from it; narrower frames use the left part of each
+	   row, and RenderedScreenWidth controls what the frontend sees. */
+	GFX.Pitch      = sizeof(uint16) * MAX_SNES_WIDTH_4X;
+	GFX.RealPPL    = MAX_SNES_WIDTH_4X;
+	GFX.ScreenSize = MAX_SNES_WIDTH_4X * MAX_SNES_HEIGHT;
 	tile_VRAM      = Memory.VRAM;
 	tile_FillRAM   = Memory.FillRAM;
-	GFXScreenBuffer.resize(MAX_SNES_WIDTH * (MAX_SNES_HEIGHT + 64));
+	GFXScreenBuffer.resize(MAX_SNES_WIDTH_4X * (MAX_SNES_HEIGHT + 64));
 	GFX.Screen = &GFXScreenBuffer[GFX.RealPPL * 32];
 	GFX.ZERO = (uint16 *) malloc(sizeof(uint16) * 0x10000);
 	GFX.SubScreen  = (uint16 *) malloc(GFX.ScreenSize * sizeof(uint16));
@@ -125,15 +129,24 @@ void S9xGraphicsScreenResize (void)
 	IPPU.InterlaceOBJ = Memory.FillRAM[0x2133] & 2;
 	IPPU.PseudoHires = Memory.FillRAM[0x2133] & 8;
 
-	if (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires)
 	{
-		IPPU.DoubleWidthPixels = TRUE;
-		IPPU.RenderedScreenWidth = SNES_WIDTH << 1;
-	}
-	else
-	{
-		IPPU.DoubleWidthPixels = FALSE;
-		IPPU.RenderedScreenWidth = SNES_WIDTH;
+		/* From snes9x2010: the Mode7Hires option forces a wider frame when
+		   it starts in Mode 7 so the M7 hires renderers have room to
+		   write; 4x only for Mode 7 with the 4x setting. */
+		bool8 cond_1 = (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires
+				|| (Settings.Mode7Hires && PPU.BGMode == 7));
+		bool8 cond_q = (PPU.BGMode == 7 && Settings.Mode7Hires == 4);
+		int width_factor = cond_q ? 4 : (cond_1 ? 2 : 1);
+		IPPU.DoubleWidthPixels = cond_1;
+		IPPU.QuadWidthPixels = cond_q;
+		IPPU.RenderedScreenWidth = SNES_WIDTH * width_factor;
+
+		/* M7 vertical-2x post-pass: arm when the frame starts in Mode 7
+		   with hires + the vertical option; the whole frame gets
+		   bilinear-Y at end of frame. Mid-frame Mode 7 entry currently
+		   renders without the vertical pass (snes9x2010 additionally arms
+		   from its mid-frame width-promotion hook; not ported yet). */
+		IPPU.M7VertStartY = (cond_1 && PPU.BGMode == 7 && Settings.Mode7HiresVertical) ? 0 : -1;
 	}
 
 	if (IPPU.Interlace)
@@ -206,6 +219,11 @@ void S9xEndScreenRefresh (void)
 	if (IPPU.RenderThisFrame)
 	{
 		FLUSH_REDRAW();
+
+		/* Mode 7 vertical-2x post-pass: expand the frame to
+		   PPU.ScreenHeight*2 rows in place before it is handed to the
+		   frontend. No-op when M7VertStartY is -1. */
+		S9xMode7VertResample();
 
 		if (GFX.DoInterlace && S9xInterlaceField() == 0)
 		{
@@ -457,20 +475,38 @@ void S9xUpdateScreen (void)
 			PPU.RecomputeClipWindows = FALSE;
 		}
 
-		if (!IPPU.DoubleWidthPixels && (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires))
+		if (!IPPU.DoubleWidthPixels && (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires
+				|| (Settings.Mode7Hires && PPU.BGMode == 7)))
 		{
+			// Mid-frame width promotion: the game switched into a hires
+			// mode (or Mode 7 with the hires option) partway down the
+			// frame, so rows already rendered at 1x must be widened in
+			// place. 4x only for Mode 7 with the 4x setting; from
+			// snes9x2010. This is the common path for Mode 7 games:
+			// HUDs render in another mode first, so frame start never
+			// sees BGMode == 7.
+			int factor = (PPU.BGMode == 7 && Settings.Mode7Hires == 4) ? 4 : 2;
+
 			// Have to back out of the regular speed hack
 			for (uint32 y = 0; y < GFX.StartY; y++)
 			{
 				uint16	*p = GFX.Screen + y * GFX.PPL + 255;
-				uint16	*q = GFX.Screen + y * GFX.PPL + 510;
+				uint16	*q = GFX.Screen + y * GFX.PPL + 256 * factor - 1;
 
-				for (int x = 255; x >= 0; x--, p--, q -= 2)
-					*q = *(q + 1) = *p;
+				for (int x = 255; x >= 0; x--, p--)
+					for (int i = 0; i < factor; i++, q--)
+						*q = *p;
 			}
 
 			IPPU.DoubleWidthPixels = TRUE;
-			IPPU.RenderedScreenWidth = 512;
+			IPPU.QuadWidthPixels = (factor == 4);
+			IPPU.RenderedScreenWidth = SNES_WIDTH * factor;
+
+			// M7 vertical-2x post-pass: arm now if entering Mode 7
+			// mid-frame. Rows above GFX.StartY (HUD) get row-replicated
+			// by the post-pass; rows from here on get bilinear-Y.
+			if (PPU.BGMode == 7 && Settings.Mode7HiresVertical)
+				IPPU.M7VertStartY = (int32) GFX.StartY;
 		}
 
 		if (!IPPU.DoubleHeightPixels && IPPU.Interlace && (PPU.BGMode == 5 || PPU.BGMode == 6))
@@ -1773,7 +1809,8 @@ void S9xDrawCrosshair (const char *crosshair, uint8 fgcolor, uint8 bgcolor, int1
 	x -= 7;
 	y -= 7;
 
-	if (IPPU.DoubleWidthPixels)  { cx = 2; x *= 2; W *= 2; }
+	if (IPPU.QuadWidthPixels)         { cx = 4; x *= 4; W *= 4; }
+	else if (IPPU.DoubleWidthPixels)  { cx = 2; x *= 2; W *= 2; }
 	if (IPPU.DoubleHeightPixels) { rx = 2; y *= 2; H *= 2; }
 
 	fg = get_crosshair_color(fgcolor);

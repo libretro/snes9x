@@ -20,6 +20,10 @@
 #define MAX_SNES_HEIGHT			(SNES_HEIGHT_EXTENDED * 2)
 #endif
 
+#ifndef MAX_SNES_WIDTH_4X
+#define MAX_SNES_WIDTH_4X		(SNES_WIDTH * 4)	/* Mode 7 hires 4x */
+#endif
+
 #ifdef __cplusplus
 #include <vector>
 #include <string>
