@@ -3335,7 +3335,7 @@ static void OpDB (void)
 /* WDM (Reserved S9xOpcode) ************************************************ */
 
 #ifdef DEBUGGER
-extern FILE	*trace, *trace2;
+extern RFILE	*trace, *trace2;
 #endif
 
 static void Op42 (void)
@@ -3364,7 +3364,7 @@ static void Op42 (void)
 				snprintf(buf, 25, "WDM trace on at $%02X:%04X", Registers.PB, Registers.PCw);
 				S9xMessage(S9X_DEBUG, S9X_DEBUG_OUTPUT, buf);
 				if (trace != NULL)
-					fclose(trace);
+					rfclose(trace);
 				ENSURE_TRACE_OPEN(trace, "WDMtrace.log", "ab")
 			}
 
@@ -3378,7 +3378,7 @@ static void Op42 (void)
 				snprintf(buf, 26, "WDM trace off at $%02X:%04X", Registers.PB, Registers.PCw);
 				S9xMessage(S9X_DEBUG, S9X_DEBUG_OUTPUT, buf);
 				if (trace != NULL)
-					fclose(trace);
+					rfclose(trace);
 				trace = NULL;
 			}
 

@@ -15,30 +15,22 @@
 #include "65c816.h"
 #include "messages.h"
 
-#ifdef ZLIB
-#include <zlib.h>
-#define FSTREAM					gzFile
-#define READ_FSTREAM(p, l, s)	gzread(s, p, l)
-#define WRITE_FSTREAM(p, l, s)	gzwrite(s, p, l)
-#define GETS_FSTREAM(p, l, s)	gzgets(s, p, l)
-#define GETC_FSTREAM(s)			gzgetc(s)
-#define OPEN_FSTREAM(f, m)		gzopen(f, m)
-#define REOPEN_FSTREAM(f, m)		gzdopen(f, m)
-#define FIND_FSTREAM(f)			gztell(f)
-#define REVERT_FSTREAM(s, o, p)	gzseek(s, o, p)
-#define CLOSE_FSTREAM(s)			gzclose(s)
-#else
-#define FSTREAM					FILE *
-#define READ_FSTREAM(p, l, s)	fread(p, 1, l, s)
-#define WRITE_FSTREAM(p, l, s)	fwrite(p, 1, l, s)
-#define GETS_FSTREAM(p, l, s)	fgets(p, l, s)
-#define GETC_FSTREAM(s)			fgetc(s)
-#define OPEN_FSTREAM(f, m)		fopen(f, m)
-#define REOPEN_FSTREAM(f, m)		fdopen(f, m)
-#define FIND_FSTREAM(s)			ftell(s)
-#define REVERT_FSTREAM(s, o, p)	fseek(s, o, p)
-#define CLOSE_FSTREAM(s)			fclose(s)
-#endif
+/* All core file I/O goes through the libretro VFS via the
+   file_stream_transforms wrappers (RFILE). The frontend supplies the
+   VFS interface when available (see retro_set_environment);
+   filestream falls back to its local implementation otherwise.
+   Compressed (.gz) stream support from the old ZLIB build is gone --
+   under libretro the frontend handles compressed content itself. */
+#include <streams/file_stream_transforms.h>
+#define FSTREAM					RFILE *
+#define READ_FSTREAM(p, l, s)	rfread(p, 1, l, s)
+#define WRITE_FSTREAM(p, l, s)	rfwrite(p, 1, l, s)
+#define GETS_FSTREAM(p, l, s)	rfgets(p, l, s)
+#define GETC_FSTREAM(s)			rfgetc(s)
+#define OPEN_FSTREAM(f, m)		rfopen(f, m)
+#define FIND_FSTREAM(s)			rftell(s)
+#define REVERT_FSTREAM(s, o, p)	rfseek(s, o, p)
+#define CLOSE_FSTREAM(s)			rfclose(s)
 
 #include "stream.h"
 
@@ -48,7 +40,6 @@
 #define GETS_STREAM(p, l, s)	s->gets(p,l)
 #define GETC_STREAM(s)			s->get_char()
 #define OPEN_STREAM(f, m)		openStreamFromFSTREAM(f, m)
-#define REOPEN_STREAM(f, m)		reopenStreamFromFd(f, m)
 #define FIND_STREAM(s)			s->pos()
 #define REVERT_STREAM(s, o, p)	s->revert(p, o)
 #define CLOSE_STREAM(s)			s->closeStream()

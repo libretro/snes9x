@@ -639,14 +639,14 @@ static void S9xLoadCheatsFromBMLNode(bml_node &n)
 
 static bool8 S9xLoadCheatFileClassic(const std::string &filename)
 {
-    FILE *fs;
+    RFILE *fs;
     uint8 data[28];
 
-    fs = fopen(filename.c_str(), "rb");
+    fs = rfopen(filename.c_str(), "rb");
     if (!fs)
         return (FALSE);
 
-    while (fread(data, 1, 28, fs) == 28)
+    while (rfread(data, 1, 28, fs) == 28)
     {
         SCheat c;
         c.enabled = (data[0] & 4) == 0;
@@ -663,7 +663,7 @@ static bool8 S9xLoadCheatFileClassic(const std::string &filename)
             S9xEnableCheatGroup(Cheat.group.size() - 1);
     }
 
-    fclose(fs);
+    rfclose(fs);
 
     return TRUE;
 }
@@ -693,7 +693,7 @@ bool8 S9xLoadCheatFile(const std::string &filename)
 bool8 S9xSaveCheatFile(const std::string &filename)
 {
     unsigned int i;
-    FILE *file = NULL;
+    RFILE *file = NULL;
 
     if (Cheat.group.size() == 0)
     {
@@ -701,14 +701,14 @@ bool8 S9xSaveCheatFile(const std::string &filename)
         return TRUE;
     }
 
-    file = fopen(filename.c_str(), "w");
+    file = rfopen(filename.c_str(), "w");
 
     if (!file)
         return FALSE;
 
     for (i = 0; i < Cheat.group.size(); i++)
     {
-        fprintf(file,
+        rfprintf(file,
                 "cheat\n"
                 "  name: %s\n"
                 "  code: %s\n"
@@ -718,7 +718,7 @@ bool8 S9xSaveCheatFile(const std::string &filename)
                 Cheat.group[i].enabled ? "  enable\n" : "");
     }
 
-    fclose(file);
+    rfclose(file);
 
     return TRUE;
 }

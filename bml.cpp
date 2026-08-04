@@ -1,6 +1,7 @@
+#include <sstream>
+#include <streams/file_stream.h>
 #include <vector>
 #include <iostream>
-#include <fstream>
 #include <stack>
 #include <stdio.h>
 
@@ -131,7 +132,7 @@ static void bml_parse_data(bml_node &node, std::string &line)
     return;
 }
 
-static std::string bml_read_line(std::ifstream &fd)
+static std::string bml_read_line(std::istream &fd)
 {
     std::string line;
 
@@ -237,7 +238,7 @@ void bml_node::print()
     bml_print_node(*this, -1);
 }
 
-void bml_node::parse(std::ifstream &fd)
+void bml_node::parse(std::istream &fd)
 {
     std::stack<bml_node *> nodestack;
     nodestack.push(this);
@@ -280,12 +281,19 @@ bml_node *bml_node::find_subnode(std::string name)
 
 bool bml_node::parse_file(std::string filename)
 {
-    std::ifstream file(filename.c_str(), std::ios_base::binary);
+    /* Read through the libretro VFS, then parse from memory; the
+       parser itself only needs an std::istream. */
+    void   *buf = NULL;
+    int64_t len = 0;
 
-    if (!file)
+    if (filestream_read_file(filename.c_str(), &buf, &len) <= 0 || !buf)
         return false;
 
-    parse(file);
+    std::string contents((const char *) buf, (size_t) len);
+    free(buf);
+
+    std::istringstream stream(contents);
+    parse(stream);
 
     return true;
 }

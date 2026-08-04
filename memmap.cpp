@@ -1693,15 +1693,15 @@ bool8 CMemory::LoadMultiCartInt ()
         else if(Multi.cartOffsetB) // clear cart A so the bios can detect that it's not present
             memset(ROM, 0, Multi.cartOffsetB);
 
-        FILE	*fp;
+        RFILE *fp;
 	    size_t	size;
 		std::string path = S9xGetDirectory(BIOS_DIR) + SLASH_STR + "STBIOS.bin";
 
-	    fp = fopen(path.c_str(), "rb");
+	    fp = rfopen(path.c_str(), "rb");
 	    if (fp)
 	    {
-		    size = fread((void *) ROM, 1, 0x40000, fp);
-		    fclose(fp);
+		    size = rfread((void *) ROM, 1, 0x40000, fp);
+		    rfclose(fp);
 		    if (!is_SufamiTurbo_BIOS(ROM, size))
 			    return (FALSE);
 	    }
@@ -1833,32 +1833,32 @@ bool8 CMemory::LoadGNEXT ()
 
 bool8 CMemory::LoadSRTC (void)
 {
-	FILE	*fp;
+	RFILE *fp;
 
-	fp = fopen(S9xGetFilename(".rtc", SRAM_DIR).c_str(), "rb");
+	fp = rfopen(S9xGetFilename(".rtc", SRAM_DIR).c_str(), "rb");
 	if (!fp)
 		return (FALSE);
 
-	if (fread(RTCData.reg, 1, 20, fp) < 20)
+	if (rfread(RTCData.reg, 1, 20, fp) < 20)
 		memset (RTCData.reg, 0, 20);
-	fclose(fp);
+	rfclose(fp);
 
 	return (TRUE);
 }
 
 bool8 CMemory::SaveSRTC (void)
 {
-	FILE	*fp;
+	RFILE *fp;
 
-	fp = fopen(S9xGetFilename(".rtc", SRAM_DIR).c_str(), "wb");
+	fp = rfopen(S9xGetFilename(".rtc", SRAM_DIR).c_str(), "wb");
 	if (!fp)
 		return (FALSE);
 
-	if (fwrite(RTCData.reg, 1, 20, fp) < 20)
+	if (rfwrite(RTCData.reg, 1, 20, fp) < 20)
 	{
 		printf ("Failed to save clock data.\n");
 	}
-	fclose(fp);
+	rfclose(fp);
 
 	return (TRUE);
 }
@@ -1874,7 +1874,7 @@ void CMemory::ClearSRAM (bool8 onlyNonSavedSRAM)
 
 bool8 CMemory::LoadSRAM (const char *filename)
 {
-	FILE	*file;
+	RFILE *file;
 	int		size, len;
 
 	ClearSRAM();
@@ -1883,11 +1883,11 @@ bool8 CMemory::LoadSRAM (const char *filename)
 	{
 		size = (1 << (Multi.sramSizeB + 3)) * 128;
 
-		file = fopen(S9xGetFilename(Multi.fileNameB, ".srm", SRAM_DIR).c_str(), "rb");
+		file = rfopen(S9xGetFilename(Multi.fileNameB, ".srm", SRAM_DIR).c_str(), "rb");
 		if (file)
 		{
-			len = fread((char *) Multi.sramB, 1, 0x10000, file);
-			fclose(file);
+			len = rfread((char *) Multi.sramB, 1, 0x10000, file);
+			rfclose(file);
 			if (len - size == 512)
 				memmove(Multi.sramB, Multi.sramB + 512, size);
 		}
@@ -1901,11 +1901,11 @@ bool8 CMemory::LoadSRAM (const char *filename)
 
 	if (size)
 	{
-		file = fopen(filename, "rb");
+		file = rfopen(filename, "rb");
 		if (file)
 		{
-			len = fread((char *) SRAM, 1, size, file);
-			fclose(file);
+			len = rfread((char *) SRAM, 1, size, file);
+			rfclose(file);
 			if (len - size == 512)
 				memmove(SRAM, SRAM + 512, size);
 
@@ -1920,11 +1920,11 @@ bool8 CMemory::LoadSRAM (const char *filename)
 			// Try to read BS-X.srm instead
 			std::string path = S9xGetDirectory(SRAM_DIR) + SLASH_STR + "BS-X.srm";
 
-			file = fopen(path.c_str(), "rb");
+			file = rfopen(path.c_str(), "rb");
 			if (file)
 			{
-				len = fread((char *) SRAM, 1, size, file);
-				fclose(file);
+				len = rfread((char *) SRAM, 1, size, file);
+				rfclose(file);
 				if (len - size == 512)
 					memmove(SRAM, SRAM + 512, size);
 
@@ -1952,7 +1952,7 @@ bool8 CMemory::SaveSRAM (const char *filename)
 	if (Settings.SA1 && ROMType == 0x34)    // doesn't have SRAM
 		return (TRUE);
 
-	FILE	*file;
+	RFILE *file;
 	int		size;
 
 	if (Multi.cartType && Multi.sramSizeB)
@@ -1960,12 +1960,12 @@ bool8 CMemory::SaveSRAM (const char *filename)
 		std::string name = S9xGetFilename(Multi.fileNameB, ".srm", SRAM_DIR);
 		size = (1 << (Multi.sramSizeB + 3)) * 128;
 
-		file = fopen(name.c_str(), "wb");
+		file = rfopen(name.c_str(), "wb");
 		if (file)
 		{
-			if (!fwrite((char *) Multi.sramB, size, 1, file))
+			if (!rfwrite((char *) Multi.sramB, size, 1, file))
 				printf ("Couldn't write to subcart SRAM file.\n");
-			fclose(file);
+			rfclose(file);
 		}
     }
 
@@ -1977,12 +1977,12 @@ bool8 CMemory::SaveSRAM (const char *filename)
 
 	if (size)
 	{
-		file = fopen(filename, "wb");
+		file = rfopen(filename, "wb");
 		if (file)
 		{
-			if (!fwrite((char *) SRAM, size, 1, file))
+			if (!rfwrite((char *) SRAM, size, 1, file))
 				printf ("Couldn't write to SRAM file.\n");
-			fclose(file);
+			rfclose(file);
 
 			if (Settings.SRTC || Settings.SPC7110RTC)
 				SaveSRTC();
@@ -1998,18 +1998,18 @@ bool8 CMemory::SaveMPAK (const char *filename)
 {
 	if (Settings.BS || (Multi.cartSizeB && (Multi.cartType == 3)))
 	{
-		FILE	*file;
+		RFILE *file;
 		int		size;
 
 		size = 0x100000;
 		if (size)
 		{
-			file = fopen(filename, "wb");
+			file = rfopen(filename, "wb");
 			if (file)
 			{
 				size_t	written;
-				written = fwrite((char *)Memory.ROM + Multi.cartOffsetB, size, 1, file);
-				fclose(file);
+				written = rfwrite((char *)Memory.ROM + Multi.cartOffsetB, size, 1, file);
+				rfclose(file);
 
 				return (written > 0);
 			}

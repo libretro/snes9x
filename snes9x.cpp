@@ -22,7 +22,7 @@
 
 #ifdef DEBUGGER
 #include "debug.h"
-extern FILE	*trace;
+extern RFILE	*trace;
 #endif
 
 #define S9X_CONF_FILE_NAME	"snes9x.conf"

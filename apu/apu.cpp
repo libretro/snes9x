@@ -472,11 +472,11 @@ void S9xAPULoadBlarggState(uint8 *oldblock)
 
 bool8 S9xSPCDump(const char *filename)
 {
-    FILE *fs;
+    RFILE *fs;
     uint8 buf[SPC_FILE_SIZE];
     size_t ignore;
 
-    fs = fopen(filename, "wb");
+    fs = rfopen(filename, "wb");
     if (!fs)
         return false;
 
@@ -484,14 +484,14 @@ bool8 S9xSPCDump(const char *filename)
 
     SNES::smp.save_spc(buf);
 
-    ignore = fwrite(buf, SPC_FILE_SIZE, 1, fs);
+    ignore = rfwrite(buf, SPC_FILE_SIZE, 1, fs);
 
     if (ignore == 0)
     {
         fprintf(stderr, "Couldn't write file %s.\n", filename);
     }
 
-    fclose(fs);
+    rfclose(fs);
 
     S9xSetSoundMute(false);
 

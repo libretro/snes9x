@@ -462,10 +462,3 @@ Stream *openStreamFromFSTREAM(const char* filename, const char* mode)
     return new fStream(f);
 }
 
-Stream *reopenStreamFromFd(int fd, const char* mode)
-{
-    FSTREAM f = REOPEN_FSTREAM(fd,mode);
-    if(!f)
-        return NULL;
-    return new fStream(f);
-}

@@ -1,4 +1,6 @@
 #include "libretro.h"
+#include <streams/file_stream.h>
+#include <file/file_path.h>
 #include "libretro_core_options.h"
 
 #include "snes9x.h"
@@ -190,6 +192,20 @@ static bool setting_superscope_reverse_buttons = false;
 void retro_set_environment(retro_environment_t cb)
 {
     environ_cb = cb;
+
+    {
+        /* Route all core file I/O through the frontend's VFS when it
+           provides one; filestream falls back to its local
+           implementation otherwise. */
+        struct retro_vfs_interface_info vfs_iface_info;
+        vfs_iface_info.required_interface_version = 1;
+        vfs_iface_info.iface                      = NULL;
+        if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+        {
+            filestream_vfs_init(&vfs_iface_info);
+            path_vfs_init(&vfs_iface_info);
+        }
+    }
 
     static const struct retro_subsystem_memory_info multi_a_memory[] = {
         { "srm", RETRO_MEMORY_SNES_SUFAMI_TURBO_A_RAM },
@@ -1255,7 +1271,7 @@ static int is_bsx (uint8 *p)
 
 static bool8 LoadBIOS(uint8 *biosrom, const char *biosname, int biossize)
 {
-    FILE	*fp;
+    RFILE	*fp;
     char	name[PATH_MAX + 1];
     bool8 r = FALSE;
 
@@ -1263,22 +1279,22 @@ static bool8 LoadBIOS(uint8 *biosrom, const char *biosname, int biossize)
     strcat(name, SLASH_STR);
     strcat(name, biosname);
 
-    fp = fopen(name, "rb");
+    fp = rfopen(name, "rb");
     if (!fp)
     {
         strcpy(name, S9xGetDirectory(BIOS_DIR).c_str());
         strcat(name, SLASH_STR);
         strcat(name, biosname);
 
-        fp = fopen(name, "rb");
+        fp = rfopen(name, "rb");
     }
 
     if (fp)
     {
         size_t size;
 
-        size = fread((void *) biosrom, 1, biossize, fp);
-        fclose(fp);
+        size = rfread((void *) biosrom, 1, biossize, fp);
+        rfclose(fp);
         if (size == (unsigned int) biossize)
             r = TRUE;
     }

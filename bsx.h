@@ -8,6 +8,7 @@
 #define _BSX_H_
 
 #include <stdio.h>
+#include <streams/file_stream_transforms.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -48,8 +49,8 @@ struct SBSX
 	uint8_t	flash_bsr;
 	uint8_t	flash_cmd_done;
 
-	FILE			*sat_stream1;
-	FILE			*sat_stream2;
+	RFILE			*sat_stream1;
+	RFILE			*sat_stream2;
 
 	uint8_t	sat_pf_latch1_enable, sat_dt_latch1_enable;
 	uint8_t	sat_pf_latch2_enable, sat_dt_latch2_enable;

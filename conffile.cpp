@@ -123,9 +123,9 @@ void ConfigFile::LoadFile(Stream *r, const char *name){
 
 bool ConfigFile::SaveTo(const char *filename){
     string section;
-    FILE *fp;
+    RFILE *fp;
 
-    if((fp=fopen(filename, "w"))==NULL){
+    if((fp=rfopen(filename, "w"))==NULL){
         fprintf(stderr, "Couldn't write conffile ");
         perror(filename);
         return false;
@@ -134,9 +134,9 @@ bool ConfigFile::SaveTo(const char *filename){
 	curConfigFile = this;
     section.clear();
     set<ConfigEntry, ConfigEntry::line_less> tmp;
-    fprintf(fp, "# Config file output by snes9x\n");
+    rfprintf(fp, "# Config file output by snes9x\n");
     time_t t=time(NULL);
-    fprintf(fp, "# %s", ctime(&t));
+    rfprintf(fp, "# %s", ctime(&t));
 
 #ifdef SORT_SECTIONS_BY_SIZE
 	std::set<ConfigEntry, ConfigEntry::section_then_key_less> data2;
@@ -152,7 +152,7 @@ bool ConfigFile::SaveTo(const char *filename){
     for(set<ConfigEntry, ConfigEntry::section_then_key_less>::iterator j=data2.begin(); ; j++){
         if(j==data2.end() || j->section!=section){
             if(!tmp.empty()){
-                fprintf(fp, "\n[%s]\n", section.c_str());
+                rfprintf(fp, "\n[%s]\n", section.c_str());
 				unsigned int maxKeyLen=0, maxValLen=0; int maxLeftDiv=0; int maxRightDiv=-1;
 				if(niceAlignment){
 					for(set<ConfigEntry, ConfigEntry::line_less>::iterator i=tmp.begin(); i!=tmp.end(); i++){
@@ -189,23 +189,23 @@ bool ConfigFile::SaveTo(const char *filename){
 						len3=i->key.find_last_of(':');
 						int len3sub=0;
 						if(len3 < maxRightDiv){
-							for(int j=len3;j<maxRightDiv;j++) fputc(' ',fp);
+							for(int j=len3;j<maxRightDiv;j++) rfputc(' ',fp);
 							len3sub=maxRightDiv-len3;
 							len3 = maxRightDiv;
 						}
 						len3+=maxLeftDiv-i->key.length();
-						for(unsigned int j=i->key.length()+len3+3;j<maxKeyLen;j++) fputc(' ',fp);
-						fprintf(fp, "%s", i->key.c_str());
-						for(int j=0;j<len3-len3sub;j++) fputc(' ',fp);
-						fprintf(fp, " = %s", o.c_str());
+						for(unsigned int j=i->key.length()+len3+3;j<maxKeyLen;j++) rfputc(' ',fp);
+						rfprintf(fp, "%s", i->key.c_str());
+						for(int j=0;j<len3-len3sub;j++) rfputc(' ',fp);
+						rfprintf(fp, " = %s", o.c_str());
 					} else
-						fprintf(fp, "%s = %s", i->key.c_str(), o.c_str());
+						rfprintf(fp, "%s = %s", i->key.c_str(), o.c_str());
 
 					if(showComments && !i->comment.empty()){
-						if(niceAlignment) for(unsigned int j=o.length();j<maxValLen;j++) fputc(' ',fp);
-						fprintf(fp, "  # %s", i->comment.c_str());
+						if(niceAlignment) for(unsigned int j=o.length();j<maxValLen;j++) rfputc(' ',fp);
+						rfprintf(fp, "  # %s", i->comment.c_str());
 					}
-					fprintf(fp, "\n");
+					rfprintf(fp, "\n");
                 }
             }
             if(j==data2.end()) break;
@@ -219,12 +219,12 @@ bool ConfigFile::SaveTo(const char *filename){
 	#undef data2
 	#undef section_then_key_less
 
-	if(ferror(fp))
+	if(rferror(fp))
 	{
 		printf ("Error writing config file %s\n", filename);
 	}
 
-    fclose(fp);
+    rfclose(fp);
     return true;
 }
 

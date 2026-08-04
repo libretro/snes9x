@@ -129,7 +129,6 @@ class nulStream : public Stream
 };
 
 Stream *openStreamFromFSTREAM(const char* filename, const char* mode);
-Stream *reopenStreamFromFd(int fd, const char* mode);
 
 
 #endif

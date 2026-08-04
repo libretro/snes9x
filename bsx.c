@@ -28,9 +28,9 @@
 #define PATH_MAX 1024
 #endif
 
-static int bsx_stream_get (FILE *f)
+static int bsx_stream_get (RFILE *f)
 {
-	int c = getc(f);
+	int c = rfgetc(f);
 	return (c == EOF) ? 0xFF : c;
 }
 
@@ -820,18 +820,18 @@ static void S9xBSXSetStream1 (uint8 count)
 	float QueueSize;
 
 	if ((BSX.sat_stream1 != NULL))
-		{ fclose(BSX.sat_stream1); BSX.sat_stream1 = NULL; } /* already open: close it */
+		{ rfclose(BSX.sat_stream1); BSX.sat_stream1 = NULL; } /* already open: close it */
 
 
 	sprintf(path, "%s%sBSX%04X-%d.bin", BSXGetSatDirectory(), BSXGetSlashStr(),
 		(BSX.PPU[0x2188 - BSXPPUBASE] | (BSX.PPU[0x2189 - BSXPPUBASE] * 256)), count); /* BSXHHHH-DDD.bin */
 
-	BSX.sat_stream1 = fopen(path, "rb");
+	BSX.sat_stream1 = rfopen(path, "rb");
 	if (BSX.sat_stream1 != NULL)
 	{
-		fseek(BSX.sat_stream1, 0, SEEK_END);
-		str1size = ftell(BSX.sat_stream1);
-		fseek(BSX.sat_stream1, 0, SEEK_SET);
+		rfseek(BSX.sat_stream1, 0, SEEK_END);
+		str1size = rftell(BSX.sat_stream1);
+		rfseek(BSX.sat_stream1, 0, SEEK_SET);
 		QueueSize = str1size / 22.;
 		BSX.sat_stream1_queue = (uint16)(ceil(QueueSize));
 		BSX.PPU[0x218D - BSXPPUBASE] = 0;
@@ -851,19 +851,19 @@ static void S9xBSXSetStream2 (uint8 count)
 	float QueueSize;
 
 	if ((BSX.sat_stream2 != NULL))
-		{ fclose(BSX.sat_stream2); BSX.sat_stream2 = NULL; } /* already open: close it */
+		{ rfclose(BSX.sat_stream2); BSX.sat_stream2 = NULL; } /* already open: close it */
 
 
 
 	sprintf(path, "%s%sBSX%04X-%d.bin", BSXGetSatDirectory(), BSXGetSlashStr(),
 		(BSX.PPU[0x218E - BSXPPUBASE] | (BSX.PPU[0x218F - BSXPPUBASE] * 256)), count); /* BSXHHHH-DDD.bin */
 
-	BSX.sat_stream2 = fopen(path, "rb");
+	BSX.sat_stream2 = rfopen(path, "rb");
 	if (BSX.sat_stream2 != NULL)
 	{
-		fseek(BSX.sat_stream2, 0, SEEK_END);
-		str2size = ftell(BSX.sat_stream2);
-		fseek(BSX.sat_stream2, 0, SEEK_SET);
+		rfseek(BSX.sat_stream2, 0, SEEK_END);
+		str2size = rftell(BSX.sat_stream2);
+		rfseek(BSX.sat_stream2, 0, SEEK_SET);
 		QueueSize = str2size / 22.;
 		BSX.sat_stream2_queue = (uint16)(ceil(QueueSize));
 		BSX.PPU[0x2193 - BSXPPUBASE] = 0;
@@ -1020,7 +1020,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 				}
 				else if (BSX.sat_stream1_loaded)
 				{
-					if (feof(BSX.sat_stream1))
+					if (rfeof(BSX.sat_stream1))
 						BSX.PPU[0x218C - BSXPPUBASE] = 0xFF;
 					else
 						BSX.PPU[0x218C - BSXPPUBASE] = bsx_stream_get(BSX.sat_stream1);
@@ -1137,7 +1137,7 @@ uint8 S9xGetBSXPPU (uint16 address)
 				}
 				else if (BSX.sat_stream2_loaded)
 				{
-					if (feof(BSX.sat_stream2))
+					if (rfeof(BSX.sat_stream2))
 						BSX.PPU[0x2192 - BSXPPUBASE] = 0xFF;
 					else
 						BSX.PPU[0x2192 - BSXPPUBASE] = bsx_stream_get(BSX.sat_stream2);
@@ -1287,25 +1287,25 @@ uint8 * S9xGetBasePointerBSX (uint32 address)
 
 static bool8 BSX_LoadBIOS (void)
 {
-	FILE	*fp;
+	RFILE *fp;
 	bool8	r = FALSE;
 
 	char name[PATH_MAX + 16];
 
 	sprintf(name, "%s%sBS-X.bin", BSXGetBIOSDirectory(), BSXGetSlashStr());
-	fp = fopen(name, "rb");
+	fp = rfopen(name, "rb");
 	if (!fp)
 	{
 		sprintf(name, "%s%sBS-X.bios", BSXGetBIOSDirectory(), BSXGetSlashStr());
-		fp = fopen(name, "rb");
+		fp = rfopen(name, "rb");
 	}
 
 	if (fp)
 	{
 		size_t	size;
 
-		size = fread((void *) BIOSROM, 1, BIOS_SIZE, fp);
-		fclose(fp);
+		size = rfread((void *) BIOSROM, 1, BIOS_SIZE, fp);
+		rfclose(fp);
 		if (size == BIOS_SIZE)
 			r = TRUE;
 	}
@@ -1467,12 +1467,12 @@ void S9xResetBSX (void)
 
     if (BSX.sat_stream1 != NULL)
     {
-        fclose(BSX.sat_stream1);
+        rfclose(BSX.sat_stream1);
         BSX.sat_stream1 = NULL;
     }
     if (BSX.sat_stream2 != NULL)
     {
-        fclose(BSX.sat_stream2);
+        rfclose(BSX.sat_stream2);
         BSX.sat_stream2 = NULL;
     }
 

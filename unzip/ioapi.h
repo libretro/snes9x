@@ -45,28 +45,9 @@
 #include <stdlib.h>
 #include "zlib.h"
 
-#if defined(USE_FILE32API)
-#define fopen64 fopen
-#define ftello64 ftell
-#define fseeko64 fseek
-#else
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__HAIKU__) || defined(MINIZIP_FOPEN_NO_64)
-#define fopen64 fopen
-#define ftello64 ftello
-#define fseeko64 fseeko
-#endif
-#ifdef _MSC_VER
- #define fopen64 fopen
- #if (_MSC_VER >= 1400) && (!(defined(NO_MSCVER_FILE64_FUNC)))
-  #define ftello64 _ftelli64
-  #define fseeko64 _fseeki64
- #else // old MSC
-  #define ftello64 ftell
-  #define fseeko64 fseek
- #endif
-#endif
-#endif
-
+/* The stdio fopen64/ftello64/fseeko64 selection that lived here is
+   gone: the I/O backend in ioapi.c goes through the libretro VFS
+   (RFILE), which is 64-bit capable on every platform. */
 /*
 #ifndef ZPOS64_T
   #ifdef _WIN32
