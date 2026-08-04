@@ -85,19 +85,11 @@ std::string S9xCheatGroupToText(const SCheatGroup &g);
 std::string S9xCheatGroupToText(uint32_t index);
 void S9xDeleteCheatGroup(uint32_t index);
 bool8 S9xLoadCheatFile(const std::string &filename);
-bool8 S9xSaveCheatFile(const std::string &filename);
 void S9xUpdateCheatsInMemory(void);
-int S9xImportCheatsFromDatabase(const std::string &filename);
 void S9xCheatsDisable(void);
 void S9xCheatsEnable(void);
 std::string S9xCheatValidate(const std::string &cheat);
 
 void S9xInitCheatData (void);
-void S9xInitWatchedAddress (void);
-void S9xStartCheatSearch (SCheatData *);
-void S9xSearchForChange (SCheatData *, S9xCheatComparisonType, S9xCheatDataSize, bool8, bool8);
-void S9xSearchForValue (SCheatData *, S9xCheatComparisonType, S9xCheatDataSize, uint32_t, bool8, bool8);
-void S9xSearchForAddress (SCheatData *, S9xCheatComparisonType, S9xCheatDataSize, uint32_t, bool8);
-void S9xOutputCheatSearchResults (SCheatData *);
 
 #endif

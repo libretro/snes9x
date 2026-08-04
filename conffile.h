@@ -276,7 +276,4 @@ class ConfigFile {
 /* You must write this for your port */
 void S9xParsePortConfig(ConfigFile &, int pass);
 
-/* This may or may not be useful to you */
-const char *S9xParseDisplayConfig(ConfigFile &, int pass);
-
 #endif

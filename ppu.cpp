@@ -13,8 +13,6 @@
 #include "srtc.h"
 #include "controls.h"
 #include "display.h"
-#ifdef NETPLAY_SUPPORT
-#endif
 #ifdef DEBUGGER
 #include "debug.h"
 #include "missing.h"

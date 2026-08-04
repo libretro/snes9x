@@ -185,12 +185,6 @@ static inline void S9xSetByteFree(uint8 Byte, uint32 Address)
     }
 }
 
-void S9xInitWatchedAddress(void)
-{
-    for (unsigned int i = 0; i < sizeof(watches) / sizeof(watches[0]); i++)
-        watches[i].on = false;
-}
-
 void S9xInitCheatData(void)
 {
     Cheat.RAM = Memory.RAM;
@@ -690,39 +684,6 @@ bool8 S9xLoadCheatFile(const std::string &filename)
     return (TRUE);
 }
 
-bool8 S9xSaveCheatFile(const std::string &filename)
-{
-    unsigned int i;
-    RFILE *file = NULL;
-
-    if (Cheat.group.size() == 0)
-    {
-        remove(filename.c_str());
-        return TRUE;
-    }
-
-    file = rfopen(filename.c_str(), "w");
-
-    if (!file)
-        return FALSE;
-
-    for (i = 0; i < Cheat.group.size(); i++)
-    {
-        rfprintf(file,
-                "cheat\n"
-                "  name: %s\n"
-                "  code: %s\n"
-                "%s\n",
-                Cheat.group[i].name.c_str(),
-                S9xCheatGroupToText(i).c_str(),
-                Cheat.group[i].enabled ? "  enable\n" : "");
-    }
-
-    rfclose(file);
-
-    return TRUE;
-}
-
 void S9xCheatsDisable(void)
 {
     unsigned int i;
@@ -759,38 +720,4 @@ void S9xCheatsEnable(void)
             S9xEnableCheatGroup(i);
         }
     }
-}
-
-int S9xImportCheatsFromDatabase(const std::string &filename)
-{
-    char sha256_txt[65];
-    char hextable[] = "0123456789abcdef";
-    unsigned int i;
-
-    bml_node bml;
-    if (!bml.parse_file(filename))
-        return -1; // No file
-
-    for (i = 0; i < 32; i++)
-    {
-        sha256_txt[i * 2]     = hextable[Memory.ROMSHA256[i] >> 4];
-        sha256_txt[i * 2 + 1] = hextable[Memory.ROMSHA256[i] & 0xf];
-    }
-    sha256_txt[64] = '\0';
-
-    for (auto &c : bml.child)
-    {
-        if (!strcasecmp(c.name.c_str(), "cartridge"))
-        {
-            auto n = c.find_subnode("sha256");
-
-            if (n && !strcasecmp(n->data.c_str(), sha256_txt))
-            {
-                S9xLoadCheatsFromBMLNode(c);
-                return 0;
-            }
-        }
-    }
-
-    return -2; /* No codes */
 }

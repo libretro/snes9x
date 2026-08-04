@@ -19,8 +19,6 @@
 #include "controls.h"
 #include "crosshairs.h"
 #include "display.h"
-#ifdef NETPLAY_SUPPORT
-#endif
 
 using namespace	std;
 
@@ -2221,9 +2219,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 
 					case Pause:
 						Settings.Paused = !Settings.Paused;
-					#if defined(NETPLAY_SUPPORT) && !defined(__WIN32__)
-						S9xNPSendPause(Settings.Paused);
-					#endif
 						break;
 
 					case QuickLoad000:

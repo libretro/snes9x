@@ -12,8 +12,6 @@
 #include "fxemu.h"
 #include "srtc.h"
 #include "cheats.h"
-#ifdef NETPLAY_SUPPORT
-#endif
 #ifdef DEBUGGER
 #include "debug.h"
 #include "missing.h"
@@ -51,8 +49,6 @@ struct SMSU1			MSU1;
 struct SMulti			Multi;
 struct SSettings		Settings;
 struct SSNESGameFixes	SNESGameFixes;
-#ifdef NETPLAY_SUPPORT
-#endif
 #ifdef DEBUGGER
 struct Missing			missing;
 #endif
