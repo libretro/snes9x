@@ -35,7 +35,6 @@
 #ifndef snes9x_types_defined
 #define snes9x_types_defined
 typedef unsigned char		bool8;
-#ifdef HAVE_STDINT_H
 #include <stdint.h>
 typedef intptr_t			pint;
 typedef int8_t				int8;
@@ -46,42 +45,6 @@ typedef int32_t				int32;
 typedef uint32_t			uint32;
 typedef int64_t				int64;
 typedef uint64_t			uint64;
-#else	/* HAVE_STDINT_H */
-#ifdef __WIN32__
-typedef intptr_t			pint;
-typedef signed char			int8;
-typedef unsigned char		uint8;
-typedef signed short		int16;
-typedef unsigned short		uint16;
-typedef signed int     		int32;
-typedef unsigned int		uint32;
-typedef signed __int64		int64;
-typedef unsigned __int64	uint64;
-typedef int8                int8_t;
-typedef uint8       		uint8_t;
-typedef int16       		int16_t;
-typedef uint16      		uint16_t;
-typedef int32		    	int32_t;
-typedef uint32      		uint32_t;
-typedef int64               int64_t;
-typedef uint64              uint64_t;
-typedef int					socklen_t;
-#else	/* __WIN32__ */
-typedef signed char			int8;
-typedef unsigned char		uint8;
-typedef signed short		int16;
-typedef unsigned short		uint16;
-typedef signed int			int32;
-typedef unsigned int		uint32;
-#ifdef __GNUC__
-/* long long is not part of ISO C++ */
-__extension__
-#endif
-typedef long long			int64;
-typedef unsigned long long	uint64;
-typedef size_t				pint;
-#endif	/*  __WIN32__ */
-#endif	/* HAVE_STDINT_H */
 #endif	/* snes9x_types_defined */
 
 #ifndef TRUE
