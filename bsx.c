@@ -28,6 +28,15 @@
 #define PATH_MAX 1024
 #endif
 
+/* EOF semantics note for the VFS conversion: stdio feof() is
+   flag-based (true only after a failed read), while rfeof() /
+   filestream_eof() is positional (true as soon as tell == size, i.e.
+   right after the last byte is consumed). For the Satellaview stream
+   protocol the two are observably equivalent: a read at or past the
+   end yields 0xFF through either branch -- bsx_stream_get maps
+   rfgetc's EOF to 0xFF, and the rfeof branch serves 0xFF directly --
+   and rfseek clears the positional EOF just as fseek cleared the
+   stdio flag. */
 static int bsx_stream_get (RFILE *f)
 {
 	int c = rfgetc(f);
