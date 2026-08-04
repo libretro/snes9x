@@ -225,13 +225,11 @@ struct SSettings
 	uint32	FrameTime;
 
 	bool8	SoundSync;
-	bool8	SixteenBitSound;
 	uint32	SoundPlaybackRate;
 	uint32	SoundInputRate;
 	bool8	Stereo;
 	bool8	ReverseStereo;
 	bool8	Mute;
-	bool8	DynamicRateControl;
 	int32	DynamicRateLimit; /* Multiplied by 1000 */
 	int32	InterpolationMethod;
 
@@ -257,8 +255,6 @@ struct SSettings
 	bool8	BlockInvalidVRAMAccess;
 	int32	HDMATimingHack;
 
-	bool8	ForcedPause;
-	bool8	Paused;
 	bool8	StopEmulation;
 
 	uint32	SkipFrames;
@@ -300,21 +296,6 @@ struct SSNESGameFixes
 	uint8	Uniracers;
 };
 
-enum
-{
-	PAUSE_NETPLAY_CONNECT		= (1 << 0),
-	PAUSE_TOGGLE_FULL_SCREEN	= (1 << 1),
-	PAUSE_EXIT					= (1 << 2),
-	PAUSE_MENU					= (1 << 3),
-	PAUSE_INACTIVE_WINDOW		= (1 << 4),
-	PAUSE_WINDOW_ICONISED		= (1 << 5),
-	PAUSE_RESTORE_GUI			= (1 << 6),
-	PAUSE_FREEZE_FILE			= (1 << 7)
-};
-
-void S9xSetPause(uint32);
-void S9xClearPause(uint32);
-void S9xExit(void);
 void S9xMessage(int, int, const char *);
 
 extern struct SSettings			Settings;

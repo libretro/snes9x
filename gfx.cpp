@@ -1765,14 +1765,6 @@ static inline void DrawBackdrop (void)
 	}
 }
 
-void S9xReRefresh (void)
-{
-	// Be careful when calling this function from the thread other than the emulation one...
-	// Here it's assumed no drawing occurs from the emulation thread when Settings.Paused is TRUE.
-	if (Settings.Paused)
-		S9xDeinitUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
-}
-
 static uint16 get_crosshair_color (uint8 color)
 {
 	switch (color & 15)

@@ -2118,7 +2118,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 				switch ((enum command_numbers) (i = cmd.button.command))
 				{
 					case ExitEmu:
-						S9xExit();
 						break;
 
 					case Reset:
@@ -2218,7 +2217,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 					}
 
 					case Pause:
-						Settings.Paused = !Settings.Paused;
 						break;
 
 					case QuickLoad000:

@@ -1577,7 +1577,6 @@ void retro_init(void)
     Settings.MacsRifleMaster = TRUE;
     Settings.FrameTimePAL = 20000;
     Settings.FrameTimeNTSC = 16667;
-    Settings.SixteenBitSound = TRUE;
     Settings.Stereo = TRUE;
     Settings.SoundPlaybackRate = 32040;
     Settings.SoundInputRate = 32040;
@@ -2562,11 +2561,7 @@ void S9xToggleSoundChannel(int) {}
 std::string S9xGetFilenameInc(std::string in, s9x_getdirtype) { return ""; }
 const char* S9xBasename(const char* in) { return in; }
 bool8 S9xInitUpdate() { return TRUE; }
-void S9xExtraUsage() {}
-bool8 S9xOpenSoundDevice() { return TRUE; }
 bool S9xPollAxis(uint32, short*) { return FALSE; }
-void S9xParseArg(char**, int&, int) {}
-void S9xExit() {}
 bool S9xPollPointer(uint32, short*, short*) { return false; }
 
 void S9xMessage(int type, int, const char* s)

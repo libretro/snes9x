@@ -319,7 +319,6 @@ void S9xGraphicsDeinit (void);
 bool8 S9xInitUpdate (void);
 bool8 S9xDeinitUpdate (int, int);
 bool8 S9xContinueUpdate (int, int);
-void S9xReRefresh (void);
 void S9xSyncSpeed (void);
 
 #ifdef __cplusplus

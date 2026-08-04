@@ -19,11 +19,6 @@ bool8 S9xOpenSnapshotFile (const char *, bool8, STREAM *);
 void S9xCloseSnapshotFile (STREAM);
 const char * S9xStringInput (const char *);
 
-// Routines the port has to implement if it uses command-line
-
-void S9xExtraUsage (void);
-void S9xParseArg (char **, int &, int);
-
 // Routines the port may implement as needed
 
 void S9xInitInputDevices (void);

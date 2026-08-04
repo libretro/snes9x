@@ -135,16 +135,6 @@ void S9xClearSamples(void)
         msu::resampler.clear();
 }
 
-bool8 S9xSyncSound(void)
-{
-    if (!Settings.SoundSync || spc::sound_in_sync)
-        return true;
-
-    S9xLandSamples();
-
-    return (spc::sound_in_sync);
-}
-
 void S9xSetSamplesAvailableCallback(apu_callback callback, void *data)
 {
     spc::callback = callback;
@@ -165,12 +155,6 @@ static void UpdatePlaybackRate(void)
         Settings.SoundInputRate = APU_DEFAULT_INPUT_RATE;
 
     double time_ratio = (double)Settings.SoundInputRate * spc::timing_hack_numerator / (Settings.SoundPlaybackRate * spc::timing_hack_denominator);
-
-    if (Settings.DynamicRateControl)
-    {
-        time_ratio *= spc::dynamic_rate_multiplier;
-    }
-
     spc::resampler.time_ratio(time_ratio);
 
     if (Settings.MSU1)
@@ -197,7 +181,7 @@ bool8 S9xInitSound(int buffer_ms)
 
     UpdatePlaybackRate();
 
-    spc::sound_enabled = S9xOpenSoundDevice();
+    spc::sound_enabled = true;
 
     return (spc::sound_enabled);
 }
