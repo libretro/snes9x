@@ -238,7 +238,6 @@ struct SSettings
 	int32	Mode7HiresVertical;		// 2x vertical resample post-pass
 	int32	Mode7HiresBilinear;		// 0 nearest, 1 stable, 2 smooth
 	uint8	BG_Forced;
-	bool8	DisableGraphicWindows;
 	uint16  ForcedBackdrop;
 
 	uint32	InitialInfoStringTimeout;
@@ -255,16 +254,11 @@ struct SSettings
 	bool8	BlockInvalidVRAMAccess;
 	int32	HDMATimingHack;
 
-	bool8	StopEmulation;
-
 	uint32	SkipFrames;
 	uint32	TurboSkipFrames;
 	uint32	AutoMaxSkipFrames;
 	bool8	TurboMode;
 	uint32	HighSpeedSeek;
-	bool8	FrameAdvance;
-	bool8	Rewinding;
-
 
 	bool8	DumpStreams;
 	int		DumpStreamsMaxFrames;

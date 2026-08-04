@@ -2137,7 +2137,6 @@ void S9xApplyCommand (s9xcommand_t cmd, int16 data1, int16 data2)
 						break;
 
 					case ClipWindows:
-						Settings.DisableGraphicWindows = !Settings.DisableGraphicWindows;
 						break;
 
 					case Debugger:

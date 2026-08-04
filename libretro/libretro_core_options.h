@@ -757,20 +757,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "enabled"
    },
    {
-      "snes9x_gfx_clip",
-      "Enable Graphic Clip Windows",
-      NULL,
-      NULL,
-      NULL,
-      "advanced_av",
-      {
-         { "enabled",  NULL },
-         { "disabled", NULL },
-         { NULL, NULL },
-      },
-      "enabled"
-   },
-   {
       "snes9x_gfx_transp",
       "Enable Transparency Effects",
       NULL,

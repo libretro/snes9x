@@ -492,10 +492,6 @@ static void update_variables(void)
     Settings.BG_Forced=disabled_layers;
 
     //for some reason, Transparency seems to control both the fixed color and the windowing registers?
-    var.key="snes9x_gfx_clip";
-    var.value=NULL;
-    Settings.DisableGraphicWindows=(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));
-
     var.key="snes9x_gfx_transp";
     var.value=NULL;
     Settings.Transparency=!(environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && !strcmp("disabled", var.value));

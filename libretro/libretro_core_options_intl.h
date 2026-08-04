@@ -483,18 +483,6 @@ struct retro_core_option_v2_definition option_defs_tr[] = {
       NULL
    },
    {
-      "snes9x_gfx_clip",
-      "Grafik Klibi Pencerelerini Etkinleştir",
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      {
-         { NULL, NULL },
-      },
-      NULL
-   },
-   {
       "snes9x_gfx_transp",
       "Saydamlık Efektlerini Etkinleştir",
       NULL,
