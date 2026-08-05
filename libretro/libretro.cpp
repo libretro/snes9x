@@ -1,5 +1,6 @@
 #include "libretro.h"
 #include <streams/file_stream.h>
+#include <vfs/vfs_hybrid.h>
 #include <file/file_path.h>
 #include "libretro_core_options.h"
 
@@ -193,19 +194,19 @@ void retro_set_environment(retro_environment_t cb)
 {
     environ_cb = cb;
 
-    {
-        /* Route all core file I/O through the frontend's VFS when it
-           provides one; filestream falls back to its local
-           implementation otherwise. */
-        struct retro_vfs_interface_info vfs_iface_info;
-        vfs_iface_info.required_interface_version = 1;
-        vfs_iface_info.iface                      = NULL;
-        if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
-        {
-            filestream_vfs_init(&vfs_iface_info);
-            path_vfs_init(&vfs_iface_info);
-        }
-    }
+    /*
+       Hybrid VFS replaces the wholesale v1 adoption. MSU-1 makes this
+       core an unusually direct beneficiary: PCM sidecars stream
+       continuously during gameplay, and every one of those reads paid
+       the frontend-callback indirection on every platform. Plain
+       paths now serve through the local implementation directly;
+       the frontend is consulted only for URI-shaped paths or after a
+       local failure on sandboxed platforms, so Android keeps exactly
+       the reachability it had - plus dirent coverage the old v1-only
+       wiring never provided. log_cb is unset this early; the hybrid
+       treats NULL as no-log.
+    */
+    vfs_hybrid_init(cb, NULL);
 
     static const struct retro_subsystem_memory_info multi_a_memory[] = {
         { "srm", RETRO_MEMORY_SNES_SUFAMI_TURBO_A_RAM },

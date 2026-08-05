@@ -69,7 +69,9 @@ SOURCES_C += \
 	$(LIBRETRO_COMM_DIR)/streams/file_stream_transforms.c \
 	$(LIBRETRO_COMM_DIR)/string/stdstring.c \
 	$(LIBRETRO_COMM_DIR)/time/rtime.c \
-	$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c
+	$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c \
+	$(LIBRETRO_COMM_DIR)/vfs/vfs_hybrid.c \
+	$(LIBRETRO_COMM_DIR)/file/retro_dirent.c
 endif
 
 ifneq (,$(findstring unix,$(platform)))
