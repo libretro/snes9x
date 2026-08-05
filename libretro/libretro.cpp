@@ -194,6 +194,7 @@ void retro_set_environment(retro_environment_t cb)
 {
     environ_cb = cb;
 
+#ifndef STATIC_LINKING
     /*
        Hybrid VFS replaces the wholesale v1 adoption. MSU-1 makes this
        core an unusually direct beneficiary: PCM sidecars stream
@@ -207,6 +208,14 @@ void retro_set_environment(retro_environment_t cb)
        treats NULL as no-log.
     */
     vfs_hybrid_init(cb, NULL);
+#else
+    /*
+       Statically linked frontends share one libretro-common with the
+       core: the local implementation and the "frontend VFS" are the
+       same code, so the hybrid is semantically void there and its
+       object is excluded from the archive (see Makefile.common).
+    */
+#endif
 
     static const struct retro_subsystem_memory_info multi_a_memory[] = {
         { "srm", RETRO_MEMORY_SNES_SUFAMI_TURBO_A_RAM },

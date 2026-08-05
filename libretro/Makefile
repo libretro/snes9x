@@ -666,6 +666,16 @@ ifeq ($(LTO),-flto)
    endif
 endif
 
+# Statically linked frontends compile their own libretro-common, so
+# Makefile.common keeps the vendored copy (including vfs_hybrid.c) out
+# of the archive; the define lets libretro.cpp compile the matching
+# call site out.  Evaluated here, before the msvc lib.exe block resets
+# STATIC_LINKING, so it keys off the same value the source split sees.
+ifeq ($(STATIC_LINKING),1)
+CFLAGS   += -DSTATIC_LINKING
+CXXFLAGS += -DSTATIC_LINKING
+endif
+
 include Makefile.common
 
 OBJECTS := $(SOURCES_CXX:.cpp=.o) $(SOURCES_C:.c=.o)
