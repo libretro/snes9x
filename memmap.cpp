@@ -1177,9 +1177,13 @@ int CMemory::ScoreLoROM (bool8 skip_header, int32 romoff)
 	if (CalculatedSize <= 1024 * 1024 * 16)
 		score += 2;
 
-	/* buf[0xd7] < 7 claims a ROM smaller than 16KB: bogus header, penalize.
-	   Also avoids a negative shift count (UB, arch-dependent result). */
-	if (buf[0xd7] < 7 || (1 << (buf[0xd7] - 7)) > 48)
+	/* buf[0xd7] is a size exponent, meaningful only in 7..12 (16 KB..32 MB).
+	   Below 7 the header claims a ROM smaller than 16 KB and above 12 it
+	   exceeds 48 Mbit, both bogus, so penalize. Testing the range rather
+	   than shifting also keeps the shift count in bounds: this byte comes
+	   straight out of the ROM image, so a junk header could ask for a shift
+	   of up to 248, which is undefined and in practice arch-dependent. */
+	if (buf[0xd7] < 7 || buf[0xd7] > 12)
 		score -= 1;
 
 	if (!allASCII(&buf[0xb0], 6))
@@ -2395,12 +2399,29 @@ void CMemory::InitROM (void)
 	}
 
 	// SRAM size
+	/* SRAMSize is a header byte, so it is whatever the image says - a bad
+	   dump or a hacked header can hold anything up to 255. Left unclamped,
+	   the shift below is undefined past 28 and the resulting mask outgrows
+	   the 512 KB SRAM allocation from SRAMSize 10 upward, at which point
+	   every masked SRAM access reads and writes past the end of the buffer.
+	   9 is the largest value the allocation can represent. */
+	if (SRAMSize > 9)
+		SRAMSize = 9;
+
 	SRAMMask = SRAMSize ? ((1 << (SRAMSize + 3)) * 128) - 1 : 0;
+
+	if (SRAMMask >= SRAM_SIZE)
+		SRAMMask = SRAM_SIZE - 1;
 	BridgeSRAMMask = SRAMMask;
 	BridgeCalculatedSize = CalculatedSize;
 
 	// checksum
-	if (!isChecksumOK || ((uint32) CalculatedSize > (uint32) (((1 << (ROMSize - 7)) * 128) * 1024)))
+	/* ROMSize is a header byte as well: below 7 the shift count goes
+	   negative and above 12 the result overflows, both undefined. The
+	   comparison only drives a warning colour, so treat anything outside
+	   the meaningful 7..12 range as "header disagrees with the image". */
+	if (!isChecksumOK || ROMSize < 7 || ROMSize > 12 ||
+	    ((uint32) CalculatedSize > (uint32) (((1 << (ROMSize - 7)) * 128) * 1024)))
 	{
 		Settings.DisplayColor = BUILD_PIXEL(31, 31, 0);
 		SET_UI_COLOR(255, 255, 0);
@@ -3877,7 +3898,7 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
             uint8 *pdata = (psize > 0) ? new uint8[psize] : NULL;
             ret = FALSE;
 
-            if (pdata && READ_FSTREAM(pdata, psize, patch_file) == (size_t) psize)
+            if (pdata && (size_t) READ_FSTREAM(pdata, psize, patch_file) == (size_t) psize)
             {
                 ByteStream bs;
                 bs_init(&bs, pdata, (size_t) psize);
