@@ -211,11 +211,21 @@ void zip_archive_close (struct zip_archive *ar)
 
 /* ---- lookup --------------------------------------------------------------- */
 
+/* Lookup skips entries this reader cannot decode, so a match is always
+   readable. Without this a pack whose first name match happens to use, say,
+   lzma would shadow a perfectly good deflated copy later in the directory:
+   the caller gets a hit, zip_file_open then refuses it, and it has no way to
+   know a usable entry existed. */
+static int readable (const struct zip_entry *e)
+{
+	return (e->method == ZIP_METHOD_STORE || e->method == ZIP_METHOD_DEFLATE);
+}
+
 int zip_find_name (const struct zip_archive *ar, const char *name, int from)
 {
 	int i;
 	for (i = (from < 0) ? 0 : from; i < ar->count; i++)
-		if (ci_equal(ar->entries[i].name, name))
+		if (readable(&ar->entries[i]) && ci_equal(ar->entries[i].name, name))
 			return (i);
 	return (-1);
 }
@@ -226,7 +236,7 @@ int zip_find_ext (const struct zip_archive *ar, const char *ext, int from)
 	for (i = (from < 0) ? 0 : from; i < ar->count; i++)
 	{
 		const char *dot = strrchr(ar->entries[i].name, '.');
-		if (dot && ci_equal(dot + 1, ext))
+		if (readable(&ar->entries[i]) && dot && ci_equal(dot + 1, ext))
 			return (i);
 	}
 	return (-1);
@@ -236,7 +246,7 @@ int zip_find_suffix (const struct zip_archive *ar, const char *suffix, int from)
 {
 	int i;
 	for (i = (from < 0) ? 0 : from; i < ar->count; i++)
-		if (ends_with(ar->entries[i].name, suffix))
+		if (readable(&ar->entries[i]) && ends_with(ar->entries[i].name, suffix))
 			return (i);
 	return (-1);
 }

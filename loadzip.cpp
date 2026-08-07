@@ -30,6 +30,12 @@ static int find_rom_entry (const struct zip_archive *ar, uint32 *out_size)
 		if (size > CMemory::MAX_ROM_SIZE + 512)
 			continue;
 
+		/* Skip entries this reader cannot decode rather than selecting one
+		   and failing the load. */
+		if (ar->entries[i].method != ZIP_METHOD_STORE &&
+		    ar->entries[i].method != ZIP_METHOD_DEFLATE)
+			continue;
+
 		if (size > best_size)
 		{
 			best = i;
