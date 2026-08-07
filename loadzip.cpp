@@ -4,75 +4,84 @@
    For further information, consult the LICENSE file in the root directory.
 \*****************************************************************************/
 
-#ifdef UNZIP_SUPPORT
-
 #include <assert.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "snes9x.h"
-#ifdef SYSTEM_ZIP
-#include <minizip/unzip.h>
-#else
-#include "unzip/unzip.h"
-#endif
+#include "zipfile.h"
 #include "memmap.h"
 
-
-bool8 LoadZip (const char *zipname, uint32 *TotalFileSize, uint8 *buffer)
+/* Selection rules, unchanged from the minizip implementation: prefer a file
+   named program.rom or one whose extension is ".1", otherwise take the largest
+   entry that fits in a cart. A .msu1 pack only ever loads program.rom, since
+   its other entries are MSU1 companion data rather than the ROM. */
+static int find_rom_entry (const struct zip_archive *ar, uint32 *out_size)
 {
-	*TotalFileSize = 0;
+	int      best = -1;
+	uint32   best_size = 0;
+	int      i;
 
-	unzFile	file = unzOpen(zipname);
-	if (file == NULL)
-		return (FALSE);
-
-	// find largest file in zip file (under MAX_ROM_SIZE) or a file with extension .1, or a file named program.rom
-	char	filename[132];
-	uint32	filesize = 0;
-	int		port = unzGoToFirstFile(file);
-
-	unz_file_info	info;
-
-	while (port == UNZ_OK)
+	for (i = 0; i < ar->count; i++)
 	{
-		char	name[132];
-		unzGetCurrentFileInfo(file, &info, name, 128, NULL, 0, NULL, 0);
+		const char *name = ar->entries[i].name;
+		uint32      size = ar->entries[i].uncomp_size;
+		int         len  = (int) strlen(name);
 
-		if (info.uncompressed_size > CMemory::MAX_ROM_SIZE + 512)
-		{
-			port = unzGoToNextFile(file);
+		if (size > CMemory::MAX_ROM_SIZE + 512)
 			continue;
-		}
 
-		if (info.uncompressed_size > filesize)
+		if (size > best_size)
 		{
-			strcpy(filename, name);
-			filesize = info.uncompressed_size;
+			best = i;
+			best_size = size;
 		}
 
-		int	len = strlen(name);
 		if (len > 2 && name[len - 2] == '.' && name[len - 1] == '1')
 		{
-			strcpy(filename, name);
-			filesize = info.uncompressed_size;
+			best = i;
+			best_size = size;
 			break;
 		}
 
 		if (strncasecmp(name, "program.rom", 11) == 0)
 		{
-			strcpy(filename, name);
-			filesize = info.uncompressed_size;
+			best = i;
+			best_size = size;
 			break;
 		}
-
-		port = unzGoToNextFile(file);
 	}
 
-	int len = strlen(zipname);
-	if (!(port == UNZ_END_OF_LIST_OF_FILE || port == UNZ_OK) || filesize == 0 ||
-		(len > 5 && strcasecmp(zipname + len - 5, ".msu1") == 0 && strcasecmp(filename, "program.rom") != 0))
+	*out_size = best_size;
+	return (best);
+}
+
+bool8 LoadZip (const char *zipname, uint32 *TotalFileSize, uint8 *buffer)
+{
+	struct zip_archive	ar;
+	char			filename[ZIP_MAX_NAME];
+	uint32			filesize = 0;
+	int			idx;
+	int			len;
+
+	*TotalFileSize = 0;
+
+	if (!zip_archive_open(&ar, zipname))
+		return (FALSE);
+
+	idx = find_rom_entry(&ar, &filesize);
+	if (idx < 0 || filesize == 0)
 	{
-		if (unzClose(file) != UNZ_OK)
-			assert(FALSE);
+		zip_archive_close(&ar);
+		return (FALSE);
+	}
+
+	strcpy(filename, ar.entries[idx].name);
+
+	len = (int) strlen(zipname);
+	if (len > 5 && strcasecmp(zipname + len - 5, ".msu1") == 0 &&
+	    strcasecmp(filename, "program.rom") != 0)
+	{
+		zip_archive_close(&ar);
 		return (FALSE);
 	}
 
@@ -87,39 +96,35 @@ bool8 LoadZip (const char *zipname, uint32 *TotalFileSize, uint8 *buffer)
 	uint8	*ptr = buffer;
 	bool8	more = FALSE;
 
-	unzLocateFile(file, filename, 0);
-	unzGetCurrentFileInfo(file, &info, filename, 128, NULL, 0, NULL, 0);
-
-	if (unzOpenCurrentFile(file) != UNZ_OK)
-	{
-		unzClose(file);
-		return (FALSE);
-	}
-
 	do
 	{
-		assert(info.uncompressed_size <= CMemory::MAX_ROM_SIZE + 512);
+		uint32   FileSize = ar.entries[idx].uncomp_size;
+		uint32   got;
 
-		uint32 FileSize = info.uncompressed_size;
-		int	l = unzReadCurrentFile(file, ptr, FileSize);
+		assert(FileSize <= CMemory::MAX_ROM_SIZE + 512);
 
-		if (unzCloseCurrentFile(file) == UNZ_CRCERROR)
 		{
-			unzClose(file);
-			return (FALSE);
+			struct zip_file zf;
+
+			if (!zip_file_open(&zf, &ar, idx))
+			{
+				zip_archive_close(&ar);
+				return (FALSE);
+			}
+
+			got = zip_file_read(&zf, 0, ptr, FileSize);
+			zip_file_close(&zf);
 		}
 
-		if (l <= 0 || l != (int) FileSize)
+		if (got != FileSize)
 		{
-			unzClose(file);
+			zip_archive_close(&ar);
 			return (FALSE);
 		}
 
 		FileSize = Memory.HeaderRemove(FileSize, ptr);
 		ptr += FileSize;
 		*TotalFileSize += FileSize;
-
-		int	len;
 
 		if (ptr - Memory.ROM < CMemory::MAX_ROM_SIZE + 512 && (isdigit(ext[0]) && ext[1] == 0 && ext[0] < '9'))
 		{
@@ -129,17 +134,19 @@ bool8 LoadZip (const char *zipname, uint32 *TotalFileSize, uint8 *buffer)
 		else
 		if (ptr - Memory.ROM < CMemory::MAX_ROM_SIZE + 512)
 		{
-			if (ext == tmp)
-				len = strlen(filename);
-			else
-				len = ext - filename - 1;
+			int	nlen;
 
-			if ((len == 7 || len == 8) && strncasecmp(filename, "sf", 2) == 0 &&
+			if (ext == tmp)
+				nlen = (int) strlen(filename);
+			else
+				nlen = (int) (ext - filename - 1);
+
+			if ((nlen == 7 || nlen == 8) && strncasecmp(filename, "sf", 2) == 0 &&
 				isdigit(filename[2]) && isdigit(filename[3]) && isdigit(filename[4]) &&
-				isdigit(filename[5]) && isalpha(filename[len - 1]))
+				isdigit(filename[5]) && isalpha(filename[nlen - 1]))
 			{
 				more = TRUE;
-				filename[len - 1]++;
+				filename[nlen - 1]++;
 			}
 		}
 		else
@@ -147,16 +154,13 @@ bool8 LoadZip (const char *zipname, uint32 *TotalFileSize, uint8 *buffer)
 
 		if (more)
 		{
-			if (unzLocateFile(file, filename, 0) != UNZ_OK ||
-				unzGetCurrentFileInfo(file, &info, filename, 128, NULL, 0, NULL, 0) != UNZ_OK ||
-				unzOpenCurrentFile(file) != UNZ_OK)
+			idx = zip_find_name(&ar, filename, 0);
+			if (idx < 0)
 				break;
 		}
 	} while (more);
 
-	unzClose(file);
+	zip_archive_close(&ar);
 
 	return (TRUE);
 }
-
-#endif

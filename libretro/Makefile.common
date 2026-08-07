@@ -10,7 +10,7 @@ endif
 
 SOURCES_C   := $(CORE_DIR)/c4emu.c \
 	       $(CORE_DIR)/msu1.c \
-	       $(CORE_DIR)/msu1_pack.c \
+	       $(CORE_DIR)/zipfile.c \
 	       $(CORE_DIR)/srtc.c \
 	       $(CORE_DIR)/obc1.c \
 	       $(CORE_DIR)/bsflash.c \
@@ -76,13 +76,3 @@ SOURCES_C += \
 	$(LIBRETRO_COMM_DIR)/file/retro_dirent.c
 endif
 
-ifneq (,$(findstring unix,$(platform)))
-   INCFLAGS += -I$(CORE_DIR)/unzip
-   SOURCES_C += $(CORE_DIR)/unzip/unzip.c \
-                $(CORE_DIR)/unzip/ioapi.c
-endif
-ifneq (,$(findstring win,$(platform)))
-   INCFLAGS += -I$(CORE_DIR)/unzip
-   SOURCES_C += $(CORE_DIR)/unzip/unzip.c \
-                $(CORE_DIR)/unzip/ioapi.c
-endif

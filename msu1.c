@@ -17,7 +17,7 @@
 #include "snes9x.h"
 #include "msu1.h"
 #include <streams/file_stream.h>
-#include "msu1_pack.h"
+#include "zipfile.h"
 
 /* The instance lives in globals.cpp with the other chip state, as in the
    msu1.cpp this replaces. */
@@ -29,7 +29,8 @@
 struct msu1_src
 {
 	RFILE			*loose;
-	struct msu1_pack_file	 pack;
+	struct zip_archive	 pack_ar;
+	struct zip_file		 pack;
 	uint8_t			 packed;
 	uint32_t		 size;
 };
@@ -120,11 +121,18 @@ static uint8_t msu1_src_open (struct msu1_src *src, const char *loose_path,
 		}
 	}
 
-	if (pack_path && *pack_path && msu1_pack_open(&src->pack, pack_path, suffix))
+	if (pack_path && *pack_path && zip_archive_open(&src->pack_ar, pack_path))
 	{
-		src->packed = TRUE;
-		src->size   = msu1_pack_size(&src->pack);
-		return (TRUE);
+		int idx = zip_find_suffix(&src->pack_ar, suffix, 0);
+
+		if (idx >= 0 && zip_file_open(&src->pack, &src->pack_ar, idx))
+		{
+			src->packed = TRUE;
+			src->size   = zip_file_size(&src->pack);
+			return (TRUE);
+		}
+
+		zip_archive_close(&src->pack_ar);
 	}
 
 	return (FALSE);
@@ -139,7 +147,8 @@ static void msu1_src_close (struct msu1_src *src)
 	}
 	if (src->packed)
 	{
-		msu1_pack_close(&src->pack);
+		zip_file_close(&src->pack);
+		zip_archive_close(&src->pack_ar);
 		src->packed = FALSE;
 	}
 	src->size = 0;
@@ -153,7 +162,7 @@ static uint32_t msu1_src_read (struct msu1_src *src, uint32_t offset, uint8_t *o
 		return ((uint32_t) filestream_read(src->loose, out, (int64_t) len));
 	}
 	if (src->packed)
-		return (msu1_pack_read(&src->pack, offset, out, len));
+		return (zip_file_read(&src->pack, offset, out, len));
 	return (0);
 }
 

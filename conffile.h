@@ -13,13 +13,6 @@
 #include <string>
 
 #include "snes9x.h"
-#ifdef UNZIP_SUPPORT
-#  ifdef SYSTEM_ZIP
-#    include <minizip/unzip.h>
-#  else
-#    include "unzip/unzip.h"
-#  endif
-#endif
 
 #ifndef MAX
 #  define MAX(a,b)  ((a) > (b)? (a) : (b))

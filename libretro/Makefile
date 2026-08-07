@@ -53,7 +53,7 @@ endif
 # Unix
 ifneq (,$(findstring unix,$(platform)))
    CFLAGS += $(LTO)
-   CXXFLAGS += $(LTO) -DUNZIP_SUPPORT
+   CXXFLAGS += $(LTO)
    LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
@@ -61,7 +61,6 @@ ifneq (,$(findstring unix,$(platform)))
    CC = gcc
    SHARED := -shared -z defs
    else
-   LIBS += -lz
    SHARED := -shared -Wl,--version-script=link.T -Wl,-z,defs
    endif
 
@@ -597,14 +596,14 @@ CXXFLAGS += -D_CRT_SECURE_NO_DEPRECATE
 # Windows
 else
    CFLAGS += $(LTO)
-   CXXFLAGS += $(LTO) -DUNZIP_SUPPORT
+   CXXFLAGS += $(LTO)
    LDFLAGS += $(LTO)
    TARGET := $(TARGET_NAME)_libretro.dll
    CC ?= gcc
    CXX ?= g++
    SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=link.T
    CXXFLAGS += -D__WIN32__
-   LIBS += -lz -lcrypt32
+   LIBS += -lcrypt32
 endif
 
 CORE_DIR := ..

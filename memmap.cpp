@@ -11,13 +11,6 @@
 #include <assert.h>
 
 #include "snes9x.h"
-#ifdef UNZIP_SUPPORT
-#  ifdef SYSTEM_ZIP
-#    include <minizip/unzip.h>
-#  else
-#    include "unzip/unzip.h"
-#  endif
-#endif
 
 #ifdef JMA_SUPPORT
 #include "jma/s9x-jma.h"
@@ -45,7 +38,7 @@ uint32_t  BridgeCalculatedSize = 0;
 #include "sha256.h"
 #include "snapshot.h"
 #include "msu1.h"
-#include "msu1_pack.h"
+#include "zipfile.h"
 
 #ifndef SET_UI_COLOR
 #define SET_UI_COLOR(r, g, b) ;
@@ -791,9 +784,6 @@ static uint32 caCRC32 (uint8 *, uint32, uint32 crc32 = 0xffffffff);
 static bool8 ReadUPSPatch (Stream *, long, int32 &);
 static long ReadInt (Stream *, unsigned);
 static bool8 ReadIPSPatch (Stream *, long, int32 &);
-#ifdef UNZIP_SUPPORT
-static int unzFindExtension (unzFile &, const char *, bool restart = TRUE, bool print = TRUE, bool allowExact = FALSE);
-#endif
 
 // deinterleave
 
@@ -1264,7 +1254,6 @@ uint32 CMemory::FileLoader (uint8 *buffer, const char *filename, uint32 maxsize)
 	{
 		case FILE_ZIP:
 		{
-		#ifdef UNZIP_SUPPORT
 			if (!LoadZip(filename, &totalSize, buffer))
 			{
 			 	S9xMessage(S9X_ERROR, S9X_ROM_INFO, "Invalid Zip archive.");
@@ -1272,10 +1261,6 @@ uint32 CMemory::FileLoader (uint8 *buffer, const char *filename, uint32 maxsize)
 			}
 
 			ROMFilename = filename;
-		#else
-			S9xMessage(S9X_ERROR, S9X_ROM_INFO, "This binary was not created with Zip support.");
-			return (0);
-		#endif
 			break;
 		}
 
@@ -3893,40 +3878,6 @@ static bool8 ReadIPSPatch (Stream *r, long offset, int32 &rom_size)
 	return (1);
 }
 
-#ifdef UNZIP_SUPPORT
-static int unzFindExtension (unzFile &file, const char *ext, bool restart, bool print, bool allowExact)
-{
-	unz_file_info	info;
-	int				port, l = strlen(ext), e = allowExact ? 0 : 1;
-
-	if (restart)
-		port = unzGoToFirstFile(file);
-	else
-		port = unzGoToNextFile(file);
-
-	while (port == UNZ_OK)
-	{
-		int		len;
-		char	name[132];
-
-		unzGetCurrentFileInfo(file, &info, name, 128, NULL, 0, NULL, 0);
-		len = strlen(name);
-
-		if (len >= l + e && name[len - l - 1] == '.' && strcasecmp(name + len - l, ext) == 0 && unzOpenCurrentFile(file) == UNZ_OK)
-		{
-			if (print)
-				printf("Using patch %s", name);
-
-			return (port);
-		}
-
-		port = unzGoToNextFile(file);
-	}
-
-	return (port);
-}
-#endif
-
 void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &rom_size)
 {
     Settings.IsPatched = false;
@@ -3993,30 +3944,40 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
     if (try_patch_type_sequence(ROMFILENAME_DIR))
         return;
 
-#ifdef UNZIP_SUPPORT
     if (path.ext_is(".zip"))
     {
-        unzFile file = unzOpen(rom_filename);
-        if (file)
+        struct zip_archive ar;
+
+        if (zip_archive_open(&ar, rom_filename))
         {
             auto try_zip_patch = [&](const char *ext, bool8 (*read_patch_func)(Stream * r, long offset, int32 &rom_size)) -> bool {
-                if (unzFindExtension(file, ext) == UNZ_OK)
+                int idx = zip_find_ext(&ar, ext, 0);
+                uint32_t psize = 0;
+                uint8_t *pdata;
+
+                if (idx < 0)
+                    return false;
+
+                pdata = zip_read_entry(&ar, idx, &psize);
+                if (!pdata)
+                    return false;
+
+                printf("Using patch %s in %s", ar.entries[idx].name, rom_filename);
+
                 {
-                    printf(" in %s", rom_filename);
-
-                    Stream *s = new unzStream(file);
-                    ret = read_patch_func(s, offset, rom_size);
-                    delete s;
-
-                    if (ret)
-                    {
-                        printf("!\n");
-                        flag = true;
-                        return true;
-                    }
-
-                    printf(" failed!\n");
+                    memStream ms(pdata, psize);
+                    ret = read_patch_func(&ms, offset, rom_size);
                 }
+                free(pdata);
+
+                if (ret)
+                {
+                    printf("!\n");
+                    flag = true;
+                    return true;
+                }
+
+                printf(" failed!\n");
                 return false;
             };
 
@@ -4043,9 +4004,7 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
             if (!flag)
                 try_zip_ips_sequence("ip%d");
 
-            int close_ret = unzClose(file);
-            assert(close_ret == UNZ_OK);
-            (void) close_ret;
+            zip_archive_close(&ar);
 
             if (flag)
                 return;
@@ -4055,18 +4014,18 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
     // Mercurial Magic (MSU-1 distribution pack)
     if (path.ext_is(".msu1"))
     {
-        // The pack reader is offset-addressed rather than stream-based, so
-        // pull the whole patch into memory and hand ReadBPSPatch a memStream.
-        // BPS patches for these packs are a few hundred KB at most.
-        struct msu1_pack_file pf;
-        memset(&pf, 0, sizeof(pf));
+        // zip entries are read by offset rather than as a stream, so pull the
+        // whole patch into memory and hand ReadBPSPatch a memStream. BPS
+        // patches in these packs are a few hundred KB at most.
+        struct zip_archive ar;
 
-        if (msu1_pack_open(&pf, rom_filename, "patch.bps"))
+        if (zip_archive_open(&ar, rom_filename))
         {
-            uint32_t psize = msu1_pack_size(&pf);
-            uint8 *pdata = (psize > 0) ? new uint8[psize] : NULL;
+            int idx = zip_find_name(&ar, "patch.bps", 0);
+            uint32_t psize = 0;
+            uint8_t *pdata = (idx >= 0) ? zip_read_entry(&ar, idx, &psize) : NULL;
 
-            if (pdata && msu1_pack_read(&pf, 0, pdata, psize) == psize)
+            if (pdata)
             {
                 memStream ms(pdata, psize);
                 printf("Using BPS patch from msu1");
@@ -4076,13 +4035,13 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
                     printf("!\n");
                 else
                     printf(" failed!\n");
+
+                free(pdata);
             }
 
-            delete[] pdata;
-            msu1_pack_close(&pf);
+            zip_archive_close(&ar);
         }
     }
-#endif
 
     if (try_patch_type_sequence(PATCH_DIR))
         return;
