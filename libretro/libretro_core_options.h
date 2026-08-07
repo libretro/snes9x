@@ -221,20 +221,6 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "disabled"
    },
    {
-      "snes9x_turbo_buttons",
-      "Turbo Buttons (L2/R2/L3/R3)",
-      NULL,
-      "Map L2/R2/L3/R3 to rapid-fire B/A/Y/X. Leave disabled unless wanted: accidental analog trigger presses or stick clicks otherwise engage rapid-fire, which breaks games that need buttons held (charging, jump height, dashing).",
-      NULL,
-      NULL,
-      {
-         { "disabled", NULL },
-         { "enabled",  NULL },
-         { NULL, NULL },
-      },
-      "disabled"
-   },
-   {
       "snes9x_overclock_superfx",
       "SuperFX Overclocking",
       NULL,

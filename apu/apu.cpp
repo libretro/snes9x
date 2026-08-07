@@ -62,7 +62,6 @@ static std::vector<int16_t> resampler_buffer;
 } // namespace msu
 
 static void UpdatePlaybackRate(void);
-static void SPCSnapshotCallback(void);
 static inline int S9xAPUGetClock(int32);
 static inline int S9xAPUGetClockRemainder(int32);
 
@@ -198,17 +197,6 @@ void S9xSetSoundMute(bool8 mute)
         Settings.Mute = true;
 }
 
-void S9xDumpSPCSnapshot(void)
-{
-    SNES::dsp.spc_dsp.dump_spc_snapshot();
-}
-
-static void SPCSnapshotCallback(void)
-{
-    S9xSPCDump(S9xGetFilenameInc((".spc"), SPC_DIR).c_str());
-    printf("Dumped key-on triggered spc snapshot.\n");
-}
-
 bool8 S9xInitAPU(void)
 {
     spc::resampler.clear();
@@ -293,7 +281,6 @@ void S9xResetAPU(void)
     SNES::cpu.reset();
     SNES::smp.power();
     SNES::dsp.power();
-    SNES::dsp.spc_dsp.set_spc_snapshot_callback(SPCSnapshotCallback);
 
     S9xClearSamples();
 }
@@ -452,32 +439,4 @@ void S9xAPULoadBlarggState(uint8 *oldblock)
 
     // blargg stores CPUIx in regs_in
     memcpy(SNES::cpu.registers, regs_in + 4, 4);
-}
-
-bool8 S9xSPCDump(const char *filename)
-{
-    RFILE *fs;
-    uint8 buf[SPC_FILE_SIZE];
-    size_t ignore;
-
-    fs = rfopen(filename, "wb");
-    if (!fs)
-        return false;
-
-    S9xSetSoundMute(true);
-
-    SNES::smp.save_spc(buf);
-
-    ignore = rfwrite(buf, SPC_FILE_SIZE, 1, fs);
-
-    if (ignore == 0)
-    {
-        fprintf(stderr, "Couldn't write file %s.\n", filename);
-    }
-
-    rfclose(fs);
-
-    S9xSetSoundMute(false);
-
-    return true;
 }

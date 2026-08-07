@@ -369,23 +369,8 @@ void update_geometry(void)
     g_geometry_update = false;
 }
 
-static bool setting_turbo_buttons = false;
-static bool turbo_buttons_mapped   = false;
-static void map_turbo_buttons(void);
-
 static void update_variables(void)
 {
-    {
-        struct retro_variable tvar = { "snes9x_turbo_buttons", NULL };
-        bool want = false;
-        if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &tvar) && tvar.value)
-            want = !strcmp(tvar.value, "enabled");
-        if (want != setting_turbo_buttons)
-        {
-            setting_turbo_buttons = want;
-            map_turbo_buttons();
-        }
-    }
     char key[256];
     struct retro_variable var;
 
@@ -1118,10 +1103,6 @@ static void init_descriptors(void)
         { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
     
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1135,10 +1116,6 @@ static void init_descriptors(void)
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 1, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1152,10 +1129,6 @@ static void init_descriptors(void)
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 2, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1169,10 +1142,6 @@ static void init_descriptors(void)
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 3, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1186,10 +1155,6 @@ static void init_descriptors(void)
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 4, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1203,10 +1168,6 @@ static void init_descriptors(void)
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 5, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
         
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1220,10 +1181,6 @@ static void init_descriptors(void)
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 6, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "D-Pad Left" },
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,		"D-Pad Up" },
@@ -1237,10 +1194,6 @@ static void init_descriptors(void)
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,		"R" },
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT,	"Select" },
         { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START,		"Start" },
-        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2,		"Turbo B" },
-        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2,		"Turbo A" },
-        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3,		"Turbo Y" },
-        { 7, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3,		"Turbo X" },
 	    
         { 0, 0, 0, 0, NULL },
     };
@@ -1641,34 +1594,40 @@ void retro_init(void)
         libretro_supports_bitmasks = true;
 }
 
-#define MAP_BUTTON(id, name) S9xMapButton((id), S9xGetCommandT((name)), false)
+#define MAP_BUTTON(id, name) S9xMapButton((id), S9xGetCommandT((name)))
 #define MAKE_BUTTON(pad, btn) (((pad)<<4)|(btn))
 
-/* Report input edges only. S9xReportButton applies non-command mappings
-   unconditionally, and this port re-reports every button every frame; the
-   per-frame release report of an unheld button then clears the very bit
-   that S9xControlEOF's "buttons ^= turbos" turbo toggle set, so turbo
-   pulses are suppressed before every auto-joypad read. (This was latent
-   for as long as the pointer-ID collision kept pad 1's B/Y mappings dead;
-   fixing the collision exposed it.) The standalone ports never see this
-   because they only report key events -- do the same. */
-static uint8 button_state_cache[MAKE_BUTTON(8 + 1, 0) + 16];
+/* Peripheral reports are edges, not state. The Super Scope's
+   phys/next/read triple emulates one shot per trigger pull unless turbo
+   is engaged: S9xSetJoypadLatch clears FIRE/CURSOR out of next_buttons
+   after every read, so re-reporting a held trigger each frame re-arms it
+   and the scope free-fires with turbo off. The Justifier and mouse
+   handlers are written to the same press/release contract. Pads do not
+   go through here at all - they are absolute state via
+   S9xSetJoypadButtons - so this cache cannot desync the way the old
+   whole-input one did in libretro/snes9x#313. It still has to be
+   dropped whenever the core's own copy can change underneath it:
+   savestate load restores the peripheral button state, and a device
+   change or reset rebuilds it. */
+static uint8 peripheral_button_cache[MAKE_BUTTON(3 + 1, 0)];
 
 static void reset_button_cache(void)
 {
-    memset(button_state_cache, 0, sizeof(button_state_cache));
+    memset(peripheral_button_cache, 0, sizeof(peripheral_button_cache));
 }
 
 static void report_button(uint32 id, bool pressed)
 {
-    if (id < sizeof(button_state_cache))
+    if (id < sizeof(peripheral_button_cache))
     {
-        if (button_state_cache[id] == (uint8) pressed)
+        if (peripheral_button_cache[id] == (uint8) pressed)
             return;
-        button_state_cache[id] = (uint8) pressed;
+        peripheral_button_cache[id] = (uint8) pressed;
     }
+
     S9xReportButton(id, pressed);
 }
+
 
 #define PAD_1 1
 #define PAD_2 2
@@ -1679,24 +1638,35 @@ static void report_button(uint32 id, bool pressed)
 #define PAD_7 7
 #define PAD_8 8
 
-#define BTN_B RETRO_DEVICE_ID_JOYPAD_B
-#define BTN_Y RETRO_DEVICE_ID_JOYPAD_Y
-#define BTN_SELECT RETRO_DEVICE_ID_JOYPAD_SELECT
-#define BTN_START RETRO_DEVICE_ID_JOYPAD_START
-#define BTN_UP RETRO_DEVICE_ID_JOYPAD_UP
-#define BTN_DOWN RETRO_DEVICE_ID_JOYPAD_DOWN
-#define BTN_LEFT RETRO_DEVICE_ID_JOYPAD_LEFT
-#define BTN_RIGHT RETRO_DEVICE_ID_JOYPAD_RIGHT
-#define BTN_A RETRO_DEVICE_ID_JOYPAD_A
-#define BTN_X RETRO_DEVICE_ID_JOYPAD_X
-#define BTN_L RETRO_DEVICE_ID_JOYPAD_L
-#define BTN_R RETRO_DEVICE_ID_JOYPAD_R
-#define BTN_L2 RETRO_DEVICE_ID_JOYPAD_L2
-#define BTN_R2 RETRO_DEVICE_ID_JOYPAD_R2
-#define BTN_L3 RETRO_DEVICE_ID_JOYPAD_L3
-#define BTN_R3 RETRO_DEVICE_ID_JOYPAD_R3
-#define BTN_FIRST BTN_B
-#define BTN_LAST BTN_R3
+/* RETRO_DEVICE_ID_JOYPAD_* (0..11) -> SNES joypad register bits. Pad
+   state is written straight into the core as an absolute mask every
+   frame; the pads are not in the keymap at all. */
+#define RETRO_PAD_ID_COUNT (RETRO_DEVICE_ID_JOYPAD_R + 1)
+
+static const uint16 retro_to_snes_mask[RETRO_PAD_ID_COUNT] =
+{
+    SNES_B_MASK,       /* B      */
+    SNES_Y_MASK,       /* Y      */
+    SNES_SELECT_MASK,  /* SELECT */
+    SNES_START_MASK,   /* START  */
+    SNES_UP_MASK,      /* UP     */
+    SNES_DOWN_MASK,    /* DOWN   */
+    SNES_LEFT_MASK,    /* LEFT   */
+    SNES_RIGHT_MASK,   /* RIGHT  */
+    SNES_A_MASK,       /* A      */
+    SNES_X_MASK,       /* X      */
+    SNES_TL_MASK,      /* L      */
+    SNES_TR_MASK,      /* R      */
+};
+
+static uint16 snes_pad_mask(int16_t joy_bits)
+{
+    uint16 mask = 0;
+    for (int i = 0; i < RETRO_PAD_ID_COUNT; i++)
+        if (joy_bits & (1 << i))
+            mask |= retro_to_snes_mask[i];
+    return mask;
+}
 
 #define MOUSE_X RETRO_DEVICE_ID_MOUSE_X
 #define MOUSE_Y RETRO_DEVICE_ID_MOUSE_Y
@@ -1719,6 +1689,7 @@ static int scope_button_count = sizeof( scope_buttons ) / sizeof( int );
 #define SUPER_SCOPE_CURSOR 3
 #define SUPER_SCOPE_TURBO 4
 #define SUPER_SCOPE_START 5
+#define SUPER_SCOPE_OFFSCREEN 6
 
 #define JUSTIFIER_TRIGGER 2
 #define JUSTIFIER_START 3
@@ -1726,166 +1697,37 @@ static int scope_button_count = sizeof( scope_buttons ) / sizeof( int );
 
 #define MACS_RIFLE_TRIGGER 2
 
-/* Pointer IDs must live outside the MAKE_BUTTON space: MAKE_BUTTON packs
-   the button into 4 bits, so pads 1-8 occupy IDs 0x10-0x8F. When the
-   turbo buttons extended BTN_LAST from BTN_R (11) to BTN_R3 (15),
-   BTN_LAST + 1 = 16 = MAKE_BUTTON(PAD_1, BTN_B): S9xMapPointer then
-   overwrote the Joypad1 B and Y button mappings with the two pointer
-   mappings ("Remapping ID 0x00000010/0x00000011 from button to pointer"
-   at startup), leaving pad 1's B and Y dead in every game. */
-#define BTN_POINTER (MAKE_BUTTON(PAD_8, BTN_LAST) + 1)
+/* Keymap IDs. Only the peripherals are in the keymap now, occupying
+   MAKE_BUTTON(pad 1-3, slot 2-6) i.e. 0x12-0x36, so the two pointer IDs
+   just have to sit clear of that range. */
+#define BTN_POINTER 0x90
 #define BTN_POINTER2 (BTN_POINTER + 1)
 
-
-/* L2/R2/L3/R3 turbo mappings, gated by the snes9x_turbo_buttons core
-   option. They were previously hardwired, which made accidental analog
-   trigger presses and stick clicks engage rapid-fire with no way to turn
-   it off: hold-sensitive games (Mega Man X2 charge shots, jump height,
-   dashing) then appear to have broken controls. */
-static void map_turbo_buttons(void)
-{
-    static const int  btns[4]  = { BTN_L2, BTN_R2, BTN_L3, BTN_R3 };
-    static const char *cmds[4] = { "Turbo B", "Turbo A", "Turbo Y", "Turbo X" };
-    char name[32];
-    int pad, b;
-
-    if (setting_turbo_buttons == turbo_buttons_mapped)
-        return;
-
-    for (pad = 1; pad <= 8; pad++)
-    {
-        for (b = 0; b < 4; b++)
-        {
-            uint32 id = MAKE_BUTTON(pad, btns[b]);
-            /* Release through the old mapping first so an engaged turbo
-               bit cannot stick when the mapping goes away. */
-            if (turbo_buttons_mapped)
-                S9xReportButton(id, false);
-            if (setting_turbo_buttons)
-            {
-                snprintf(name, sizeof(name), "Joypad%d %s", pad, cmds[b]);
-                S9xMapButton(id, S9xGetCommandT(name), false);
-            }
-            else
-                S9xMapButton(id, S9xGetCommandT("None"), false);
-        }
-    }
-
-    turbo_buttons_mapped = setting_turbo_buttons;
-}
 
 static void map_buttons()
 {
     reset_button_cache();
-    /* Fresh keymap: force map_turbo_buttons to (re)apply the current
-       option state. */
-    turbo_buttons_mapped = !setting_turbo_buttons;
-    map_turbo_buttons();
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_A), "Joypad1 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_B), "Joypad1 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_X), "Joypad1 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_Y), "Joypad1 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_SELECT), "{Joypad1 Select,Mouse1 L}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_START), "{Joypad1 Start,Mouse1 R}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_L), "Joypad1 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_R), "Joypad1 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_LEFT), "Joypad1 Left");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_RIGHT), "Joypad1 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_UP), "Joypad1 Up");
-    MAP_BUTTON(MAKE_BUTTON(PAD_1, BTN_DOWN), "Joypad1 Down");
-    S9xMapPointer((BTN_POINTER), S9xGetCommandT("Pointer Mouse1+Superscope+Justifier1+MacsRifle"), false);
-    S9xMapPointer((BTN_POINTER2), S9xGetCommandT("Pointer Mouse2+Justifier2"), false);
+    /* Joypads deliberately absent: report_buttons() writes their
+       absolute state into the core directly. Only the peripherals go
+       through the keymap, on exactly the MAKE_BUTTON slots the report
+       paths already use - mouse buttons on pad-N slots 2/3, Super Scope
+       on pad-2 slots 2-6, Justifier 1 on pad-2 slots 2-4, Justifier 2
+       and the MACS Rifle likewise. */
+    MAP_BUTTON(MAKE_BUTTON(PAD_1, MOUSE_LEFT), "Mouse1 L");
+    MAP_BUTTON(MAKE_BUTTON(PAD_1, MOUSE_RIGHT), "Mouse1 R");
 
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_B), "Joypad2 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_Y), "Joypad2 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_SELECT), "{Joypad2 Select,Mouse2 L,Superscope Fire,Justifier1 Trigger,MacsRifle Trigger}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_START), "{Joypad2 Start,Mouse2 R,Superscope Cursor,Justifier1 Start}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_UP), "{Joypad2 Up,Superscope ToggleTurbo,Justifier1 AimOffscreen}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_DOWN), "{Joypad2 Down,Superscope Pause}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_LEFT), "{Joypad2 Left,Superscope AimOffscreen}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_RIGHT), "Joypad2 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_A), "Joypad2 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_X), "Joypad2 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_L), "Joypad2 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_2, BTN_R), "Joypad2 R");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, SUPER_SCOPE_TRIGGER), "{Mouse2 L,Superscope Fire,Justifier1 Trigger,MacsRifle Trigger}");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, SUPER_SCOPE_CURSOR), "{Mouse2 R,Superscope Cursor,Justifier1 Start}");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, SUPER_SCOPE_TURBO), "{Superscope ToggleTurbo,Justifier1 AimOffscreen}");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, SUPER_SCOPE_START), "Superscope Pause");
+    MAP_BUTTON(MAKE_BUTTON(PAD_2, SUPER_SCOPE_OFFSCREEN), "Superscope AimOffscreen");
 
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_B), "Joypad3 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_Y), "Joypad3 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_SELECT), "{Joypad3 Select,Justifier2 Trigger}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_START), "{Joypad3 Start,Justifier2 Start}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_UP), "{Joypad3 Up,Justifier2 AimOffscreen}");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_DOWN), "Joypad3 Down");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_LEFT), "Joypad3 Left");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_RIGHT), "Joypad3 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_A), "Joypad3 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_X), "Joypad3 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_L), "Joypad3 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_3, BTN_R), "Joypad3 R");
+    MAP_BUTTON(MAKE_BUTTON(PAD_3, JUSTIFIER_TRIGGER), "Justifier2 Trigger");
+    MAP_BUTTON(MAKE_BUTTON(PAD_3, JUSTIFIER_START), "Justifier2 Start");
+    MAP_BUTTON(MAKE_BUTTON(PAD_3, JUSTIFIER_OFFSCREEN), "Justifier2 AimOffscreen");
 
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_A), "Joypad4 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_B), "Joypad4 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_X), "Joypad4 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_Y), "Joypad4 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_SELECT), "Joypad4 Select");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_START), "Joypad4 Start");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_L), "Joypad4 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_R), "Joypad4 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_LEFT), "Joypad4 Left");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_RIGHT), "Joypad4 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_UP), "Joypad4 Up");
-    MAP_BUTTON(MAKE_BUTTON(PAD_4, BTN_DOWN), "Joypad4 Down");
-
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_A), "Joypad5 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_B), "Joypad5 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_X), "Joypad5 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_Y), "Joypad5 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_SELECT), "Joypad5 Select");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_START), "Joypad5 Start");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_L), "Joypad5 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_R), "Joypad5 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_LEFT), "Joypad5 Left");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_RIGHT), "Joypad5 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_UP), "Joypad5 Up");
-    MAP_BUTTON(MAKE_BUTTON(PAD_5, BTN_DOWN), "Joypad5 Down");
-    
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_A), "Joypad6 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_B), "Joypad6 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_X), "Joypad6 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_Y), "Joypad6 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_SELECT), "Joypad6 Select");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_START), "Joypad6 Start");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_L), "Joypad6 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_R), "Joypad6 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_LEFT), "Joypad6 Left");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_RIGHT), "Joypad6 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_UP), "Joypad6 Up");
-    MAP_BUTTON(MAKE_BUTTON(PAD_6, BTN_DOWN), "Joypad6 Down");
-    
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_A), "Joypad7 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_B), "Joypad7 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_X), "Joypad7 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_Y), "Joypad7 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_SELECT), "Joypad7 Select");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_START), "Joypad7 Start");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_L), "Joypad7 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_R), "Joypad7 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_LEFT), "Joypad7 Left");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_RIGHT), "Joypad7 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_UP), "Joypad7 Up");
-    MAP_BUTTON(MAKE_BUTTON(PAD_7, BTN_DOWN), "Joypad7 Down");
-
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_A), "Joypad8 A");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_B), "Joypad8 B");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_X), "Joypad8 X");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_Y), "Joypad8 Y");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_SELECT), "Joypad8 Select");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_START), "Joypad8 Start");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_L), "Joypad8 L");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_R), "Joypad8 R");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_LEFT), "Joypad8 Left");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_RIGHT), "Joypad8 Right");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_UP), "Joypad8 Up");
-    MAP_BUTTON(MAKE_BUTTON(PAD_8, BTN_DOWN), "Joypad8 Down");
+    S9xMapPointer((BTN_POINTER), S9xGetCommandT("Pointer Mouse1+Superscope+Justifier1+MacsRifle"));
+    S9xMapPointer((BTN_POINTER2), S9xGetCommandT("Pointer Mouse2+Justifier2"));
 }
 
 static int16_t snes_mouse_state[2][2] = {{0}, {0}};
@@ -2069,12 +1911,11 @@ static void report_buttons()
                 else
                 {
                     joy_bits = 0;
-                    for (int i = 0; i < (RETRO_DEVICE_ID_JOYPAD_R3+1); i++)
+                    for (int i = 0; i < RETRO_PAD_ID_COUNT; i++)
                         joy_bits |= input_state_cb(port * offset, RETRO_DEVICE_JOYPAD, 0, i) ? (1 << i) : 0;
                 }
 
-                for (int i = BTN_FIRST; i <= BTN_LAST; i++)
-                    report_button(MAKE_BUTTON(port * offset + 1, i), joy_bits & (1 << i));
+                S9xSetJoypadButtons(port * offset, snes_pad_mask(joy_bits));
                 break;
 
             case RETRO_DEVICE_JOYPAD_MULTITAP:
@@ -2085,13 +1926,12 @@ static void report_buttons()
                     else
                     {
                         joy_bits = 0;
-                        for (int i = 0; i < (RETRO_DEVICE_ID_JOYPAD_R3+1); i++)
+                        for (int i = 0; i < RETRO_PAD_ID_COUNT; i++)
                             joy_bits |= input_state_cb(port * offset + j, RETRO_DEVICE_JOYPAD, 0, i) ? (1 << i) : 0;
                     }
 
-                    for (int i = BTN_FIRST; i <= BTN_LAST; i++)
-                        report_button(MAKE_BUTTON(port * offset + j + 1, i), joy_bits & (1 << i));
-				}
+                    S9xSetJoypadButtons(port * offset + j, snes_pad_mask(joy_bits));
+                }
                 break;
 
             case RETRO_DEVICE_MOUSE:
@@ -2561,14 +2401,8 @@ std::string S9xGetDirectory(s9x_getdirtype type)
     return std::string("");
 }
 void S9xInitInputDevices() {}
-void S9xHandlePortCommand(s9xcommand_t, short, short) {}
-bool S9xPollButton(uint32, bool*) { return false; }
-void S9xToggleSoundChannel(int) {}
-std::string S9xGetFilenameInc(std::string in, s9x_getdirtype) { return ""; }
 const char* S9xBasename(const char* in) { return in; }
 bool8 S9xInitUpdate() { return TRUE; }
-bool S9xPollAxis(uint32, short*) { return FALSE; }
-bool S9xPollPointer(uint32, short*, short*) { return false; }
 
 void S9xMessage(int type, int, const char* s)
 {

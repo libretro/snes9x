@@ -48,5 +48,4 @@ std::string S9xBasenameNoExt (std::string);
 std::string S9xGetFilename (std::string ext, enum s9x_getdirtype dirtype);
 std::string S9xGetFilename (std::string filename, std::string ext, enum s9x_getdirtype dirtype);
 std::string S9xGetDirectory (enum s9x_getdirtype);
-std::string S9xGetFilenameInc (std::string, enum s9x_getdirtype);
 #endif

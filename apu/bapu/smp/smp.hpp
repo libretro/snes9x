@@ -15,7 +15,6 @@ public:
 
   void load_state(uint8 **);
   void save_state(uint8 **);
-  void save_spc (uint8 *);
   SMP();
   ~SMP();
 
