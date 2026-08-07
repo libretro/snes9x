@@ -979,7 +979,19 @@ static FreezeData	SnapMSU1[] =
 	INT_ENTRY(13, MSU1_RsmpNxtR),
 	INT_ENTRY(13, MSU1_RsmpNx2L),
 	INT_ENTRY(13, MSU1_RsmpNx2R),
-	INT_ENTRY(13, MSU1_RsmpPrimed)
+	INT_ENTRY(13, MSU1_RsmpPrimed),
+	/* The SPC -> 44.1 kHz upsampler that feeds MSU-1 Enhanced Audio. Its
+	   frame pair and 32.32 phase are emulation-timeline state, not scratch:
+	   they carry across batch boundaries by design, and Preemptive Frames
+	   rewinds the timeline. Left un-rewound, every rollback reseats the
+	   interpolator mid-waveform against a frame pair belonging to the
+	   discarded future. */
+	INT_ENTRY(14, MSU1_EnhFrac),
+	INT_ENTRY(14, MSU1_EnhCurL),
+	INT_ENTRY(14, MSU1_EnhCurR),
+	INT_ENTRY(14, MSU1_EnhNxtL),
+	INT_ENTRY(14, MSU1_EnhNxtR),
+	INT_ENTRY(14, MSU1_EnhFill)
 };
 
 #undef STRUCT

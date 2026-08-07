@@ -68,16 +68,6 @@ static BOOST::uint8_t const initial_regs [SPC_DSP::register_count] =
 	out += 2;\
 }
 
-#define SPC_DSP_OUT_HOOK(l, r)  \
-    {                           \
-        resampler->push_sample(l, r);  \
-    }
-
-void SPC_DSP::set_output( Resampler *resampler )
-{
-	this->resampler = resampler;
-}
-
 void SPC_DSP::set_output( sample_t* out, int size )
 {
 	require( (size & 1) == 0 ); // must be even
@@ -1076,13 +1066,20 @@ ECHO_CLOCK( 27 )
 	}
 
 	// Output sample to DAC
-	#ifdef SPC_DSP_OUT_HOOK
-		SPC_DSP_OUT_HOOK( l, r );
-	#else
+	{
+		/* Clamp to the end of the caller's buffer. A pathological long
+		   frame - Top Gear 3000 periodically emits ~2600 stereo samples in
+		   one frame, roughly 5x the ~530 nominal - can otherwise run the
+		   cursor past out_end and corrupt whatever follows the buffer.
+		   Dropping the overflow is inaudible, and the frontend's dynamic
+		   rate control absorbs the per-frame count variation. */
 		sample_t* out = m.out;
-		WRITE_SAMPLES( l, r, out );
-		m.out = out;
-	#endif
+		if ( out + 2 <= m.out_end )
+		{
+			WRITE_SAMPLES( l, r, out );
+			m.out = out;
+		}
+	}
 }
 ECHO_CLOCK( 28 )
 {

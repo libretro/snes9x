@@ -877,22 +877,156 @@ static void update_variables(void)
     }
 }
 
-void S9xSyncSpeed() {
+/* Silence sent while audio is hard-disabled. Sized for the worst frame the
+   DSP can hand us: PAL at ~641 stereo frames plus headroom for the APU
+   speedup hack. Never written to, so it costs nothing but BSS. */
+#define MUTE_BUFFER_FRAMES 768
 
-    /* Even when muted the batch callback still has to run: skipping it lets
-       the frontend's audio ring drain, which pulls dynamic rate control out
-       of steady-state tracking. S9xMixSamples substitutes silence for the
-       SPC output while Settings.Mute is set, so this costs a memset and
-       keeps the ring fed. */
-    static std::vector<int16_t> audio_buffer;
+/* 44.1 kHz needs more room per frame than the SPC rate: PAL worst case is
+   44100/50 = 882 frames, plus headroom for the APU speedup hack. */
+#define MSU1_ENH_FRAMES 1024
 
-    size_t avail = S9xGetSampleCount();
+/* True while the enhanced upsampler holds valid in-flight state; cleared
+   whenever the enhanced path is not the one feeding the frontend, so state
+   never leaks across a mode change. */
+static bool msu1_enh_running = false;
 
-    if (audio_buffer.size() < avail)
-        audio_buffer.resize(avail);
+static bool msu1_enhanced_active(void)
+{
+    return msu1_enhanced_pref && Settings.MSU1;
+}
 
-    S9xMixSamples((uint8*)&audio_buffer[0], avail);
-    audio_batch_cb(&audio_buffer[0], avail >> 1);
+/* The frontend is clocked at 44.1 kHz scaled by however far the SPC rate has
+   been pushed, so the ratio the upsampler works to stays exact. */
+static uint32_t msu1_enhanced_output_rate(void)
+{
+    return (uint32_t) (44100.0 * (double) S9xGetAudioSampleRate() / 32040.0);
+}
+
+/* Frame-boundary hook from cpuexec. The audio upload used to happen here,
+   mid-frame at the start of vblank; it now happens at the end of retro_run so
+   one call to the core produces exactly one video frame and one consecutive
+   run of audio samples. Nothing else needs doing at this point - throttling
+   is the frontend's job. */
+void S9xSyncSpeed() {}
+
+/* Deliver this frame's audio. Zero-copy in the normal case: S9xDrainAudio
+   returns a pointer into the DSP's landing buffer and that pointer goes
+   straight to the frontend. */
+static void audio_upload_samples(void)
+{
+    int count = 0;
+    const int16_t *src = S9xDrainAudio(&count);
+
+    if (count <= 0)
+        return;
+
+    /* Muted means hard-disabled (see retro_run): the APU output is not
+       meaningful, but the callback still has to run or the frontend's ring
+       drains. A static zero buffer covers the largest frame we can produce. */
+    if (Settings.Mute || !msu1_enhanced_active())
+        msu1_enh_running = false;
+
+    if (Settings.Mute)
+    {
+        static const int16_t silence[MUTE_BUFFER_FRAMES * 2] = { 0 };
+
+        int frames = count >> 1;
+        while (frames > 0)
+        {
+            int chunk = (frames > MUTE_BUFFER_FRAMES) ? MUTE_BUFFER_FRAMES : frames;
+            audio_batch_cb(silence, (size_t) chunk);
+            frames -= chunk;
+        }
+        return;
+    }
+
+    /* MSU-1 Enhanced Audio: run the frame at 44.1 kHz so the MSU-1 stream
+       mixes in at its native rate instead of being decimated to the SPC's
+       ~32040 Hz (libretro/snes9x#309). The SPC side is linearly upsampled
+       here; the interpolator's frame pair and 32.32 phase live in struct MSU1
+       so they survive savestates and rollback. */
+    if (msu1_enhanced_active())
+    {
+        static int16_t enh_buffer[MSU1_ENH_FRAMES * 2];
+
+        int16_t  cur_l = (int16_t) MSU1.MSU1_EnhCurL;
+        int16_t  cur_r = (int16_t) MSU1.MSU1_EnhCurR;
+        int16_t  nxt_l = (int16_t) MSU1.MSU1_EnhNxtL;
+        int16_t  nxt_r = (int16_t) MSU1.MSU1_EnhNxtR;
+        uint64_t frac  = MSU1.MSU1_EnhFrac;
+        int      fill  = (int) MSU1.MSU1_EnhFill;
+
+        int      in_frames  = count >> 1;
+        int      in_pos     = 0;
+        int      out_frames = 0;
+        uint32_t in_rate    = S9xGetAudioSampleRate();
+        uint32_t out_rate   = msu1_enhanced_output_rate();
+        uint64_t step       = ((uint64_t) in_rate << 32) / out_rate;
+
+        if (!msu1_enh_running)
+        {
+            frac = 0;
+            fill = 0;
+            msu1_enh_running = true;
+        }
+
+        while (fill < 2 && in_pos < in_frames)
+        {
+            if (fill == 0) { cur_l = src[in_pos * 2]; cur_r = src[in_pos * 2 + 1]; }
+            else           { nxt_l = src[in_pos * 2]; nxt_r = src[in_pos * 2 + 1]; }
+            fill++;
+            in_pos++;
+        }
+
+        while (fill == 2 && out_frames < MSU1_ENH_FRAMES)
+        {
+            /* 64-bit product: |nxt - cur| * t reaches 65535 * 65535, which
+               overflows int32 on full-scale transients. */
+            uint32_t t = (uint32_t) (frac >> 16) & 0xffff;
+            enh_buffer[out_frames * 2] = (int16_t) (cur_l +
+                (int32_t) (((int64_t) (nxt_l - cur_l) * (int32_t) t) >> 16));
+            enh_buffer[out_frames * 2 + 1] = (int16_t) (cur_r +
+                (int32_t) (((int64_t) (nxt_r - cur_r) * (int32_t) t) >> 16));
+            out_frames++;
+
+            frac += step;
+            while (frac >= ((uint64_t) 1 << 32))
+            {
+                frac -= (uint64_t) 1 << 32;
+                cur_l = nxt_l; cur_r = nxt_r;
+                if (in_pos < in_frames)
+                {
+                    nxt_l = src[in_pos * 2];
+                    nxt_r = src[in_pos * 2 + 1];
+                    in_pos++;
+                }
+                else
+                {
+                    fill = 1;   /* nxt refills from the next batch */
+                    break;
+                }
+            }
+        }
+
+        MSU1.MSU1_EnhCurL = cur_l; MSU1.MSU1_EnhCurR = cur_r;
+        MSU1.MSU1_EnhNxtL = nxt_l; MSU1.MSU1_EnhNxtR = nxt_r;
+        MSU1.MSU1_EnhFrac = frac;
+        MSU1.MSU1_EnhFill = (uint8_t) fill;
+
+        if (out_frames > 0)
+        {
+            S9xMSU1Mix(enh_buffer, (size_t) out_frames, out_rate);
+            audio_batch_cb(enh_buffer, (size_t) out_frames);
+        }
+        return;
+    }
+
+    /* Normal path: mix MSU-1 into the landing buffer at the SPC's own rate. */
+    if (Settings.MSU1)
+        S9xMSU1Mix((int16_t *) src, (size_t)(count >> 1), S9xGetAudioSampleRate());
+
+    audio_batch_cb(src, (size_t)(count >> 1));
 }
 
 void retro_get_system_info(struct retro_system_info *info)
@@ -966,7 +1100,11 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
                                    ? MAX_SNES_WIDTH_NTSC : MAX_SNES_WIDTH_4X;
     info->geometry.max_height = MAX_SNES_HEIGHT;
     info->geometry.aspect_ratio = get_aspect_ratio(width, height);
-    info->timing.sample_rate = Settings.SoundPlaybackRate;
+    /* What the core actually emits: the DSP's own rate, or the enhanced
+       44.1 kHz cadence when the MSU-1 path is upsampling. */
+    info->timing.sample_rate = msu1_enhanced_active()
+                             ? (double) msu1_enhanced_output_rate()
+                             : (double) S9xGetAudioSampleRate();
     info->timing.fps = retro_get_region() == RETRO_REGION_NTSC ? 21477272.0 / 357366.0 : 21281370.0 / 425568.0;
 
     g_screen_gun_width = width;
@@ -1270,23 +1408,24 @@ static bool8 is_SufamiTurbo_Cart (const uint8 *data, uint32 size)
         return (FALSE);
 }
 
-/* MSU-1 tracks are 44.1 kHz PCM. At the default 32040 Hz playback rate the
-   MSU resampler runs at ratio 44100/32040 = 1.376 -- a decimation through a
-   hermite interpolator with no anti-alias filtering, folding all
-   16.02-22.05 kHz track content down into the 10-16 kHz band as audible
-   hiss (libretro/snes9x#309; standalone builds don't exhibit it because
-   they default to 48 kHz playback). Raise the pipeline to 44.1 kHz for
-   MSU-1 content: the MSU ratio becomes exactly 1.0 (the resampler's
-   bit-exact pull path) and the SPC side becomes a clean upsample.
-   Non-MSU-1 content keeps the historical 32040 Hz output, as does MSU-1
-   content when the core option is disabled. */
+/* MSU-1 tracks are 44.1 kHz PCM. Mixing them into the SPC's ~32040 Hz stream
+   decimates them through an interpolator with no anti-alias filtering, which
+   folds 16.02-22.05 kHz track content down into the 10-16 kHz band as audible
+   hiss (libretro/snes9x#309). The enhanced path avoids that by running the
+   frame at 44.1 kHz - see audio_upload_samples. The rate reported to the
+   frontend changes with it, so the frontend has to be told. */
 static void msu1_update_playback_rate(void)
 {
-    int playback_rate = (Settings.MSU1 && msu1_enhanced_pref) ? 44100 : 32040;
-    if (Settings.SoundPlaybackRate != playback_rate)
+    static bool last_enhanced = false;
+    bool enhanced = msu1_enhanced_active();
+
+    if (enhanced != last_enhanced)
     {
-        Settings.SoundPlaybackRate = playback_rate;
-        S9xInitSound(32);
+        struct retro_system_av_info av_info;
+        last_enhanced = enhanced;
+        msu1_enh_running = false;
+        retro_get_system_av_info(&av_info);
+        environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av_info);
     }
 }
 
@@ -2100,6 +2239,8 @@ void retro_run()
     poll_cb();
     report_buttons();
     S9xMainLoop();
+
+    audio_upload_samples();
 }
 
 void retro_deinit()

@@ -34,7 +34,9 @@ void S9xSetSoundControl (uint8);
 void S9xSetSoundMute (bool8);
 void S9xLandSamples (void);
 void S9xClearSamples (void);
-bool8 S9xMixSamples (uint8 *, int);
+/* Hand over this frame's samples without copying them; see apu.cpp. */
+const int16 * S9xDrainAudio (int *sample_count);
+uint32 S9xGetAudioSampleRate (void);
 void S9xSetSamplesAvailableCallback (apu_callback, void *);
 void S9xUpdateDynamicRate (int empty = 1, int buffer_size = 2);
 
