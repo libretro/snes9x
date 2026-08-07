@@ -1365,6 +1365,17 @@ static int is_bsx (uint8 *p)
     return (0);
 }
 
+/* The header probe reads 32 bytes from p, so the caller must have that much
+   left. Anything smaller than a header offset plus a header is not a cart of
+   that layout anyway. */
+static int is_bsx_at (const uint8 *data, size_t size, size_t offset)
+{
+    if (!data || offset + 32 > size)
+        return (0);
+
+    return (is_bsx((uint8 *) data + offset));
+}
+
 static bool8 LoadBIOS(uint8 *biosrom, const char *biosname, int biossize)
 {
     RFILE	*fp;
@@ -1452,7 +1463,8 @@ bool retro_load_game(const struct retro_game_info *game)
         }
 
         else
-        if ((is_bsx((uint8 *) game->data + 0x7fc0)==1) | (is_bsx((uint8 *) game->data + 0xffc0)==1)) {
+        if (is_bsx_at((const uint8 *) game->data, game->size, 0x7fc0) == 1 ||
+            is_bsx_at((const uint8 *) game->data, game->size, 0xffc0) == 1) {
             if ((rom_loaded = LoadBIOS(biosrom,"BS-X.bin",0x100000)))
             rom_loaded = Memory.LoadMultiCartMem(biosrom, 0x100000, (const uint8_t*)game->data, game->size, 0, 0);
         }
