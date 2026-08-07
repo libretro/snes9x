@@ -16,7 +16,6 @@ extern "C" { extern uint8 TileMode7Hires; extern uint8 TileMode7HiresBilinear; }
 #include "controls.h"
 #include "cheats.h"
 #include "display.h"
-#include "conffile.h"
 #include "crosshairs.h"
 #include <stdio.h>
 #include <vector>
@@ -2553,7 +2552,6 @@ bool8 S9xContinueUpdate(int width, int height)
 }
 
 // Dummy functions that should probably be implemented correctly later.
-void S9xParsePortConfig(ConfigFile&, int) {}
 const char* S9xStringInput(const char* in) { return in; }
 
 #ifdef _WIN32
@@ -2600,30 +2598,6 @@ void S9xMessage(int type, int, const char* s)
             log_cb(RETRO_LOG_DEBUG, "%s\n", s);
             break;
     }
-}
-
-bool8 S9xOpenSnapshotFile(const char* filepath, bool8 read_only, STREAM *file)
-{
-    if(read_only)
-    {
-        if((*file = OPEN_STREAM(filepath, "rb")) != 0)
-        {
-            return (TRUE);
-        }
-    }
-    else
-    {
-        if((*file = OPEN_STREAM(filepath, "wb")) != 0)
-        {
-            return (TRUE);
-        }
-    }
-    return (FALSE);
-}
-
-void S9xCloseSnapshotFile(STREAM file)
-{
-    CLOSE_STREAM(file);
 }
 
 void S9xAutoSaveSRAM()

@@ -96,7 +96,6 @@ static void S9xSoftResetCPU (void)
 
 void S9xReset (void)
 {
-	S9xResetSaveTimer(FALSE);
 
 	memset(Memory.RAM, 0x55, sizeof(Memory.RAM));
 	memset(Memory.VRAM, 0x00, sizeof(Memory.VRAM));
@@ -133,7 +132,6 @@ void S9xReset (void)
 
 void S9xSoftReset (void)
 {
-	S9xResetSaveTimer(FALSE);
 
 	memset(Memory.FillRAM, 0, 0x8000);
 

@@ -14,8 +14,6 @@
 void S9xInitDisplay (int, char **);
 void S9xDeinitDisplay (void);
 void S9xTextMode (void);
-bool8 S9xOpenSnapshotFile (const char *, bool8, STREAM *);
-void S9xCloseSnapshotFile (STREAM);
 const char * S9xStringInput (const char *);
 
 // Routines the port may implement as needed
