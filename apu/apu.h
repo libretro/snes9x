@@ -38,7 +38,6 @@ void S9xClearSamples (void);
 const int16 * S9xDrainAudio (int *sample_count);
 uint32 S9xGetAudioSampleRate (void);
 void S9xSetSamplesAvailableCallback (apu_callback, void *);
-void S9xUpdateDynamicRate (int empty = 1, int buffer_size = 2);
 
 #define DSP_INTERPOLATION_NONE     0
 #define DSP_INTERPOLATION_LINEAR   1

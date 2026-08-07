@@ -14,7 +14,6 @@
 
 #include "bapu/snes/snes.hpp"
 
-static const int APU_DEFAULT_INPUT_RATE = 31950; // ~59.94Hz
 static const int APU_SAMPLE_BLOCK       = 48;
 static const int APU_NUMERATOR_NTSC     = 15664;
 static const int APU_DENOMINATOR_NTSC   = 328125;
@@ -118,16 +117,6 @@ void S9xSetSamplesAvailableCallback(apu_callback callback, void *data)
 {
     spc::callback = callback;
     spc::callback_data = data;
-}
-
-/* Rate conversion is the frontend's job now, so there is no internal ratio to
-   keep up to date and dynamic rate control has nothing to steer here: the
-   frontend adjusts its own resampler against its own buffer level. Kept as a
-   no-op so ports that call it still link. */
-void S9xUpdateDynamicRate(int avail, int buffer_size)
-{
-    (void) avail;
-    (void) buffer_size;
 }
 
 bool8 S9xInitSound(int buffer_ms)

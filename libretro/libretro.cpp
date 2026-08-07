@@ -1676,8 +1676,6 @@ void retro_init(void)
     Settings.FrameTimePAL = 20000;
     Settings.FrameTimeNTSC = 16667;
     Settings.Stereo = TRUE;
-    Settings.SoundPlaybackRate = 32040;
-    Settings.SoundInputRate = 32040;
     Settings.Transparency = TRUE;
     Settings.InitialInfoStringTimeout = 120;
     Settings.HDMATimingHack = 100;

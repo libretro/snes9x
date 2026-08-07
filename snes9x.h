@@ -231,13 +231,9 @@ struct SSettings
 	uint32	FrameTimeNTSC;
 	uint32	FrameTime;
 
-	bool8	SoundSync;
-	uint32	SoundPlaybackRate;
-	uint32	SoundInputRate;
 	bool8	Stereo;
 	bool8	ReverseStereo;
 	bool8	Mute;
-	int32	DynamicRateLimit; /* Multiplied by 1000 */
 	int32	InterpolationMethod;
 
 	bool8	Transparency;
