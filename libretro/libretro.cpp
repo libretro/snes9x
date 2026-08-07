@@ -879,11 +879,11 @@ static void update_variables(void)
 
 void S9xSyncSpeed() {
 
-    if (Settings.Mute) {
-        S9xClearSamples();
-        return;
-    }
-
+    /* Even when muted the batch callback still has to run: skipping it lets
+       the frontend's audio ring drain, which pulls dynamic rate control out
+       of steady-state tracking. S9xMixSamples substitutes silence for the
+       SPC output while Settings.Mute is set, so this costs a memset and
+       keeps the ring fed. */
     static std::vector<int16_t> audio_buffer;
 
     size_t avail = S9xGetSampleCount();
@@ -2070,10 +2070,26 @@ void retro_run()
     bool okay = environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
     if (okay)
     {
-        bool audioEnabled = 0 != (result & 2);
-        bool videoEnabled = 0 != (result & 1);
+        bool videoEnabled     = 0 != (result & 1);
+        bool hardDisableAudio = 0 != (result & 8);
+
         IPPU.RenderThisFrame = videoEnabled;
-        S9xSetSoundMute(!audioEnabled);
+
+        /* RETRO_AV_ENABLE_AUDIO (0x02) is deliberately ignored. It says the
+           frontend will discard these samples, not that the core may stop
+           producing them - and the state the frames leave behind is kept.
+           Preemptive Frames replays frames with audio suspended and
+           hard-disable clear, then carries the replayed state forward, so
+           muting there freezes every audio-side cursor - the MSU-1 play
+           offset above all - while the CPU and APU advance. The stream falls
+           a replay window behind on every rollback, which is heard as the
+           music slowing and popping.
+
+           RETRO_AV_ENABLE_HARD_DISABLE_AUDIO (0x08) is the bit that grants
+           permission to skip the work: RetroArch only sets it where the
+           resulting state is discarded or restored afterwards. Suspension
+           costs output, never state. */
+        S9xSetSoundMute(hardDisableAudio);
     }
     else
     {
