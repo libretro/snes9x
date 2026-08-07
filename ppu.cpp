@@ -1770,6 +1770,30 @@ void S9xMode7VertResample (void)
 	ppl      = GFX.PPL;
 	width    = IPPU.RenderedScreenWidth;
 
+	/* An interlaced frame is already two fields tall: the renderer writes
+	   PPU.ScreenHeight rows at twice the normal stride, so the frame
+	   already occupies 2 * PPU.ScreenHeight physical rows. Doubling again
+	   here would need four times the height - 956 rows at 239-line
+	   overscan against the 510 the buffer holds - and the bottom-up walk
+	   writes those rows before anything notices, roughly 850 KB past the
+	   end of GFXScreenBuffer and straight through whatever the allocator
+	   put after it. Interlace already provides the vertical resolution
+	   this pass exists to synthesise, so skip it. */
+	if (ppl != (uint32) GFX.RealPPL)
+		return;
+
+	/* Backstop for any future path that arms the pass with a taller frame
+	   or a wider stride: refuse rather than write past the buffer. The
+	   usable region below GFX.Screen is (MAX_SNES_HEIGHT + 32) rows of
+	   RealPPL, the 64 rows of slack in GFXScreenBuffer less the 32-row
+	   offset GFX.Screen sits at. */
+	{
+		uint32 max_rows = ((uint32) GFX.RealPPL * (MAX_SNES_HEIGHT + 32)) / ppl;
+
+		if ((uint32) PPU.ScreenHeight * 2 > max_rows)
+			return;
+	}
+
 	/* Bottom-up walk over the original PPU.ScreenHeight rows. */
 	for (y = (int32)PPU.ScreenHeight - 1; y >= 0; y--)
 	{
