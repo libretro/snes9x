@@ -661,7 +661,9 @@ inline void SPC_DSP::decode_brr( voice_t* v )
 		// Shift sample based on header
 		int const shift = header >> 4;
 		if (shift <= 12)
-			s = (s << shift) >> 1;
+			/* s is signed and routinely negative here; shifting it left
+			   is undefined, so do the shift in unsigned and come back. */
+			s = (int) ((unsigned) s << shift) >> 1;
 		else
 			s &= ~0x7ff;
 

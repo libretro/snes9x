@@ -13736,17 +13736,17 @@ static void DrawMode7BG1_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -13817,17 +13817,17 @@ static void DrawMode7BG1Add_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -13898,17 +13898,17 @@ static void DrawMode7BG1AddBrightness_Normal1x1 (uint32_t Left, uint32_t Right, 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -13979,17 +13979,17 @@ static void DrawMode7BG1AddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14060,17 +14060,17 @@ static void DrawMode7BG1AddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14141,17 +14141,17 @@ static void DrawMode7BG1AddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14222,17 +14222,17 @@ static void DrawMode7BG1Sub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14303,17 +14303,17 @@ static void DrawMode7BG1SubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14384,17 +14384,17 @@ static void DrawMode7BG1SubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14479,17 +14479,17 @@ static void DrawMode7BG1_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14560,17 +14560,17 @@ static void DrawMode7BG1Add_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14641,17 +14641,17 @@ static void DrawMode7BG1AddBrightness_Normal2x1 (uint32_t Left, uint32_t Right, 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14722,17 +14722,17 @@ static void DrawMode7BG1AddF1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14803,17 +14803,17 @@ static void DrawMode7BG1AddS1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14884,17 +14884,17 @@ static void DrawMode7BG1AddS1_2Brightness_Normal2x1 (uint32_t Left, uint32_t Rig
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -14965,17 +14965,17 @@ static void DrawMode7BG1Sub_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15046,17 +15046,17 @@ static void DrawMode7BG1SubF1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15127,17 +15127,17 @@ static void DrawMode7BG1SubS1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15222,17 +15222,17 @@ static void DrawMode7BG1_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15303,17 +15303,17 @@ static void DrawMode7BG1Add_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15384,17 +15384,17 @@ static void DrawMode7BG1AddBrightness_Hires (uint32_t Left, uint32_t Right, int 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15465,17 +15465,17 @@ static void DrawMode7BG1AddF1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15546,17 +15546,17 @@ static void DrawMode7BG1AddS1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15627,17 +15627,17 @@ static void DrawMode7BG1AddS1_2Brightness_Hires (uint32_t Left, uint32_t Right, 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15708,17 +15708,17 @@ static void DrawMode7BG1Sub_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15789,17 +15789,17 @@ static void DrawMode7BG1SubF1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15870,17 +15870,17 @@ static void DrawMode7BG1SubS1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -15959,17 +15959,17 @@ static void DrawMode7BG2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16034,17 +16034,17 @@ static void DrawMode7BG2Add_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16109,17 +16109,17 @@ static void DrawMode7BG2AddBrightness_Normal1x1 (uint32_t Left, uint32_t Right, 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16184,17 +16184,17 @@ static void DrawMode7BG2AddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16259,17 +16259,17 @@ static void DrawMode7BG2AddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16334,17 +16334,17 @@ static void DrawMode7BG2AddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16409,17 +16409,17 @@ static void DrawMode7BG2Sub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16484,17 +16484,17 @@ static void DrawMode7BG2SubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16559,17 +16559,17 @@ static void DrawMode7BG2SubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16648,17 +16648,17 @@ static void DrawMode7BG2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16723,17 +16723,17 @@ static void DrawMode7BG2Add_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16798,17 +16798,17 @@ static void DrawMode7BG2AddBrightness_Normal2x1 (uint32_t Left, uint32_t Right, 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16873,17 +16873,17 @@ static void DrawMode7BG2AddF1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -16948,17 +16948,17 @@ static void DrawMode7BG2AddS1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17023,17 +17023,17 @@ static void DrawMode7BG2AddS1_2Brightness_Normal2x1 (uint32_t Left, uint32_t Rig
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17098,17 +17098,17 @@ static void DrawMode7BG2Sub_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17173,17 +17173,17 @@ static void DrawMode7BG2SubF1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17248,17 +17248,17 @@ static void DrawMode7BG2SubS1_2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17337,17 +17337,17 @@ static void DrawMode7BG2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17412,17 +17412,17 @@ static void DrawMode7BG2Add_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17487,17 +17487,17 @@ static void DrawMode7BG2AddBrightness_Hires (uint32_t Left, uint32_t Right, int 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17562,17 +17562,17 @@ static void DrawMode7BG2AddF1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17637,17 +17637,17 @@ static void DrawMode7BG2AddS1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17712,17 +17712,17 @@ static void DrawMode7BG2AddS1_2Brightness_Hires (uint32_t Left, uint32_t Right, 
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17787,17 +17787,17 @@ static void DrawMode7BG2Sub_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17862,17 +17862,17 @@ static void DrawMode7BG2SubF1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -17937,17 +17937,17 @@ static void DrawMode7BG2SubS1_2_Hires (uint32_t Left, uint32_t Right, int D)
     for ( Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = Right - 1;
@@ -18071,16 +18071,16 @@ static void DrawMode7MosaicBG1_Normal1x1 (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -18197,16 +18197,16 @@ static void DrawMode7MosaicBG1Add_Normal1x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -18323,16 +18323,16 @@ static void DrawMode7MosaicBG1AddBrightness_Normal1x1 (uint32_t Left, uint32_t R
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -18449,16 +18449,16 @@ static void DrawMode7MosaicBG1AddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -18575,16 +18575,16 @@ static void DrawMode7MosaicBG1AddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -18701,16 +18701,16 @@ static void DrawMode7MosaicBG1AddS1_2Brightness_Normal1x1 (uint32_t Left, uint32
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -18827,16 +18827,16 @@ static void DrawMode7MosaicBG1Sub_Normal1x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -18953,16 +18953,16 @@ static void DrawMode7MosaicBG1SubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19079,16 +19079,16 @@ static void DrawMode7MosaicBG1SubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19219,16 +19219,16 @@ static void DrawMode7MosaicBG1_Normal2x1 (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19345,16 +19345,16 @@ static void DrawMode7MosaicBG1Add_Normal2x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19471,16 +19471,16 @@ static void DrawMode7MosaicBG1AddBrightness_Normal2x1 (uint32_t Left, uint32_t R
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19597,16 +19597,16 @@ static void DrawMode7MosaicBG1AddF1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19723,16 +19723,16 @@ static void DrawMode7MosaicBG1AddS1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19849,16 +19849,16 @@ static void DrawMode7MosaicBG1AddS1_2Brightness_Normal2x1 (uint32_t Left, uint32
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -19975,16 +19975,16 @@ static void DrawMode7MosaicBG1Sub_Normal2x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20101,16 +20101,16 @@ static void DrawMode7MosaicBG1SubF1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20227,16 +20227,16 @@ static void DrawMode7MosaicBG1SubS1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20367,16 +20367,16 @@ static void DrawMode7MosaicBG1_Hires (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20493,16 +20493,16 @@ static void DrawMode7MosaicBG1Add_Hires (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20619,16 +20619,16 @@ static void DrawMode7MosaicBG1AddBrightness_Hires (uint32_t Left, uint32_t Right
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20745,16 +20745,16 @@ static void DrawMode7MosaicBG1AddF1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20871,16 +20871,16 @@ static void DrawMode7MosaicBG1AddS1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -20997,16 +20997,16 @@ static void DrawMode7MosaicBG1AddS1_2Brightness_Hires (uint32_t Left, uint32_t R
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21123,16 +21123,16 @@ static void DrawMode7MosaicBG1Sub_Hires (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21249,16 +21249,16 @@ static void DrawMode7MosaicBG1SubF1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21375,16 +21375,16 @@ static void DrawMode7MosaicBG1SubS1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21509,16 +21509,16 @@ static void DrawMode7MosaicBG2_Normal1x1 (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21629,16 +21629,16 @@ static void DrawMode7MosaicBG2Add_Normal1x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21749,16 +21749,16 @@ static void DrawMode7MosaicBG2AddBrightness_Normal1x1 (uint32_t Left, uint32_t R
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21869,16 +21869,16 @@ static void DrawMode7MosaicBG2AddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -21989,16 +21989,16 @@ static void DrawMode7MosaicBG2AddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22109,16 +22109,16 @@ static void DrawMode7MosaicBG2AddS1_2Brightness_Normal1x1 (uint32_t Left, uint32
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22229,16 +22229,16 @@ static void DrawMode7MosaicBG2Sub_Normal1x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22349,16 +22349,16 @@ static void DrawMode7MosaicBG2SubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22469,16 +22469,16 @@ static void DrawMode7MosaicBG2SubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22603,16 +22603,16 @@ static void DrawMode7MosaicBG2_Normal2x1 (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22723,16 +22723,16 @@ static void DrawMode7MosaicBG2Add_Normal2x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22843,16 +22843,16 @@ static void DrawMode7MosaicBG2AddBrightness_Normal2x1 (uint32_t Left, uint32_t R
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -22963,16 +22963,16 @@ static void DrawMode7MosaicBG2AddF1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23083,16 +23083,16 @@ static void DrawMode7MosaicBG2AddS1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23203,16 +23203,16 @@ static void DrawMode7MosaicBG2AddS1_2Brightness_Normal2x1 (uint32_t Left, uint32
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23323,16 +23323,16 @@ static void DrawMode7MosaicBG2Sub_Normal2x1 (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23443,16 +23443,16 @@ static void DrawMode7MosaicBG2SubF1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23563,16 +23563,16 @@ static void DrawMode7MosaicBG2SubS1_2_Normal2x1 (uint32_t Left, uint32_t Right, 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23697,16 +23697,16 @@ static void DrawMode7MosaicBG2_Hires (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23817,16 +23817,16 @@ static void DrawMode7MosaicBG2Add_Hires (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -23937,16 +23937,16 @@ static void DrawMode7MosaicBG2AddBrightness_Hires (uint32_t Left, uint32_t Right
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -24057,16 +24057,16 @@ static void DrawMode7MosaicBG2AddF1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -24177,16 +24177,16 @@ static void DrawMode7MosaicBG2AddS1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -24297,16 +24297,16 @@ static void DrawMode7MosaicBG2AddS1_2Brightness_Hires (uint32_t Left, uint32_t R
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -24417,16 +24417,16 @@ static void DrawMode7MosaicBG2Sub_Hires (uint32_t Left, uint32_t Right, int D)
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -24537,16 +24537,16 @@ static void DrawMode7MosaicBG2SubF1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -24657,16 +24657,16 @@ static void DrawMode7MosaicBG2SubS1_2_Hires (uint32_t Left, uint32_t Right, int 
         uint8_t Pix, ctr, starty;
         if (Line + VMosaic > GFX.EndY)
             VMosaic = GFX.EndY - Line + 1;
-        HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         starty = Line + 1;
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
-        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (CentreX << 8);
-        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (CentreY << 8);
+        BB = ((l->MatrixB * starty) & ~63) + ((l->MatrixB * yy) & ~63) + (int32_t)((uint32_t) CentreX << 8);
+        DD = ((l->MatrixD * starty) & ~63) + ((l->MatrixD * yy) & ~63) + (int32_t)((uint32_t) CentreY << 8);
         if (PPU.Mode7HFlip)
         {
             startx = MRight - 1;
@@ -24824,10 +24824,10 @@ static void DrawMode7BG1HR_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -24835,9 +24835,9 @@ static void DrawMode7BG1HR_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -24990,10 +24990,10 @@ static void DrawMode7BG1HRAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -25001,9 +25001,9 @@ static void DrawMode7BG1HRAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -25156,10 +25156,10 @@ static void DrawMode7BG1HRAddBrightness_Normal1x1 (uint32_t Left, uint32_t Right
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -25167,9 +25167,9 @@ static void DrawMode7BG1HRAddBrightness_Normal1x1 (uint32_t Left, uint32_t Right
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -25322,10 +25322,10 @@ static void DrawMode7BG1HRAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -25333,9 +25333,9 @@ static void DrawMode7BG1HRAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -25488,10 +25488,10 @@ static void DrawMode7BG1HRAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -25499,9 +25499,9 @@ static void DrawMode7BG1HRAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -25654,10 +25654,10 @@ static void DrawMode7BG1HRAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t R
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -25665,9 +25665,9 @@ static void DrawMode7BG1HRAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t R
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -25820,10 +25820,10 @@ static void DrawMode7BG1HRSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -25831,9 +25831,9 @@ static void DrawMode7BG1HRSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -25986,10 +25986,10 @@ static void DrawMode7BG1HRSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -25997,9 +25997,9 @@ static void DrawMode7BG1HRSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -26152,10 +26152,10 @@ static void DrawMode7BG1HRSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -26163,9 +26163,9 @@ static void DrawMode7BG1HRSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -26327,10 +26327,10 @@ static void DrawMode7BG2HR_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -26338,9 +26338,9 @@ static void DrawMode7BG2HR_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -26487,10 +26487,10 @@ static void DrawMode7BG2HRAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -26498,9 +26498,9 @@ static void DrawMode7BG2HRAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -26647,10 +26647,10 @@ static void DrawMode7BG2HRAddBrightness_Normal1x1 (uint32_t Left, uint32_t Right
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -26658,9 +26658,9 @@ static void DrawMode7BG2HRAddBrightness_Normal1x1 (uint32_t Left, uint32_t Right
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -26807,10 +26807,10 @@ static void DrawMode7BG2HRAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -26818,9 +26818,9 @@ static void DrawMode7BG2HRAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -26967,10 +26967,10 @@ static void DrawMode7BG2HRAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -26978,9 +26978,9 @@ static void DrawMode7BG2HRAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -27127,10 +27127,10 @@ static void DrawMode7BG2HRAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t R
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -27138,9 +27138,9 @@ static void DrawMode7BG2HRAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t R
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -27287,10 +27287,10 @@ static void DrawMode7BG2HRSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -27298,9 +27298,9 @@ static void DrawMode7BG2HRSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -27447,10 +27447,10 @@ static void DrawMode7BG2HRSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -27458,9 +27458,9 @@ static void DrawMode7BG2HRSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -27607,10 +27607,10 @@ static void DrawMode7BG2HRSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -27618,9 +27618,9 @@ static void DrawMode7BG2HRSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -27834,10 +27834,10 @@ static void DrawMode7BG1HR4X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -27845,9 +27845,9 @@ static void DrawMode7BG1HR4X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -27982,10 +27982,10 @@ static void DrawMode7BG1HR4XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -27993,9 +27993,9 @@ static void DrawMode7BG1HR4XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -28130,10 +28130,10 @@ static void DrawMode7BG1HR4XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -28141,9 +28141,9 @@ static void DrawMode7BG1HR4XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -28278,10 +28278,10 @@ static void DrawMode7BG1HR4XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -28289,9 +28289,9 @@ static void DrawMode7BG1HR4XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -28426,10 +28426,10 @@ static void DrawMode7BG1HR4XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -28437,9 +28437,9 @@ static void DrawMode7BG1HR4XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -28574,10 +28574,10 @@ static void DrawMode7BG1HR4XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -28585,9 +28585,9 @@ static void DrawMode7BG1HR4XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -28722,10 +28722,10 @@ static void DrawMode7BG1HR4XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -28733,9 +28733,9 @@ static void DrawMode7BG1HR4XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -28870,10 +28870,10 @@ static void DrawMode7BG1HR4XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -28881,9 +28881,9 @@ static void DrawMode7BG1HR4XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -29018,10 +29018,10 @@ static void DrawMode7BG1HR4XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -29029,9 +29029,9 @@ static void DrawMode7BG1HR4XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -29179,10 +29179,10 @@ static void DrawMode7BG2HR4X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -29190,9 +29190,9 @@ static void DrawMode7BG2HR4X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -29321,10 +29321,10 @@ static void DrawMode7BG2HR4XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -29332,9 +29332,9 @@ static void DrawMode7BG2HR4XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -29463,10 +29463,10 @@ static void DrawMode7BG2HR4XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -29474,9 +29474,9 @@ static void DrawMode7BG2HR4XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -29605,10 +29605,10 @@ static void DrawMode7BG2HR4XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -29616,9 +29616,9 @@ static void DrawMode7BG2HR4XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -29747,10 +29747,10 @@ static void DrawMode7BG2HR4XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -29758,9 +29758,9 @@ static void DrawMode7BG2HR4XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -29889,10 +29889,10 @@ static void DrawMode7BG2HR4XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -29900,9 +29900,9 @@ static void DrawMode7BG2HR4XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -30031,10 +30031,10 @@ static void DrawMode7BG2HR4XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -30042,9 +30042,9 @@ static void DrawMode7BG2HR4XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -30173,10 +30173,10 @@ static void DrawMode7BG2HR4XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -30184,9 +30184,9 @@ static void DrawMode7BG2HR4XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -30315,10 +30315,10 @@ static void DrawMode7BG2HR4XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t Pix;
         uint8_t starty = Line + 1;
 
@@ -30326,9 +30326,9 @@ static void DrawMode7BG2HR4XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -30539,19 +30539,19 @@ static void DrawMode7BG1BL_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -30675,19 +30675,19 @@ static void DrawMode7BG1BLAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -30811,19 +30811,19 @@ static void DrawMode7BG1BLAddBrightness_Normal1x1 (uint32_t Left, uint32_t Right
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -30947,19 +30947,19 @@ static void DrawMode7BG1BLAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -31083,19 +31083,19 @@ static void DrawMode7BG1BLAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -31219,19 +31219,19 @@ static void DrawMode7BG1BLAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t R
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -31355,19 +31355,19 @@ static void DrawMode7BG1BLSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -31491,19 +31491,19 @@ static void DrawMode7BG1BLSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -31627,19 +31627,19 @@ static void DrawMode7BG1BLSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -31772,19 +31772,19 @@ static void DrawMode7BG2BL_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -31902,19 +31902,19 @@ static void DrawMode7BG2BLAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -32032,19 +32032,19 @@ static void DrawMode7BG2BLAddBrightness_Normal1x1 (uint32_t Left, uint32_t Right
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -32162,19 +32162,19 @@ static void DrawMode7BG2BLAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -32292,19 +32292,19 @@ static void DrawMode7BG2BLAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -32422,19 +32422,19 @@ static void DrawMode7BG2BLAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t R
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -32552,19 +32552,19 @@ static void DrawMode7BG2BLSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -32682,19 +32682,19 @@ static void DrawMode7BG2BLSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -32812,19 +32812,19 @@ static void DrawMode7BG2BLSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, int 
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33007,19 +33007,19 @@ static void DrawMode7BG1BL4X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33120,19 +33120,19 @@ static void DrawMode7BG1BL4XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33233,19 +33233,19 @@ static void DrawMode7BG1BL4XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33346,19 +33346,19 @@ static void DrawMode7BG1BL4XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33459,19 +33459,19 @@ static void DrawMode7BG1BL4XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33572,19 +33572,19 @@ static void DrawMode7BG1BL4XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33685,19 +33685,19 @@ static void DrawMode7BG1BL4XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33798,19 +33798,19 @@ static void DrawMode7BG1BL4XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -33911,19 +33911,19 @@ static void DrawMode7BG1BL4XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34034,19 +34034,19 @@ static void DrawMode7BG2BL4X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34141,19 +34141,19 @@ static void DrawMode7BG2BL4XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34248,19 +34248,19 @@ static void DrawMode7BG2BL4XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34355,19 +34355,19 @@ static void DrawMode7BG2BL4XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34462,19 +34462,19 @@ static void DrawMode7BG2BL4XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34569,19 +34569,19 @@ static void DrawMode7BG2BL4XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34676,19 +34676,19 @@ static void DrawMode7BG2BL4XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34783,19 +34783,19 @@ static void DrawMode7BG2BL4XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -34890,19 +34890,19 @@ static void DrawMode7BG2BL4XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35061,19 +35061,19 @@ static void DrawMode7BG1BL1X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35160,19 +35160,19 @@ static void DrawMode7BG1BL1XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35259,19 +35259,19 @@ static void DrawMode7BG1BL1XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35358,19 +35358,19 @@ static void DrawMode7BG1BL1XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35457,19 +35457,19 @@ static void DrawMode7BG1BL1XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35556,19 +35556,19 @@ static void DrawMode7BG1BL1XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35655,19 +35655,19 @@ static void DrawMode7BG1BL1XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35754,19 +35754,19 @@ static void DrawMode7BG1BL1XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35853,19 +35853,19 @@ static void DrawMode7BG1BL1XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -35961,19 +35961,19 @@ static void DrawMode7BG2BL1X_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36054,19 +36054,19 @@ static void DrawMode7BG2BL1XAdd_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36147,19 +36147,19 @@ static void DrawMode7BG2BL1XAddBrightness_Normal1x1 (uint32_t Left, uint32_t Rig
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36240,19 +36240,19 @@ static void DrawMode7BG2BL1XAddF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36333,19 +36333,19 @@ static void DrawMode7BG2BL1XAddS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36426,19 +36426,19 @@ static void DrawMode7BG2BL1XAddS1_2Brightness_Normal1x1 (uint32_t Left, uint32_t
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36519,19 +36519,19 @@ static void DrawMode7BG2BL1XSub_Normal1x1 (uint32_t Left, uint32_t Right, int D)
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36612,19 +36612,19 @@ static void DrawMode7BG2BL1XSubF1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
@@ -36705,19 +36705,19 @@ static void DrawMode7BG2BL1XSubS1_2_Normal1x1 (uint32_t Left, uint32_t Right, in
     for (Line = GFX.StartY; Line <= GFX.EndY; Line++, Offset += GFX.PPL, l++)
     {
         int AA, BB, CC, DD, xx, yy;
-        int32_t HOffset = ((int32_t) l->M7HOFS  << 19) >> 19;
-        int32_t VOffset = ((int32_t) l->M7VOFS  << 19) >> 19;
-        int32_t CentreX = ((int32_t) l->CentreX << 19) >> 19;
-        int32_t CentreY = ((int32_t) l->CentreY << 19) >> 19;
+        int32_t HOffset = (int32_t)((uint32_t) l->M7HOFS << 19) >> 19;
+        int32_t VOffset = (int32_t)((uint32_t) l->M7VOFS << 19) >> 19;
+        int32_t CentreX = (int32_t)((uint32_t) l->CentreX << 19) >> 19;
+        int32_t CentreY = (int32_t)((uint32_t) l->CentreY << 19) >> 19;
         uint8_t starty = Line + 1;
 
         if (PPU.Mode7VFlip)
             starty ^= 0xff;
         yy = CLIP_10_BIT_SIGNED(VOffset - CentreY);
         BB = ((l->MatrixB * starty) & ~63)
-           + ((l->MatrixB * yy)     & ~63) + (CentreX << 8);
+           + ((l->MatrixB * yy)     & ~63) + (int32_t)((uint32_t) CentreX << 8);
         DD = ((l->MatrixD * starty) & ~63)
-           + ((l->MatrixD * yy)     & ~63) + (CentreY << 8);
+           + ((l->MatrixD * yy)     & ~63) + (int32_t)((uint32_t) CentreY << 8);
 
         if (PPU.Mode7HFlip)
         {
