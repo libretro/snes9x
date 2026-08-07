@@ -44,6 +44,8 @@ uint32_t  BridgeCalculatedSize = 0;
 #include "display.h"
 #include "sha256.h"
 #include "snapshot.h"
+#include "msu1.h"
+#include "msu1_pack.h"
 
 #ifndef SET_UI_COLOR
 #define SET_UI_COLOR(r, g, b) ;
@@ -2268,6 +2270,12 @@ void CMemory::InitROM (void)
 	}
 
 	// MSU1
+	// The C implementation resolves companion paths itself rather than
+	// going through S9xGetFilename, so hand it the fully-qualified ROM
+	// path. Memory.ROMFilename alone is not enough: the libretro port
+	// loads from memory and passes only the basename, so the companion
+	// files would be looked for in the working directory.
+	S9xMSU1SetROMPath(S9xGetFilename(".sfc", ROMFILENAME_DIR).c_str());
 	Settings.MSU1 = S9xMSU1ROMExists();
 
 	//// Map memory and calculate checksum
@@ -4045,19 +4053,33 @@ void CMemory::CheckForAnyPatch(const char *rom_filename, bool8 header, int32 &ro
     }
 
     // Mercurial Magic (MSU-1 distribution pack)
-    if (path.ext_is(".msu1")) // ROM was *NOT* loaded from a .msu1 pack
+    if (path.ext_is(".msu1"))
     {
-        Stream *s = S9xMSU1OpenFile("patch.bps", TRUE);
-        if (s)
-        {
-            printf("Using BPS patch from msu1");
-            ret = ReadBPSPatch(s, offset, rom_size);
-            s->closeStream();
+        // The pack reader is offset-addressed rather than stream-based, so
+        // pull the whole patch into memory and hand ReadBPSPatch a memStream.
+        // BPS patches for these packs are a few hundred KB at most.
+        struct msu1_pack_file pf;
+        memset(&pf, 0, sizeof(pf));
 
-            if (ret)
-                printf("!\n");
-            else
-                printf(" failed!\n");
+        if (msu1_pack_open(&pf, rom_filename, "patch.bps"))
+        {
+            uint32_t psize = msu1_pack_size(&pf);
+            uint8 *pdata = (psize > 0) ? new uint8[psize] : NULL;
+
+            if (pdata && msu1_pack_read(&pf, 0, pdata, psize) == psize)
+            {
+                memStream ms(pdata, psize);
+                printf("Using BPS patch from msu1");
+                ret = ReadBPSPatch(&ms, offset, rom_size);
+
+                if (ret)
+                    printf("!\n");
+                else
+                    printf(" failed!\n");
+            }
+
+            delete[] pdata;
+            msu1_pack_close(&pf);
         }
     }
 #endif

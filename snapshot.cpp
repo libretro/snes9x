@@ -946,18 +946,40 @@ static FreezeData	SnapBSX[] =
 #undef STRUCT
 #define STRUCT	struct SMSU1
 
+/* struct SMSU1 was replaced wholesale at version 13: the flags moved out of
+   the packed status byte into individual fields (rebuilt into STATUS on every
+   read), the offsets were renamed to say what they address, and the resampler
+   carries its interpolation state here so a savestate resumes mid-waveform
+   instead of reseating. Version 12 and older snapshots have none of these
+   fields, so they load with MSU1 state zeroed and S9xMSU1PostLoadState
+   re-derives what it can from the track and offsets. */
 static FreezeData	SnapMSU1[] =
 {
-	INT_ENTRY(9, MSU1_STATUS),
-	INT_ENTRY(9, MSU1_DATA_SEEK),
-	INT_ENTRY(9, MSU1_DATA_POS),
-	INT_ENTRY(9, MSU1_TRACK_SEEK),
-	INT_ENTRY(9, MSU1_CURRENT_TRACK),
-	INT_ENTRY(9, MSU1_RESUME_TRACK),
-	INT_ENTRY(9, MSU1_VOLUME),
-	INT_ENTRY(9, MSU1_CONTROL),
-	INT_ENTRY(9, MSU1_AUDIO_POS),
-	INT_ENTRY(9, MSU1_RESUME_POS)
+	INT_ENTRY(13, MSU1_STATUS),
+	INT_ENTRY(13, MSU1_DataSeekOffset),
+	INT_ENTRY(13, MSU1_DataReadOffset),
+	INT_ENTRY(13, MSU1_AudioPlayOffset),
+	INT_ENTRY(13, MSU1_AudioLoopOffset),
+	INT_ENTRY(13, MSU1_CurrentTrack),
+	INT_ENTRY(13, MSU1_VolumeB),
+	INT_ENTRY(13, MSU1_AudioResumeTrack),
+	INT_ENTRY(13, MSU1_AudioResumeOffset),
+	INT_ENTRY(13, MSU1_Control),
+	INT_ENTRY(13, MSU1_AudioError),
+	INT_ENTRY(13, MSU1_AudioPlay),
+	INT_ENTRY(13, MSU1_AudioRepeat),
+	INT_ENTRY(13, MSU1_AudioBusy),
+	INT_ENTRY(13, MSU1_DataBusy),
+	INT_ENTRY(13, MSU1_RsmpFrac),
+	INT_ENTRY(13, MSU1_RsmpPrvL),
+	INT_ENTRY(13, MSU1_RsmpPrvR),
+	INT_ENTRY(13, MSU1_RsmpCurL),
+	INT_ENTRY(13, MSU1_RsmpCurR),
+	INT_ENTRY(13, MSU1_RsmpNxtL),
+	INT_ENTRY(13, MSU1_RsmpNxtR),
+	INT_ENTRY(13, MSU1_RsmpNx2L),
+	INT_ENTRY(13, MSU1_RsmpNx2R),
+	INT_ENTRY(13, MSU1_RsmpPrimed)
 };
 
 #undef STRUCT
@@ -1177,7 +1199,10 @@ void S9xFreezeToStream (STREAM stream)
 		FreezeStruct(stream, "BSX", &BSX, SnapBSX, COUNT(SnapBSX));
 
 	if (Settings.MSU1)
+	{
+		S9xMSU1PreSaveState();
 		FreezeStruct(stream, "MSU", &MSU1, SnapMSU1, COUNT(SnapMSU1));
+	}
 
 	delete [] soundsnapshot;
 }

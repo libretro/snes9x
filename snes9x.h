@@ -32,6 +32,11 @@
 #define REVERT_FSTREAM(s, o, p)	rfseek(s, o, p)
 #define CLOSE_FSTREAM(s)			rfclose(s)
 
+/* Stream is a C++ class, so the STREAM family is only visible to C++ TUs.
+   The C sources in this tree (msu1.c and friends) take snes9x.h for
+   Settings and the SNES timing constants and use filestream directly. */
+#ifdef __cplusplus
+
 #include "stream.h"
 
 #define STREAM					Stream *
@@ -43,6 +48,8 @@
 #define FIND_STREAM(s)			s->pos()
 #define REVERT_STREAM(s, o, p)	s->revert(p, o)
 #define CLOSE_STREAM(s)			s->closeStream()
+
+#endif
 
 #define SNES_WIDTH					256
 #define SNES_HEIGHT					224

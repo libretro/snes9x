@@ -9,6 +9,8 @@ INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
 endif
 
 SOURCES_C   := $(CORE_DIR)/c4emu.c \
+	       $(CORE_DIR)/msu1.c \
+	       $(CORE_DIR)/msu1_pack.c \
 	       $(CORE_DIR)/srtc.c \
 	       $(CORE_DIR)/obc1.c \
 	       $(CORE_DIR)/bsflash.c \
@@ -38,7 +40,6 @@ SOURCES_CXX := $(CORE_DIR)/apu/apu.cpp \
 	       $(CORE_DIR)/globals.cpp \
 	       $(CORE_DIR)/loadzip.cpp \
 	       $(CORE_DIR)/memmap.cpp \
-	       $(CORE_DIR)/msu1.cpp \
 	       $(CORE_DIR)/ppu.cpp \
 	       $(CORE_DIR)/stream.cpp \
 	       $(CORE_DIR)/sa1.cpp \
@@ -63,6 +64,7 @@ SOURCES_C += \
 	$(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
 	$(LIBRETRO_COMM_DIR)/compat/fopen_utf8.c \
 	$(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
+	$(LIBRETRO_COMM_DIR)/encodings/encoding_deflate.c \
 	$(LIBRETRO_COMM_DIR)/file/file_path.c \
 	$(LIBRETRO_COMM_DIR)/file/file_path_io.c \
 	$(LIBRETRO_COMM_DIR)/streams/file_stream.c \
