@@ -2189,6 +2189,34 @@ size_t retro_get_memory_size(unsigned type)
     return size;
 }
 
+/* Decide whether this (de)serialisation may take the fast in-place path.
+ *
+ * "Fast" means the state is one the core itself produced moments ago and is
+ * about to consume again, so the big blocks can be read straight into
+ * VRAM/WRAM/SRAM/fillram instead of being staged through local copies. The
+ * staging exists so a truncated or corrupt state cannot half-apply, which
+ * matters for a file off disk and does not matter for runahead, preemptive
+ * frames or netplay rollback.
+ *
+ * RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT is the supported query; every
+ * context other than NORMAL is a frontend-internal state and wants the fast
+ * path. RETRO_AV_ENABLE_FAST_SAVESTATES carries the same information from the
+ * same frontend flag but libretro.h marks it deprecated, so it stays only as
+ * the fallback for frontends that do not answer the context query. */
+static bool savestate_wants_fast_path(void)
+{
+    enum retro_savestate_context context = RETRO_SAVESTATE_CONTEXT_NORMAL;
+    int                          av      = 0;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT, &context))
+        return context != RETRO_SAVESTATE_CONTEXT_NORMAL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &av))
+        return 0 != (av & RETRO_AV_ENABLE_FAST_SAVESTATES);
+
+    return false;
+}
+
 size_t retro_serialize_size()
 {
     return rom_loaded ? S9xFreezeSize() : 0;
@@ -2196,13 +2224,8 @@ size_t retro_serialize_size()
 
 bool retro_serialize(void *data, size_t size)
 {
-    int result = -1;
-    bool okay = false;
-    okay = environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
-    if (okay)
-    {
-        Settings.FastSavestates = 0 != (result & 4);
-    }
+    Settings.FastSavestates = savestate_wants_fast_path();
+
     if (S9xFreezeGameMem((uint8_t*)data,size) == FALSE)
         return false;
 
@@ -2212,13 +2235,9 @@ bool retro_serialize(void *data, size_t size)
 bool retro_unserialize(const void* data, size_t size)
 {
     reset_button_cache();
-    int result = -1;
-    bool okay = false;
-    okay = environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
-    if (okay)
-    {
-        Settings.FastSavestates = 0 != (result & 4);
-    }
+
+    Settings.FastSavestates = savestate_wants_fast_path();
+
     if (S9xUnfreezeGameMem((const uint8_t*)data,size) != SUCCESS)
         return false;
 
