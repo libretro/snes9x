@@ -247,6 +247,20 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       "100%"
    },
    {
+      "snes9x_superfx_timing",
+      "SuperFX Timing Model (Experimental)",
+      NULL,
+      "'Compatibility' runs the GSU with snes9x2010's field-tested per-line budget. 'Hardware-derived' charges each instruction its approximate real GSU cycle cost (cache-aware fetches, 5-cycle memory accesses, amortized plot flushes), matching ares/MiSTer wait states; backported from mainline Snes9x. More accurate, less field-tested. Works together with SuperFX Overclocking.",
+      NULL,
+      "hacks",
+      {
+         { "compat",   "Compatibility (snes9x2010)" },
+         { "hardware", "Hardware-derived" },
+         { NULL, NULL },
+      },
+      "compat"
+   },
+   {
       "snes9x_overclock_cycles",
       "Reduce Slowdown (Hack, Unsafe)",
       "Reduce Slowdown (Unsafe)",

@@ -454,8 +454,15 @@ static void update_variables(void)
            costs are snes9x2010's, so 100% here must mean the same speed the
            reference core ships with (libretro/snes9x#314). */
         SuperFXSpeedPerLineHz = (uint32) ((uint64) 6255000 * freq / 100);
+        SuperFXHwTimingPct = freq;
         S9xSuperFXRecomputeSpeedPerLine();
     }
+
+    var.key = "snes9x_superfx_timing";
+    var.value = NULL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var))
+        fx_hw_timing = !strcmp(var.value, "hardware") ? 1 : 0;
 
     var.key = "snes9x_up_down_allowed";
     var.value = NULL;
