@@ -170,21 +170,6 @@ static const char	*color_names[32] =
 	"tPurple"
 };
 
-static void DoGunLatch (int, int);
-static void DoMacsRifleLatch (int, int);
-static int maptype (int);
-static const char * maptypename (int);
-static int32 ApplyMulti (s9xcommand_t *, int32, int16);
-static void UpdateMouseDelta (int);
-
-
-static string& operator += (string &s, int i)
-{
-	snprintf(buf, sizeof(buf), "%d", i);
-	s.append(buf);
-	return (s);
-}
-
 static void DoGunLatch (int x, int y)
 {
 	x += 40;
