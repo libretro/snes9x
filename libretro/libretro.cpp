@@ -449,7 +449,12 @@ static void update_variables(void)
     {
         int freq = atoi(var.value);
         Settings.SuperFXClockMultiplier = freq;
-        SuperFXSpeedPerLineHz = (uint32) ((uint64) 4378500 * freq / 100);
+        /* 6255000 is snes9x2010's default per-line budget (625500 per MHz at
+           its "10 MHz" default); the GSU executor and its per-opcode cycle
+           costs are snes9x2010's, so 100% here must mean the same speed the
+           reference core ships with (libretro/snes9x#314). */
+        SuperFXSpeedPerLineHz = (uint32) ((uint64) 6255000 * freq / 100);
+        S9xSuperFXRecomputeSpeedPerLine();
     }
 
     var.key = "snes9x_up_down_allowed";

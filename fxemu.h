@@ -179,6 +179,7 @@ struct FxInfo_s
 extern struct FxInfo_s	SuperFX;
 
 void S9xResetSuperFX (void);
+void S9xSuperFXRecomputeSpeedPerLine (void);
 void S9xInitSuperFX (void);
 void S9xSetSuperFX (uint8_t byte, uint16_t address);
 uint8_t S9xGetSuperFX (uint16_t address);

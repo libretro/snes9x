@@ -159,7 +159,15 @@
 #endif
 
 uint8_t  *SFXFillRAM           = 0;
-uint32_t  SuperFXSpeedPerLineHz = 4378500; /* 0.417 duty * 10.5MHz GSU clock */
+/* Per-line GSU budget, in "0.417-duty Hz".  This must match what snes9x2010
+   ships as its default (625500 cycles/s per MHz at the default "10 MHz"
+   setting = 6255000): the executor below is snes9x2010's, and its per-opcode
+   cycle costs were tuned against that budget.  The naive 0.417 * 10.5 MHz
+   (4378500) figure runs the same executor at 70% of the reference speed,
+   which starves plot/memory-bound titles (Yoshi's Island renders its whole
+   sprite plane and collision state on the GSU against a fixed VBlank DMA
+   schedule and is the first casualty; see libretro/snes9x#314). */
+uint32_t  SuperFXSpeedPerLineHz = 6255000;
 uint8_t   SuperFXPalFlag        = 0;
 
 #ifndef SNES_CYCLES_PER_SCANLINE
@@ -4546,32 +4554,43 @@ static void FxReset (struct FxInfo_s *psFxInfo)
 
 void S9xResetSuperFX (void)
 {
-   /* GSU cycles per scanline.  A scanline lasts SNES_CYCLES_PER_SCANLINE (1364)
-    * master-clock cycles, so the number of GSU cycles that elapse in one line is
-    *
-    *    speedPerLine = SuperFXSpeedPerLine * 1364 / master_clock
-    *
-    * This is the hardware-exact form: it uses the real master clock and dot
-    * count rather than a rounded 50/60 Hz refresh.  fps and V_Max both cancel
-    * out, since master_clock == fps * V_Max * SNES_CYCLES_PER_SCANLINE, so the
-    * divisor is a nonzero compile-time constant (no V_Max==0 hazard).
-    *
-    * Integer math throughout: the SNES has no FPU, and this value is the per-line
-    * SuperFX instruction budget, so it must be bit-identical across platforms for
-    * deterministic emulation (netplay/savestates/runahead).  The master-clock
-    * macros are doubles, but the casts are compile-time constant conversions
-    * (21477272.0 / 21281370.0 are exact), so no runtime float op is emitted; the
-    * SuperFXSpeedPerLine * 1364 product needs the 64-bit intermediate.
-    *
-    * FIXME: Snes9x can't execute CPU and SuperFX at a time. Don't ask me what
-    * is the 0.417 baked into SuperFXSpeedPerLineHz :P */
+   S9xSuperFXRecomputeSpeedPerLine();
+   SuperFX.oneLineDone = FALSE;
+   SuperFX.vFlags = 0;
+   FxReset(&SuperFX);
+}
+
+/* Derive the per-line instruction budget from SuperFXSpeedPerLineHz.
+ *
+ * A scanline lasts SNES_CYCLES_PER_SCANLINE (1364) master-clock cycles, so
+ * the number of budget units that elapse in one line is
+ *
+ *    speedPerLine = SuperFXSpeedPerLineHz * 1364 / master_clock
+ *
+ * This is the hardware-exact form: it uses the real master clock and dot
+ * count rather than a rounded 50/60 Hz refresh.  fps and V_Max both cancel
+ * out, since master_clock == fps * V_Max * SNES_CYCLES_PER_SCANLINE, so the
+ * divisor is a nonzero compile-time constant (no V_Max==0 hazard).
+ *
+ * Integer math throughout: the SNES has no FPU, and this value is the
+ * per-line SuperFX instruction budget, so it must be bit-identical across
+ * platforms for deterministic emulation (netplay/savestates/runahead).  The
+ * master-clock macros are doubles, but the casts are compile-time constant
+ * conversions (21477272.0 / 21281370.0 are exact), so no runtime float op is
+ * emitted; the SuperFXSpeedPerLineHz * 1364 product needs the 64-bit
+ * intermediate.
+ *
+ * Split out of S9xResetSuperFX so the libretro overclock option can take
+ * effect when changed mid-session without a full chip reset (snes9x2010
+ * handles the same case by arming a chip reset; recomputing only the budget
+ * preserves GSU state).  Safe to call before a cartridge is loaded: it
+ * writes only SuperFX.speedPerLine. */
+void S9xSuperFXRecomputeSpeedPerLine (void)
+{
    uint32_t master_clock = SuperFXPalFlag ? (uint32_t) PAL_MASTER_CLOCK : (uint32_t) NTSC_MASTER_CLOCK;
 
    SuperFX.speedPerLine = (uint32_t) ((uint64_t) SuperFXSpeedPerLineHz
                                       * SNES_CYCLES_PER_SCANLINE / master_clock);
-   SuperFX.oneLineDone = FALSE;
-   SuperFX.vFlags = 0;
-   FxReset(&SuperFX);
 }
 
 static uint8_t fx_checkStartAddress (void)
