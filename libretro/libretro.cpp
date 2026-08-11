@@ -90,9 +90,15 @@ const int MAX_SNES_WIDTH_NTSC = ((SNES_NTSC_OUT_WIDTH(256) + 3) / 4) * 4;
 
 static bool show_lightgun_settings = true;
 static bool show_advanced_av_settings = true;
-/* snes9x_msu1_enhanced_audio core option; latched into the playback rate at
-   content load by msu1_update_playback_rate(). */
-static bool msu1_enhanced_pref = true;
+/* snes9x_msu1_enhanced_audio core option. The live user preference and the
+   value the audio pipeline actually runs on are kept separate: the preference
+   is only copied into msu1_enhanced_latched at content load, immediately
+   before the frontend queries retro_get_system_av_info(). That keeps the
+   reported sample rate and the rate the core emits at in agreement for the
+   whole lifetime of the loaded content, with no need to renegotiate av_info
+   from inside a load callback. */
+static bool msu1_enhanced_pref    = true;
+static bool msu1_enhanced_latched = false;
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
@@ -904,7 +910,7 @@ static bool msu1_enh_running = false;
 
 static bool msu1_enhanced_active(void)
 {
-    return msu1_enhanced_pref && Settings.MSU1;
+    return msu1_enhanced_latched && Settings.MSU1;
 }
 
 /* The frontend is clocked at 44.1 kHz scaled by however far the SPC rate has
@@ -1434,21 +1440,20 @@ static bool8 is_SufamiTurbo_Cart (const uint8 *data, uint32 size)
    decimates them through an interpolator with no anti-alias filtering, which
    folds 16.02-22.05 kHz track content down into the 10-16 kHz band as audible
    hiss (libretro/snes9x#309). The enhanced path avoids that by running the
-   frame at 44.1 kHz - see audio_upload_samples. The rate reported to the
-   frontend changes with it, so the frontend has to be told. */
-static void msu1_update_playback_rate(void)
-{
-    static bool last_enhanced = false;
-    bool enhanced = msu1_enhanced_active();
+   frame at 44.1 kHz - see audio_upload_samples. That changes the rate the core
+   emits at, so the frontend has to agree on it.
 
-    if (enhanced != last_enhanced)
-    {
-        struct retro_system_av_info av_info;
-        last_enhanced = enhanced;
-        msu1_enh_running = false;
-        retro_get_system_av_info(&av_info);
-        environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av_info);
-    }
+   It is told the ordinary way: retro_get_system_av_info() reports the enhanced
+   rate, and the frontend calls it once, straight after retro_load_game()
+   returns. Nothing has to be renegotiated, so this runs at the tail of the
+   load path with no environment call attached. SET_SYSTEM_AV_INFO would be
+   wrong here twice over - it may only be issued from retro_run(), and it tears
+   down and rebuilds the frontend's audio and video drivers, which at this
+   point in the load sequence have not necessarily been brought up yet. */
+static void msu1_latch_playback_rate(void)
+{
+    msu1_enhanced_latched = msu1_enhanced_pref;
+    msu1_enh_running      = false;
 }
 
 bool retro_load_game(const struct retro_game_info *game)
@@ -1512,7 +1517,7 @@ bool retro_load_game(const struct retro_game_info *game)
     if (!rom_loaded && log_cb)
         log_cb(RETRO_LOG_ERROR, "ROM loading failed...\n");
 
-    msu1_update_playback_rate();
+    msu1_latch_playback_rate();
 
     Memory.ClearSRAM();
 
@@ -1648,7 +1653,7 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
         g_geometry_update = true;
     }
 
-    msu1_update_playback_rate();
+    msu1_latch_playback_rate();
 
     return rom_loaded;
 }
