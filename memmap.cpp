@@ -2464,6 +2464,7 @@ void CMemory::InitROM (void)
 	Timings.NMIDMADelay  = 24;
 	Timings.IRQTriggerCycles = 14;
 	Timings.APUSpeedup = 0;
+	fx_cel_delay = 0;
 	S9xAPUTimingSetSpeedup(Timings.APUSpeedup);
 
 	IPPU.TotalEmulatedFrames = 0;
@@ -3513,6 +3514,11 @@ void CMemory::ApplyROMFixes (void)
 	// APU timing hacks
 	if (match_na("CIRCUIT USA"))
 		Timings.APUSpeedup = 3;
+
+	// Winter Gold: hold the GSU pose-cel publish from CPU view for one frame
+	// at the race-start handshake (snes9xgit#533; see S9xSuperFXCelDelayTick).
+	if (match_na("FX SKIING NINTENDO 96"))
+		fx_cel_delay = 312;
 
 	S9xAPUTimingSetSpeedup(Timings.APUSpeedup);
 

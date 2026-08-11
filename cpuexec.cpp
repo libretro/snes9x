@@ -270,6 +270,10 @@ void S9xDoHEventProcessing (void)
 				if (!SuperFX.oneLineDone && CHECK_EXEC_SUPERFX())
 					S9xSuperFXExec();
 				SuperFX.oneLineDone = FALSE;
+				// Ticks every line, whether or not the GSU ran; see the
+				// comment on the function for why it cannot live in the
+				// exec above.  No-op unless fx_cel_delay is set (FX SKIING only).
+				S9xSuperFXCelDelayTick();
 			}
 
 			S9xAPUEndScanline();
