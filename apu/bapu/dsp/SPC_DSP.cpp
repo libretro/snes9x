@@ -1171,6 +1171,15 @@ void SPC_DSP::run( int clocks_remain )
 {
 	require( clocks_remain > 0 );
 
+	/* The frontend has granted permission to skip audio work entirely for this
+	   frame and guaranteed the resulting state is thrown away or restored
+	   afterwards, so decline to advance the DSP at all: no voices, no echo
+	   writes, no phase. The output cursor therefore does not move,
+	   S9xDrainAudio reports nothing, and the libretro port uploads nothing.
+	   The caller zeroes its clock either way, so nothing accumulates. */
+	if ( Settings.HardDisableAudio )
+		return;
+
 	int const phase = m.phase;
 	m.phase = (phase + clocks_remain) & 31;
 	switch ( phase )

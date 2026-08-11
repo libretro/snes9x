@@ -216,6 +216,11 @@ struct SSettings
 	bool8	Stereo;
 	bool8	ReverseStereo;
 	bool8	Mute;
+	/* The frontend has stated it will never need this frame's audio and that
+	   the state left behind will be discarded or restored. The DSP declines to
+	   run at all while this is set - see SPC_DSP::run. Distinct from Mute,
+	   which only says the output is not wanted. */
+	bool8	HardDisableAudio;
 	int32	InterpolationMethod;
 
 	bool8	Transparency;

@@ -943,10 +943,13 @@ static void audio_upload_samples(void)
        and RetroArch only ever sets the bit around runahead's discarded frames,
        where it has suspended its own consumption for the same frames.
        audio_driver_sample_batch() returns on the suspended flag before it
-       reads anything the core hands over, so uploading silence here would be
-       filling a buffer nobody looks at. Drop the frame instead. S9xDrainAudio
-       above has already reset the DSP's output cursor, which is the part of
-       this that is state, and that happens either way. */
+       reads anything the core hands over, so uploading here would be filling a
+       buffer nobody looks at. Drop the frame instead.
+
+       In practice this is unreachable now that the DSP declines to run at all
+       under the same flag - the drain above reports nothing and the function
+       has already returned - but the flag is the contract and the check is
+       where the contract belongs. */
     if (Settings.Mute || !msu1_enhanced_active())
         msu1_enh_running = false;
 
@@ -2280,11 +2283,13 @@ void retro_run()
            resulting state is discarded or restored afterwards. Suspension
            costs output, never state. */
         S9xSetSoundMute(hardDisableAudio);
+        Settings.HardDisableAudio = hardDisableAudio;
     }
     else
     {
         IPPU.RenderThisFrame = true;
         S9xSetSoundMute(false);
+        Settings.HardDisableAudio = FALSE;
     }
 
     poll_cb();
