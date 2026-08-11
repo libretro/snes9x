@@ -92,22 +92,75 @@ typedef uint64_t			uint64;
 
 #if defined(__i386__) || defined(__i486__) || defined(__i586__) || defined(__i686__) || defined(__x86_64__) || defined(__alpha__) || defined(__MIPSEL__) || defined(_M_IX86) || defined(_M_X64) || defined(_XBOX1) || defined(__arm__) || defined(ANDROID) || defined(__aarch64__) || (defined(__BYTE_ORDER__) && __BYTE_ORDER == __ORDER_LITTLE_ENDIAN__)
 #define LSB_FIRST
-#define FAST_LSB_WORD_ACCESS
 #else
 #define MSB_FIRST
 #endif
 
-#ifdef FAST_LSB_WORD_ACCESS
-#define READ_WORD(s)		(*(uint16 *) (s))
-#define READ_3WORD(s)		(*(uint32 *) (s) & 0x00ffffff)
-#define READ_DWORD(s)		(*(uint32 *) (s))
-#define WRITE_WORD(s, d)	*(uint16 *) (s) = (d)
-#define WRITE_3WORD(s, d)	*(uint16 *) (s) = (uint16) (d), *((uint8 *) (s) + 2) = (uint8) ((d) >> 16)
-#define WRITE_DWORD(s, d)	*(uint32 *) (s) = (d)
+/* Alignment-safe accessors.  The emulated buses issue unaligned 16/32-bit
+ * accesses constantly (immediate operand fetches, VRAM/WRAM word I/O), which
+ * the old *(uint16 *) casts made undefined behaviour.  On little-endian
+ * hosts, memcpy through an inline helper is the canonical form every
+ * supported compiler (GCC, Clang, MSVC) lowers to a single unaligned
+ * load/store, and unlike byte-composed macros it neither trips UBSan nor
+ * defeats alias analysis around the stores.  Big-endian hosts keep the
+ * byte-composed macros, which implement the little-endian bus semantics
+ * explicitly.  The 3-byte read also no longer touches a fourth byte (the
+ * old cast form read 32 bits and masked, overreading at buffer ends). */
+#ifndef MSB_FIRST
+
+#if defined(_MSC_VER)
+#define S9X_ACCESS_INLINE static __inline
+#else
+#define S9X_ACCESS_INLINE static __inline__
+#endif
+
+S9X_ACCESS_INLINE uint16 s9x_read_word (const void *s)
+{
+	uint16	v;
+	memcpy(&v, s, 2);
+	return (v);
+}
+
+S9X_ACCESS_INLINE uint32 s9x_read_3word (const void *s)
+{
+	uint32	v = 0;
+	memcpy(&v, s, 3);
+	return (v);
+}
+
+S9X_ACCESS_INLINE uint32 s9x_read_dword (const void *s)
+{
+	uint32	v;
+	memcpy(&v, s, 4);
+	return (v);
+}
+
+S9X_ACCESS_INLINE void s9x_write_word (void *s, uint16 d)
+{
+	memcpy(s, &d, 2);
+}
+
+S9X_ACCESS_INLINE void s9x_write_3word (void *s, uint32 d)
+{
+	memcpy(s, &d, 3);
+}
+
+S9X_ACCESS_INLINE void s9x_write_dword (void *s, uint32 d)
+{
+	memcpy(s, &d, 4);
+}
+
+#define READ_WORD(s)		s9x_read_word(s)
+#define READ_3WORD(s)		s9x_read_3word(s)
+#define READ_DWORD(s)		s9x_read_dword(s)
+#define WRITE_WORD(s, d)	s9x_write_word((s), (uint16) (d))
+#define WRITE_3WORD(s, d)	s9x_write_3word((s), (uint32) (d))
+#define WRITE_DWORD(s, d)	s9x_write_dword((s), (uint32) (d))
+
 #else
 #define READ_WORD(s)		(*(uint8 *) (s) | (*((uint8 *) (s) + 1) << 8))
 #define READ_3WORD(s)		(*(uint8 *) (s) | (*((uint8 *) (s) + 1) << 8) | (*((uint8 *) (s) + 2) << 16))
-#define READ_DWORD(s)		(*(uint8 *) (s) | (*((uint8 *) (s) + 1) << 8) | (*((uint8 *) (s) + 2) << 16) | (*((uint8 *) (s) + 3) << 24))
+#define READ_DWORD(s)		((uint32) *(uint8 *) (s) | ((uint32) *((uint8 *) (s) + 1) << 8) | ((uint32) *((uint8 *) (s) + 2) << 16) | ((uint32) *((uint8 *) (s) + 3) << 24))
 #define WRITE_WORD(s, d)	*(uint8 *) (s) = (uint8) (d), *((uint8 *) (s) + 1) = (uint8) ((d) >> 8)
 #define WRITE_3WORD(s, d)	*(uint8 *) (s) = (uint8) (d), *((uint8 *) (s) + 1) = (uint8) ((d) >> 8), *((uint8 *) (s) + 2) = (uint8) ((d) >> 16)
 #define WRITE_DWORD(s, d)	*(uint8 *) (s) = (uint8) (d), *((uint8 *) (s) + 1) = (uint8) ((d) >> 8), *((uint8 *) (s) + 2) = (uint8) ((d) >> 16), *((uint8 *) (s) + 3) = (uint8) ((d) >> 24)
