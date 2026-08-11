@@ -894,11 +894,6 @@ static void update_variables(void)
     }
 }
 
-/* Silence sent while audio is hard-disabled. Sized for the worst frame the
-   DSP can hand us: PAL at ~641 stereo frames plus headroom for the APU
-   speedup hack. Never written to, so it costs nothing but BSS. */
-#define MUTE_BUFFER_FRAMES 768
-
 /* Chunk size for the enhanced-audio upsampler's output staging buffer. This is
    not a worst case: audio_upload_samples() loops until the input batch is
    consumed, uploading a chunk at a time, so no frame count has to fit here.
@@ -943,25 +938,20 @@ static void audio_upload_samples(void)
     if (count <= 0)
         return;
 
-    /* Muted means hard-disabled (see retro_run): the APU output is not
-       meaningful, but the callback still has to run or the frontend's ring
-       drains. A static zero buffer covers the largest frame we can produce. */
+    /* Muted means hard-disabled (see retro_run), which is a promise from the
+       frontend that it will never need this audio - libretro.h says as much,
+       and RetroArch only ever sets the bit around runahead's discarded frames,
+       where it has suspended its own consumption for the same frames.
+       audio_driver_sample_batch() returns on the suspended flag before it
+       reads anything the core hands over, so uploading silence here would be
+       filling a buffer nobody looks at. Drop the frame instead. S9xDrainAudio
+       above has already reset the DSP's output cursor, which is the part of
+       this that is state, and that happens either way. */
     if (Settings.Mute || !msu1_enhanced_active())
         msu1_enh_running = false;
 
     if (Settings.Mute)
-    {
-        static const int16_t silence[MUTE_BUFFER_FRAMES * 2] = { 0 };
-
-        int frames = count >> 1;
-        while (frames > 0)
-        {
-            int chunk = (frames > MUTE_BUFFER_FRAMES) ? MUTE_BUFFER_FRAMES : frames;
-            audio_batch_cb(silence, (size_t) chunk);
-            frames -= chunk;
-        }
         return;
-    }
 
     /* MSU-1 Enhanced Audio: run the frame at 44.1 kHz so the MSU-1 stream
        mixes in at its native rate instead of being decimated to the SPC's
