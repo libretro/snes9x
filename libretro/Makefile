@@ -665,6 +665,27 @@ ifeq ($(LTO),-flto)
    endif
 endif
 
+# The emulated machine's memory is one byte array reinterpreted through
+# every width the SNES buses use, so the tree violates C/C++ type-based
+# aliasing rules in too many places to enumerate, and the violations are
+# inherent to the design rather than incidental.  GCC 9's LTO acts on
+# those rules across translation units and miscompiles the sprite/tile
+# path: the linux/x86_64 buildbot (GCC 9.4) shipped nightlies that
+# render Yoshi's Island with garbled sprites and broken collision, while
+# a local build of the same commit with GCC 12/13 is correct
+# (libretro/snes9x#314 and a second report).  Verified by bisection:
+# GCC 9 + LTO reproduces the shipped binary's frame hashes exactly,
+# GCC 9 without LTO or with this flag matches GCC 13 byte for byte.
+#
+# Correctness must not depend on which compiler happens not to exploit
+# the rules, so opt out of type-based aliasing everywhere it can be
+# expressed.  MSVC has no equivalent switch and does not perform this
+# class of optimisation by default.
+ifeq (,$(findstring msvc,$(platform)))
+CFLAGS   += -fno-strict-aliasing
+CXXFLAGS += -fno-strict-aliasing
+endif
+
 # Statically linked frontends compile their own libretro-common, so
 # Makefile.common keeps the vendored copy (including vfs_hybrid.c) out
 # of the archive; the define lets libretro.cpp compile the matching
