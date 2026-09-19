@@ -2,7 +2,10 @@ DEBUG = 0
 HAVE_EXCEPTIONS = 0
 HAVE_STRINGS_H = 1
 
-LTO ?= -flto
+# Link-time optimisation is opt-in: it has miscompiled this core more
+# than once (libretro/snes9x#314), so builds leave it off unless asked.
+# Build with LTO=-flto to turn it on.
+LTO ?=
 SPACE :=
 SPACE := $(SPACE) $(SPACE)
 BACKSLASH :=
@@ -167,7 +170,6 @@ else ifeq ($(platform), classic_armv7_a7)
 	fpic := -fPIC
 	SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
 	CXXFLAGS += -Ofast \
-	-flto=4 -fwhole-program -fuse-linker-plugin \
 	-fdata-sections -ffunction-sections -Wl,--gc-sections \
 	-fno-stack-protector -fno-ident -fomit-frame-pointer \
 	-falign-functions=1 -falign-jumps=1 -falign-loops=1 \
@@ -196,7 +198,6 @@ else ifeq ($(platform), classic_armv8_a35)
 	fpic := -fPIC
 	SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
 	CXXFLAGS += -Ofast \
-	-flto=4 -fwhole-program -fuse-linker-plugin \
 	-fdata-sections -ffunction-sections -Wl,--gc-sections \
 	-fno-stack-protector -fno-ident -fomit-frame-pointer \
 	-falign-functions=1 -falign-jumps=1 -falign-loops=1 \
@@ -411,12 +412,12 @@ else ifneq (,$(findstring windows_msvc2017,$(platform)))
 	ifneq (,$(findstring desktop,$(PlatformSuffix)))
 		WinPartition = desktop
         MSVC2017CompileFlags = -DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
-		LDFLAGS += -MANIFEST -LTCG:incremental -NXCOMPAT -DYNAMICBASE -DEBUG -OPT:REF -INCREMENTAL:NO -SUBSYSTEM:WINDOWS -MANIFESTUAC:"level='asInvoker' uiAccess='false'" -OPT:ICF -ERRORREPORT:PROMPT -NOLOGO -TLBID:1
+		LDFLAGS += -MANIFEST -NXCOMPAT -DYNAMICBASE -DEBUG -OPT:REF -INCREMENTAL:NO -SUBSYSTEM:WINDOWS -MANIFESTUAC:"level='asInvoker' uiAccess='false'" -OPT:ICF -ERRORREPORT:PROMPT -NOLOGO -TLBID:1
 		LIBS += kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib
 	else ifneq (,$(findstring uwp,$(PlatformSuffix)))
 		WinPartition = uwp
 		MSVC2017CompileFlags = -DWINAPI_FAMILY=WINAPI_FAMILY_APP -D_WINDLL -D_UNICODE -DUNICODE -D__WRL_NO_DEFAULT_LIB__ -ZW:nostdlib -EHsc
-		LDFLAGS += -APPCONTAINER -NXCOMPAT -DYNAMICBASE -MANIFEST:NO -LTCG -OPT:REF -SUBSYSTEM:CONSOLE -MANIFESTUAC:NO -OPT:ICF -ERRORREPORT:PROMPT -NOLOGO -TLBID:1 -DEBUG:FULL -WINMD:NO
+		LDFLAGS += -APPCONTAINER -NXCOMPAT -DYNAMICBASE -MANIFEST:NO -OPT:REF -SUBSYSTEM:CONSOLE -MANIFESTUAC:NO -OPT:ICF -ERRORREPORT:PROMPT -NOLOGO -TLBID:1 -DEBUG:FULL -WINMD:NO
 		LIBS += WindowsApp.lib
 	endif
 
@@ -647,8 +648,8 @@ endif
 # GCC 10+ parallelizes the LTRANS stage with -flto=auto, which also
 # silences the lto-wrapper "using serial compilation of N LTRANS jobs"
 # warning. Clang and older GCC reject the value, so probe the final
-# toolchain and keep plain -flto on failure. Only an unmodified
-# default is upgraded; LTO set on the command line is left alone.
+# toolchain and keep plain -flto on failure. Only a plain LTO=-flto
+# is upgraded; any other value given on the command line is left alone.
 #
 # The probe compiles only. It must not link: mingw's ld cannot write an
 # executable to /dev/null ("final link failed: file truncated"), so a
