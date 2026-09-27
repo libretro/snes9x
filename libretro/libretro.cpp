@@ -374,6 +374,48 @@ void update_geometry(void)
     g_geometry_update = false;
 }
 
+static void update_overclock(bool enabled, bool updated = false)
+{
+    static bool was_enabled = false;
+    if (enabled == was_enabled && !updated)
+        return;
+
+    was_enabled = enabled;
+
+    struct retro_variable var;
+
+    Settings.OneClockCycle      = 6;
+    Settings.OneSlowClockCycle  = 8;
+    Settings.TwoClockCycles     = 12;
+
+    var.key="snes9x_overclock_cycles";
+    var.value=NULL;
+    if (enabled && environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+    {
+        if (strcmp(var.value, "max") == 0)
+        {
+            Settings.OneClockCycle      = 3;
+            Settings.OneSlowClockCycle  = 3;
+            Settings.TwoClockCycles     = 3;
+        }
+        else if (strcmp(var.value, "compatible") == 0)
+        {
+            Settings.OneClockCycle      = 4;
+            Settings.OneSlowClockCycle  = 5;
+            Settings.TwoClockCycles     = 6;
+        }
+        else if (strcmp(var.value, "light") == 0)
+        {
+            Settings.OneClockCycle      = 6;
+            Settings.OneSlowClockCycle  = 6;
+            Settings.TwoClockCycles     = 12;
+        }
+    }
+
+    CPU.MemSpeed = memory_speed(Registers.PBPC);
+    CPU.MemSpeedx2 = CPU.MemSpeed << 1;
+}
+
 static void update_variables(void)
 {
     char key[256];
@@ -526,34 +568,7 @@ static void update_variables(void)
     else
         Settings.InterpolationMethod = DSP_INTERPOLATION_GAUSSIAN;
 
-
-    Settings.OneClockCycle      = 6;
-    Settings.OneSlowClockCycle  = 8;
-    Settings.TwoClockCycles     = 12;
-
-    var.key="snes9x_overclock_cycles";
-    var.value=NULL;
-    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-    {
-        if (strcmp(var.value, "max") == 0)
-        {
-            Settings.OneClockCycle      = 3;
-            Settings.OneSlowClockCycle  = 3;
-            Settings.TwoClockCycles     = 3;
-        }
-        else if (strcmp(var.value, "compatible") == 0)
-        {
-            Settings.OneClockCycle      = 4;
-            Settings.OneSlowClockCycle  = 5;
-            Settings.TwoClockCycles     = 6;
-        }
-        else if (strcmp(var.value, "light") == 0)
-        {
-            Settings.OneClockCycle      = 6;
-            Settings.OneSlowClockCycle  = 6;
-            Settings.TwoClockCycles     = 12;
-        }
-    }
+    update_overclock(CPU.Flags & SCAN_KEYS_FLAG, true);
 
     Settings.MaxSpriteTilesPerLine = 34;
     var.key="snes9x_reduce_sprite_flicker";
@@ -1165,6 +1180,7 @@ unsigned retro_api_version()
 void retro_reset()
 {
     reset_button_cache();
+    update_overclock(false);
     S9xSoftReset();
 }
 
@@ -1489,6 +1505,7 @@ bool retro_load_game(const struct retro_game_info *game)
     init_descriptors();
 
     update_variables();
+    update_overclock(false);
 
     if(game->data == NULL && game->size == 0 && game->path != NULL)
         rom_loaded = Memory.LoadROM(game->path);
@@ -1594,6 +1611,7 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
     rom_loaded = false;
 
     update_variables();
+    update_overclock(false);
     switch (game_type)
     {
         case RETRO_GAME_TYPE_BSX:
@@ -2252,6 +2270,8 @@ void retro_run()
     bool updated = false;
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
         update_variables();
+
+    update_overclock(CPU.Flags & SCAN_KEYS_FLAG);
 
     if (g_geometry_update || height != PPU.ScreenHeight)
     {
