@@ -1225,6 +1225,12 @@ void retro_set_controller_port_device(unsigned port, unsigned device)
                 break;
         }
 
+        /* Port 2's pad numbers depend on whether port 1 is a multitap, so
+           re-derive them whenever port 1 changes after port 2 was set. */
+        if (port == 0 && (snes_devices[1] == RETRO_DEVICE_JOYPAD ||
+                          snes_devices[1] == RETRO_DEVICE_JOYPAD_MULTITAP))
+            retro_set_controller_port_device(1, snes_devices[1]);
+
         S9xControlsSoftReset();
     }
     else if(device != RETRO_DEVICE_NONE)
