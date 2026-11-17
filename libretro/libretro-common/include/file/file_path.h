@@ -37,6 +37,7 @@ RETRO_BEGIN_DECLS
 
 #define PATH_REQUIRED_VFS_VERSION 3
 #define STAT64_REQUIRED_VFS_VERSION 4
+#define METADATA_REQUIRED_VFS_VERSION 5
 
 void path_vfs_init(const struct retro_vfs_interface_info* vfs_info);
 
@@ -300,7 +301,9 @@ size_t fill_pathname(char *s, const char *in_path,
  * - Calls strlcpy
  *
  **/
+#ifndef RETRO_DISABLE_HOST_CLOCK
 size_t fill_dated_filename(char *s, const char *ext, size_t len);
+#endif
 
 /**
  * fill_str_dated_filename:
@@ -323,7 +326,9 @@ size_t fill_dated_filename(char *s, const char *ext, size_t len);
  *
  * @return Length of the string copied into @s
  **/
+#ifndef RETRO_DISABLE_HOST_CLOCK
 size_t fill_str_dated_filename(char *s, const char *in_str, const char *ext, size_t len);
+#endif
 
 /**
  * find_last_slash:
@@ -474,14 +479,19 @@ size_t fill_pathname_join(char *s, const char *dir,
 /**
  * fill_pathname_join_special:
  * @s                  : output path
- * @dir                : directory. Cannot be identical to @s
+ * @dir                : directory
  * @path               : path
  * @len                : size of output path
  *
+ * Macro alias of fill_pathname_join(); the two are identical.
+ * Kept for source compatibility with existing callers in
+ * RetroArch and downstream cores. Each argument expands exactly
+ * once, so arguments with side effects are safe. The distinct
+ * identifier fill_pathname_join_special_ext() is unaffected.
  *
- * Specialized version of fill_pathname_join.
- * Unlike fill_pathname_join(),
- * @dir and @s CANNOT be identical.
+ * @dir and @s may be identical (the join is then performed in
+ * place); buffers that overlap without being identical are
+ * undefined.
  *
  * Joins a directory (@dir) and path (@path) together.
  * Makes sure not to get two consecutive slashes
@@ -492,8 +502,8 @@ size_t fill_pathname_join(char *s, const char *dir,
  *
  * @return Length of the string copied into @s
  **/
-size_t fill_pathname_join_special(char *s,
-      const char *dir, const char *path, size_t len);
+#define fill_pathname_join_special(s, dir, path, len) \
+   fill_pathname_join((s), (dir), (path), (len))
 
 size_t fill_pathname_join_special_ext(char *s,
       const char *dir,  const char *path,
@@ -656,6 +666,47 @@ size_t fill_pathname_home_dir(char *s, size_t len);
 bool path_mkdir(const char *dir);
 
 /**
+ * path_rmdir:
+ * @dir                : directory path.
+ *
+ * Removes the empty directory @dir.
+ *
+ * @return true if the directory was removed, otherwise false -
+ * including a directory that is not empty, and platforms with no
+ * directory removal, where an empty directory is simply left.
+ **/
+bool path_rmdir(const char *dir);
+
+/**
+ * path_remove_tree:
+ * @path               : file or directory path.
+ *
+ * Removes @path: a file, or a directory with everything in it,
+ * hidden entries included.  A link is removed, not followed, where
+ * the platform tells a link from what it points to.
+ *
+ * @return true if nothing is left at @path, including when there
+ * was nothing there to begin with.
+ **/
+bool path_remove_tree(const char *path);
+
+/**
+ * path_copy_tree:
+ * @src                : file or directory to copy.
+ * @dst                : path of the copy.
+ *
+ * Copies the file @src to @dst, or the directory @src with
+ * everything in it into the directory @dst, which is made as needed.
+ * Files already at the destination are replaced; anything else
+ * there is left.  Each file is copied with the platform's own copy
+ * (a clone where the file system can make one).  @dst must not lie
+ * inside @src.
+ *
+ * @return true if everything was copied.
+ **/
+bool path_copy_tree(const char *src, const char *dst);
+
+/**
  * path_is_directory:
  * @path               : path
  *
@@ -664,6 +715,25 @@ bool path_mkdir(const char *dir);
  * @return true if path is a directory, otherwise false.
  */
 bool path_is_directory(const char *path);
+
+/**
+ * path_is_empty_directory:
+ * @dir                : path
+ *
+ * @return true if @dir is a directory holding nothing but "." and "..",
+ * false if it holds anything else or cannot be opened.
+ */
+bool path_is_empty_directory(const char *dir);
+
+/**
+ * path_get_free_space:
+ * @path               : an existing file or directory
+ *
+ * @return bytes available to the caller on the volume holding @path,
+ * or -1 when that cannot be determined (no such path, or a platform
+ * without a free-space query).
+ */
+int64_t path_get_free_space(const char *path);
 
 /* Time format strings with AM-PM designation require special
  * handling due to platform dependence
@@ -677,6 +747,61 @@ bool path_is_character_special(const char *path);
 int path_stat(const char *path);
 
 bool path_is_valid(const char *path);
+
+/**
+ * path_set_private:
+ * @path               : file
+ *
+ * Restricts @path to the owning user (0600 on POSIX). Use for files
+ * that hold secrets. A no-op that returns true on platforms where
+ * the location is already private or has no permission model.
+ *
+ * @return true if the permissions are restricted (or nothing needed
+ * doing), false if the platform supports it and it failed.
+ **/
+bool path_set_private(const char *path);
+
+/**
+ * path_is_readonly:
+ * @path               : path
+ *
+ * Whether the current user cannot write to @path. Reads the
+ * RETRO_VFS_STAT_IS_READONLY flag, which frontends older than
+ * VFS API v5 never set, so the answer there is always false.
+ *
+ * @return true if @path exists and is read-only.
+ **/
+bool path_is_readonly(const char *path);
+
+/**
+ * path_set_readonly:
+ * @path               : path
+ * @readonly           : true to make read-only, false to make writable
+ *
+ * POSIX: toggles the write bits. Windows: FILE_ATTRIBUTE_READONLY.
+ *
+ * @return true on success, false if unsupported on this platform,
+ * the file system, or the negotiated VFS version (< 5).
+ **/
+bool path_set_readonly(const char *path, bool readonly);
+
+/**
+ * path_get_mtime:
+ * @path               : path
+ * @mtime              : receives seconds since 1970-01-01T00:00:00Z
+ *
+ * @return true on success, false if unavailable.
+ **/
+bool path_get_mtime(const char *path, int64_t *mtime);
+
+/**
+ * path_set_mtime:
+ * @path               : path
+ * @mtime              : seconds since 1970-01-01T00:00:00Z
+ *
+ * @return true on success, false if unsupported or it failed.
+ **/
+bool path_set_mtime(const char *path, int64_t mtime);
 
 int64_t path_get_size(const char *path);
 

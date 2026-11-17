@@ -55,6 +55,7 @@ enum { HYB_LOCAL = 1, HYB_FRONT = 2 };
 
 typedef struct {
 	int   be;
+	int   map_hint;   /* opened for reading to be mapped */
 	void *h;          /* libretro_vfs_implementation_file* or frontend handle */
 	char *path;
 } hyb_file_t;
@@ -123,6 +124,8 @@ static struct retro_vfs_file_handle *hyb_open( const char *path, unsigned mode, 
 	}
 	f->be = be;
 	f->h = h;
+	f->map_hint = ( hints & RETRO_VFS_FILE_ACCESS_HINT_FREQUENT_ACCESS )
+		&& mode == RETRO_VFS_FILE_ACCESS_READ;
 	/* strdup is POSIX, not C89: under a strict-C89 toolchain the
 	   prototype is hidden and the implicit int return truncates the
 	   pointer on LP64.  Copy manually with the headers we already
@@ -350,15 +353,254 @@ static int hyb_closedir( struct retro_vfs_dir_handle *dh ) {
 	return r;
 }
 
-/* the zero-copy sideband: local-backed handles expose their mapping,
-   frontend-backed ones honestly cannot */
+/* ---- v5: metadata, copy, dirent_stat ---- */
+
+/* Same local-first rule as stat: a native path is answered locally,
+   a URI (or anything on a sandboxed platform) goes to a frontend
+   that advertised v5.  A frontend older than v5 has not filled these
+   members and must not be called. */
+
+static int hyb_set_readonly( const char *path, int readonly ) {
+	if ( !hyb_is_uri( path ) ) {
+		int r = retro_vfs_set_readonly_impl( path, readonly );
+		if ( r == 0 || !( hyb_front && HYB_SANDBOXED ) )
+			return r;
+	}
+	if ( hyb_front && hyb_front_version >= 5 && hyb_front->set_readonly )
+		return hyb_front->set_readonly( path, readonly );
+	return -1;
+}
+
+static int hyb_get_mtime( const char *path, int64_t *mtime ) {
+	if ( !hyb_is_uri( path ) ) {
+		int r = retro_vfs_get_mtime_impl( path, mtime );
+		if ( r == 0 || !( hyb_front && HYB_SANDBOXED ) )
+			return r;
+	}
+	if ( hyb_front && hyb_front_version >= 5 && hyb_front->get_mtime )
+		return hyb_front->get_mtime( path, mtime );
+	return -1;
+}
+
+static int hyb_set_mtime( const char *path, int64_t mtime ) {
+	if ( !hyb_is_uri( path ) ) {
+		int r = retro_vfs_set_mtime_impl( path, mtime );
+		if ( r == 0 || !( hyb_front && HYB_SANDBOXED ) )
+			return r;
+	}
+	if ( hyb_front && hyb_front_version >= 5 && hyb_front->set_mtime )
+		return hyb_front->set_mtime( path, mtime );
+	return -1;
+}
+
+/* A copy handle must be polled and closed by whichever side began it,
+   so the wrapper records which one that was. */
+typedef struct { int be; void *h; } hyb_copy_t;
+
+static struct retro_vfs_copy_handle *hyb_copy_begin( const char *src, const char *dst, unsigned flags ) {
+	hyb_copy_t *c = (hyb_copy_t *)calloc( 1, sizeof( *c ) );
+	if ( !c )
+		return NULL;
+	/* both native: local (fast paths live there).  A URI on either
+	   side means at least one end only the frontend can reach. */
+	if ( !hyb_is_uri( src ) && !hyb_is_uri( dst ) ) {
+		c->h = retro_vfs_copy_begin_impl( src, dst, flags );
+		if ( c->h || !( hyb_front && HYB_SANDBOXED ) ) {
+			c->be = HYB_LOCAL;
+			if ( !c->h ) { free( c ); return NULL; }
+			return (struct retro_vfs_copy_handle *)c;
+		}
+	}
+	if ( hyb_front && hyb_front_version >= 5 && hyb_front->copy_begin ) {
+		c->h = hyb_front->copy_begin( src, dst, flags );
+		if ( c->h ) { c->be = HYB_FRONT; return (struct retro_vfs_copy_handle *)c; }
+	}
+	free( c );
+	return NULL;
+}
+
+static int hyb_copy_step( struct retro_vfs_copy_handle *ch, int64_t max_bytes, int64_t *done, int64_t *total ) {
+	hyb_copy_t *c = (hyb_copy_t *)ch;
+	if ( !c )
+		return RETRO_VFS_COPY_FAILED;
+	if ( c->be == HYB_LOCAL )
+		return retro_vfs_copy_step_impl( (struct retro_vfs_copy_handle *)c->h, max_bytes, done, total );
+	return hyb_front->copy_step( (struct retro_vfs_copy_handle *)c->h, max_bytes, done, total );
+}
+
+static int hyb_copy_close( struct retro_vfs_copy_handle *ch ) {
+	hyb_copy_t *c = (hyb_copy_t *)ch;
+	int r;
+	if ( !c )
+		return -1;
+	if ( c->be == HYB_LOCAL )
+		r = retro_vfs_copy_close_impl( (struct retro_vfs_copy_handle *)c->h );
+	else
+		r = hyb_front->copy_close( (struct retro_vfs_copy_handle *)c->h );
+	free( c );
+	return r;
+}
+
+static int hyb_dirent_stat( struct retro_vfs_dir_handle *dh, int64_t *size, int64_t *mtime ) {
+	hyb_dir_t *d = (hyb_dir_t *)dh;
+	if ( !d )
+		return 0;
+	if ( d->be == HYB_LOCAL )
+		return retro_vfs_dirent_stat_impl( (libretro_vfs_implementation_dir *)d->h, size, mtime );
+	if ( hyb_front_version >= 5 && hyb_front->dirent_stat )
+		return hyb_front->dirent_stat( (struct retro_vfs_dir_handle *)d->h, size, mtime );
+	return 0;
+}
+
+/* ---- v6: positional reads and writes ---- */
+
+/* -1 on a frontend handle the frontend has no positional I/O for: the
+   caller seeks and reads, as the v6 contract says. */
+static int64_t hyb_read_at( struct retro_vfs_file_handle *fh, void *s, uint64_t len, int64_t offset ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( !f )
+		return -1;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_read_at_impl( (libretro_vfs_implementation_file *)f->h, s, len, offset );
+	if ( hyb_front_version >= 6 && hyb_front->read_at )
+		return hyb_front->read_at( (struct retro_vfs_file_handle *)f->h, s, len, offset );
+	return -1;
+}
+
+static int64_t hyb_write_at( struct retro_vfs_file_handle *fh, const void *s, uint64_t len, int64_t offset ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( !f )
+		return -1;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_write_at_impl( (libretro_vfs_implementation_file *)f->h, s, len, offset );
+	if ( hyb_front_version >= 6 && hyb_front->write_at )
+		return hyb_front->write_at( (struct retro_vfs_file_handle *)f->h, s, len, offset );
+	return -1;
+}
+
+/* ---- v7: lent reads, mappings, identity, volume, fs-verity ----
+   A local handle answers from the local implementation; a frontend one
+   from a v7 frontend, else "can't be told". */
+
+#define HYB_FRONT_V7( member ) \
+	( hyb_front && hyb_front_version >= 7 && hyb_front->member )
+
+static int64_t hyb_view( struct retro_vfs_file_handle *fh, uint64_t len, const uint8_t **ptr ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( !f )
+		return -1;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_view_impl( (libretro_vfs_implementation_file *)f->h, len, ptr );
+	if ( HYB_FRONT_V7( view ) )
+		return hyb_front->view( (struct retro_vfs_file_handle *)f->h, len, ptr );
+	return -1;
+}
+
+static const uint8_t *hyb_map( struct retro_vfs_file_handle *fh, int64_t *len ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( len )
+		*len = 0;
+	if ( !f )
+		return NULL;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_map_impl( (libretro_vfs_implementation_file *)f->h, len );
+	if ( HYB_FRONT_V7( map ) )
+		return hyb_front->map( (struct retro_vfs_file_handle *)f->h, len );
+	return NULL;
+}
+
+static bool hyb_identity( struct retro_vfs_file_handle *fh, struct retro_vfs_file_identity *id ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( !f || !id )
+		return false;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_identity_impl( (libretro_vfs_implementation_file *)f->h, id );
+	if ( HYB_FRONT_V7( identity ) )
+		return hyb_front->identity( (struct retro_vfs_file_handle *)f->h, id );
+	memset( id, 0, sizeof( *id ) );
+	return false;
+}
+
+static int hyb_stat_identity( const char *path, struct retro_vfs_file_identity *id ) {
+	if ( !hyb_is_uri( path ) ) {
+		int r = retro_vfs_stat_identity_impl( path, id );
+		if ( r == 1 || !( hyb_front && HYB_SANDBOXED ) )
+			return r;
+	}
+	if ( HYB_FRONT_V7( stat_identity ) )
+		return hyb_front->stat_identity( path, id );
+	if ( id )
+		memset( id, 0, sizeof( *id ) );
+	return -1;
+}
+
+static bool hyb_volume( struct retro_vfs_file_handle *fh, unsigned want, struct retro_vfs_volume *vol ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( !f || !vol )
+		return false;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_volume_impl( (libretro_vfs_implementation_file *)f->h, want, vol );
+	if ( HYB_FRONT_V7( volume ) )
+		return hyb_front->volume( (struct retro_vfs_file_handle *)f->h, want, vol );
+	memset( vol, 0, sizeof( *vol ) );
+	return false;
+}
+
+static int hyb_stat_volume( const char *path, unsigned want, struct retro_vfs_volume *vol ) {
+	if ( !hyb_is_uri( path ) ) {
+		int r = retro_vfs_stat_volume_impl( path, want, vol );
+		if ( r == 1 || !( hyb_front && HYB_SANDBOXED ) )
+			return r;
+	}
+	if ( HYB_FRONT_V7( stat_volume ) )
+		return hyb_front->stat_volume( path, want, vol );
+	if ( vol )
+		memset( vol, 0, sizeof( *vol ) );
+	return -1;
+}
+
+static size_t hyb_verity_measure( struct retro_vfs_file_handle *fh, uint8_t *digest, size_t cap ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( !f )
+		return 0;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_verity_measure_impl( (libretro_vfs_implementation_file *)f->h, digest, cap );
+	if ( HYB_FRONT_V7( verity_measure ) )
+		return hyb_front->verity_measure( (struct retro_vfs_file_handle *)f->h, digest, cap );
+	return 0;
+}
+
+static int hyb_verity_enable( struct retro_vfs_file_handle *fh ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( !f )
+		return -1;
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_verity_enable_impl( (libretro_vfs_implementation_file *)f->h );
+	if ( HYB_FRONT_V7( verity_enable ) )
+		return hyb_front->verity_enable( (struct retro_vfs_file_handle *)f->h );
+	return 0;
+}
+
+/* the zero-copy sideband: local-backed handles expose their mapping;
+   a frontend-backed one opened to be mapped, a v7 frontend's (SAF
+   content, which only the frontend can open, among them) */
 static const uint8_t *hyb_mapped_ptr( void *fh, int64_t *len ) {
 	hyb_file_t *f = (hyb_file_t *)fh;
 	if ( len )
 		*len = 0;
-	if ( !f || f->be != HYB_LOCAL )
+	if ( !f )
 		return NULL;
-	return retro_vfs_file_get_mapped_ptr_impl( (libretro_vfs_implementation_file *)f->h, len );
+	if ( f->be == HYB_LOCAL )
+		return retro_vfs_file_get_mapped_ptr_impl( (libretro_vfs_implementation_file *)f->h, len );
+	if ( f->map_hint && HYB_FRONT_V7( map ) )
+		return hyb_front->map( (struct retro_vfs_file_handle *)f->h, len );
+	return NULL;
+}
+
+static void hyb_prefetch( void *fh, uint64_t offset, uint64_t len ) {
+	hyb_file_t *f = (hyb_file_t *)fh;
+	if ( f && f->be == HYB_LOCAL )
+		retro_vfs_file_prefetch_impl( (libretro_vfs_implementation_file *)f->h, offset, len );
 }
 
 static struct retro_vfs_interface hyb_iface = {
@@ -371,15 +613,35 @@ static struct retro_vfs_interface hyb_iface = {
 	hyb_stat, hyb_mkdir, hyb_opendir, hyb_readdir,
 	hyb_dirent_get_name, hyb_dirent_is_dir, hyb_closedir,
 	/* v4 */
-	hyb_stat_64
+	hyb_stat_64,
+	/* v5 */
+	hyb_set_readonly, hyb_get_mtime, hyb_set_mtime,
+	hyb_copy_begin, hyb_copy_step, hyb_copy_close, hyb_dirent_stat,
+	/* v6 */
+	hyb_read_at, hyb_write_at,
+	/* v7 */
+	hyb_view, hyb_map, hyb_identity, hyb_stat_identity,
+	hyb_volume, hyb_stat_volume, hyb_verity_measure, hyb_verity_enable
 };
 
 void vfs_hybrid_init( retro_environment_t env_cb, retro_log_printf_t log ) {
 	struct retro_vfs_interface_info info;
 
-	info.required_interface_version = 4;
+	info.required_interface_version = 7;
 	info.iface = NULL;
 	if ( !env_cb( RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &info ) || !info.iface ) {
+		info.required_interface_version = 6;
+		info.iface = NULL;
+	}
+	if ( !info.iface && ( !env_cb( RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &info ) || !info.iface ) ) {
+		info.required_interface_version = 5;
+		info.iface = NULL;
+	}
+	if ( !info.iface && ( !env_cb( RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &info ) || !info.iface ) ) {
+		info.required_interface_version = 4;
+		info.iface = NULL;
+	}
+	if ( !info.iface && ( !env_cb( RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &info ) || !info.iface ) ) {
 		info.required_interface_version = 3;
 		info.iface = NULL;
 	}
@@ -397,13 +659,14 @@ void vfs_hybrid_init( retro_environment_t env_cb, retro_log_printf_t log ) {
 
 	{
 		struct retro_vfs_interface_info ours;
-		ours.required_interface_version = 4;
+		ours.required_interface_version = 7;
 		ours.iface = &hyb_iface;
 		filestream_vfs_init( &ours );
 		path_vfs_init( &ours );
 		dirent_vfs_init( &ours );
 	}
 	filestream_set_mapped_ptr_cb( hyb_mapped_ptr );
+	filestream_set_prefetch_cb( hyb_prefetch );
 
 	if ( log )
 		log( RETRO_LOG_INFO,

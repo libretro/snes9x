@@ -203,6 +203,10 @@ char *string_trim_whitespace(char *const s);
  * regular Latin characters - i.e. it will not wrap
  * correctly any text containing so-called 'wide' Unicode
  * characters (e.g. CJK languages, emojis, etc.).
+ * @dst and @src must NOT overlap: the copy is performed
+ * with strlcpy(), which has undefined behaviour for
+ * overlapping buffers (and aborts via __chk_fail_overlap
+ * with fortified libc on macOS).
  **/
 size_t word_wrap(char *dst, size_t dst_size, const char *src, size_t src_len,
       int line_width, int wideglyph_width, unsigned max_lines);
@@ -240,12 +244,35 @@ size_t word_wrap(char *dst, size_t dst_size, const char *src, size_t src_len,
  * if @src string contains 'wide' Unicode characters whose
  * on-screen pixel width deviates greatly from the set
  * @wideglyph_width value.
+ * @dst and @src must NOT overlap: the copy is performed
+ * with strlcpy(), which has undefined behaviour for
+ * overlapping buffers (and aborts via __chk_fail_overlap
+ * with fortified libc on macOS).
  **/
 size_t word_wrap_wideglyph(
       char *dst, size_t dst_size,
       const char *src, size_t src_len,
       int line_width, int wideglyph_width,
       unsigned max_lines);
+
+/**
+ * word_wrap_offset:
+ * @src                : the string that was wrapped.
+ * @at                 : a byte offset into @src.
+ * @wrapped            : @src as word_wrap() or word_wrap_wideglyph()
+ *                       wrapped it; its line ends may since have been
+ *                       made '\0'.
+ * @wrapped_len        : the length the wrap returned.
+ *
+ * A wrap only turns whitespace into line ends and adds line ends
+ * before wide glyphs, so where a byte of @src landed can be read off
+ * the wrapped text, without wrapping a copy of @src up to it.
+ *
+ * Returns: the offset into @wrapped of @src's byte @at, or
+ * @wrapped_len when @at lies past what the wrap holds.
+ **/
+size_t word_wrap_offset(const char *src, size_t at,
+      const char *wrapped, size_t wrapped_len);
 
 /**
  * string_tokenize:
@@ -304,6 +331,16 @@ void string_replace_all_chars(char *str, char find, char replace);
  * @return 0 if string is invalid, otherwise > 0
  **/
 unsigned string_to_unsigned(const char *str);
+
+/**
+ * string_percent_decode:
+ *
+ * Decode %XX escapes from @src into @s.  A '%' not followed by two
+ * hex digits is copied as is; '+' is left alone.  @s may equal @src.
+ * Returns the decoded length, or -1 when @s is too small (@s holds
+ * the truncated, terminated prefix).
+ **/
+int string_percent_decode(char *s, size_t len, const char *src);
 
 /**
  * string_hex_to_unsigned:
